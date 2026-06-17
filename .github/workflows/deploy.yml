@@ -14,26 +14,26 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: projects/ibigan-web/package-lock.json
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: projects/nagibi-web/package-lock.json
 
       - name: Install frontend dependencies
         run: npm install --force
-        working-directory: projects/ibigan-web
+        working-directory: projects/nagibi-web
 
       - name: Build frontend
         run: |
           cat > .env.production << 'EOF'
           VITE_API_URL=https://nagibi.com.br/api
-          VITE_APP_NAME=Ibigan
+          VITE_APP_NAME=nagibi
           VITE_REVERB_APP_KEY=xu6y2ryaemtltwri5ulq
           VITE_REVERB_HOST=nagibi.com.br
           VITE_REVERB_PORT=443
           VITE_REVERB_SCHEME=https
           EOF
           npm run build
-        working-directory: projects/ibigan-web
+        working-directory: projects/nagibi-web
 
       - name: Setup SSH
         run: |
@@ -47,18 +47,18 @@ jobs:
           rsync -az --delete \
             --exclude='.git' \
             --exclude='.env' \
-            --exclude='projects/ibigan-api/vendor' \
-            --exclude='projects/ibigan-api/node_modules' \
-            --exclude='projects/ibigan-api/storage/logs' \
-            --exclude='projects/ibigan-api/.env' \
-            --exclude='projects/ibigan-web/node_modules' \
+            --exclude='projects/nagibi-api/vendor' \
+            --exclude='projects/nagibi-api/node_modules' \
+            --exclude='projects/nagibi-api/storage/logs' \
+            --exclude='projects/nagibi-api/.env' \
+            --exclude='projects/nagibi-web/node_modules' \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            ./ root@${{ secrets.SERVER_IP }}:/opt/ibigan/
+            ./ root@${{ secrets.SERVER_IP }}:/opt/nagibi/
 
       - name: Deploy on server
         run: |
           ssh -i ~/.ssh/deploy_key root@${{ secrets.SERVER_IP }} << 'EOF'
             set -e
-            chmod +x /opt/ibigan/scripts/deploy-prod.sh
-            /opt/ibigan/scripts/deploy-prod.sh
+            chmod +x /opt/nagibi/scripts/deploy-prod.sh
+            /opt/nagibi/scripts/deploy-prod.sh
           EOF
