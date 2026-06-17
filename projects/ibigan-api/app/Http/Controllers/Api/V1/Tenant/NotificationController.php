@@ -183,9 +183,14 @@ final class NotificationController extends Controller
 
         if ($request->filled('filter_title')) {
             $term = $request->string('filter_title')->toString();
-            $query->where(function (Builder $q) use ($term): void {
-                $q->where('type', 'like', "%{$term}%")
-                    ->orWhere('data', 'like', "%{$term}%");
+            $like = "%{$term}%";
+            $query->where(function (Builder $q) use ($like): void {
+                $q->where('type', 'like', $like)
+                    ->orWhere('data->subject', 'like', $like)
+                    ->orWhere('data->user_name', 'like', $like)
+                    ->orWhere('data->title', 'like', $like)
+                    ->orWhere('data->message', 'like', $like)
+                    ->orWhere('data->body', 'like', $like);
             });
         }
 

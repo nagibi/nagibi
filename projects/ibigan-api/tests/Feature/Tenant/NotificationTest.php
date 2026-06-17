@@ -265,17 +265,19 @@ it('filtra notificações por id e título', function (): void {
 
     Sanctum::actingAs($this->admin, ['*'], 'sanctum');
 
-    $this->getJson("/api/v1/notifications?filter_id={$notificationId}", ['X-Tenant-ID' => $this->tenant->id])
+    $headers = ['X-Tenant-ID' => $this->tenant->id];
+
+    $this->getJson('/api/v1/notifications?'.http_build_query(['filter_id' => $notificationId]), $headers)
         ->assertOk()
         ->assertJsonPath('result.meta.total', 1)
         ->assertJsonPath('result.data.0.id', $notificationId);
 
-    $this->getJson("/api/v1/notifications?filter_id={$recordId}", ['X-Tenant-ID' => $this->tenant->id])
+    $this->getJson('/api/v1/notifications?'.http_build_query(['filter_id' => $recordId]), $headers)
         ->assertOk()
         ->assertJsonPath('result.meta.total', 1)
         ->assertJsonPath('result.data.0.record_id', $recordId);
 
-    $this->getJson('/api/v1/notifications?filter_title='.$this->admin->name, ['X-Tenant-ID' => $this->tenant->id])
+    $this->getJson('/api/v1/notifications?'.http_build_query(['filter_title' => $this->admin->name]), $headers)
         ->assertOk()
         ->assertJsonPath('result.meta.total', 1);
 });

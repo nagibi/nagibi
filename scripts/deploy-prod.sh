@@ -8,9 +8,9 @@ ENV_FILE="${ENV_FILE:-/opt/nagibi/.env}"
 DC=(docker compose -f docker-compose.prod.yml --env-file "$ENV_FILE")
 
 echo "==> Permissões Laravel"
-chown -R 1000:1000 "$ROOT_DIR/projects/nagibi-api"
-chmod -R 775 "$ROOT_DIR/projects/nagibi-api/bootstrap/cache"
-chmod -R 775 "$ROOT_DIR/projects/nagibi-api/storage"
+chown -R 1000:1000 "$ROOT_DIR/projects/ibigan-api"
+chmod -R 775 "$ROOT_DIR/projects/ibigan-api/bootstrap/cache"
+chmod -R 775 "$ROOT_DIR/projects/ibigan-api/storage"
 
 echo "==> Composer (produção)"
 "${DC[@]}" run --rm app composer install --no-dev --optimize-autoloader --no-interaction

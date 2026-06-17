@@ -14,13 +14,13 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
           cache: "npm"
-          cache-dependency-path: projects/nagibi-web/package-lock.json
+          cache-dependency-path: projects/ibigan-web/package-lock.json
 
       - name: Install frontend dependencies
         run: npm install --force
-        working-directory: projects/nagibi-web
+        working-directory: projects/ibigan-web
 
       - name: Build frontend
         run: |
@@ -33,7 +33,7 @@ jobs:
           VITE_REVERB_SCHEME=https
           EOF
           npm run build
-        working-directory: projects/nagibi-web
+        working-directory: projects/ibigan-web
 
       - name: Setup SSH
         run: |
@@ -47,11 +47,11 @@ jobs:
           rsync -az --delete \
             --exclude='.git' \
             --exclude='.env' \
-            --exclude='projects/nagibi-api/vendor' \
-            --exclude='projects/nagibi-api/node_modules' \
-            --exclude='projects/nagibi-api/storage/logs' \
-            --exclude='projects/nagibi-api/.env' \
-            --exclude='projects/nagibi-web/node_modules' \
+            --exclude='projects/ibigan-api/vendor' \
+            --exclude='projects/ibigan-api/node_modules' \
+            --exclude='projects/ibigan-api/storage/logs' \
+            --exclude='projects/ibigan-api/.env' \
+            --exclude='projects/ibigan-web/node_modules' \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
             ./ root@${{ secrets.SERVER_IP }}:/opt/nagibi/
 
