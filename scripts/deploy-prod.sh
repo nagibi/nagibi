@@ -167,7 +167,7 @@ if [[ "$USE_BEHIND_PROXY" == "true" ]]; then
   echo "    Depois: systemctl reload caddy"
 fi
 
-echo "==> Migrations e caches Laravel"
+echo "==> Migrations e caches Laravel" 
 "${DC[@]}" exec -T app php artisan optimize:clear
 "${DC[@]}" exec -T app php artisan migrate --force
 "${DC[@]}" exec -T app php artisan tenants:migrate --force
