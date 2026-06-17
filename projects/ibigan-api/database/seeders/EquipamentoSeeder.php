@@ -461,7 +461,7 @@ class EquipamentoSeeder extends Seeder
             'obra_id' => $this->obras[$dados['obra']]->id,
             'colaborador_nome' => $dados['colaborador_nome'],
             'colaborador_matricula' => $dados['colaborador_matricula'],
-            'colaborador_whatsapp' => '119'.fake()->numerify('########'),
+            'colaborador_whatsapp' => $this->whatsappDemo($dados['colaborador_matricula']),
             'encarregado_nome' => $dados['encarregado_nome'],
             'data_retirada' => $dados['data_retirada'],
             'prazo_dias' => $dados['prazo_dias'],
@@ -476,6 +476,11 @@ class EquipamentoSeeder extends Seeder
         }
 
         return $payload;
+    }
+
+    private function whatsappDemo(string $matricula): string
+    {
+        return '119'.str_pad($matricula, 8, '0', STR_PAD_LEFT);
     }
 
     /**
