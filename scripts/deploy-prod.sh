@@ -18,6 +18,11 @@ chmod -R 775 "$ROOT_DIR/projects/ibigan-api/storage"
 echo "==> Composer (produção)"
 "${DC[@]}" run --rm app composer install --no-dev --optimize-autoloader --no-interaction
 
+echo "==> Remover containers legados (ibigan_*)"
+for container in ibigan_app ibigan_nginx ibigan_mysql ibigan_redis ibigan_horizon ibigan_scheduler ibigan_reverb; do
+  docker rm -f "$container" 2>/dev/null || true
+done
+
 echo "==> Containers"
 "${DC[@]}" up -d --build --force-recreate
 
