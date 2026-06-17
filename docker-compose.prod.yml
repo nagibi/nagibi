@@ -1,5 +1,7 @@
 name: nagibi
 
+services:
+
   # ── PHP-FPM — Laravel 12 / PHP 8.4 ───────────────────────────
   app:
     build:
@@ -10,6 +12,8 @@ name: nagibi
         INSTALL_XDEBUG: 0
     container_name: nagibi_app
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       TZ: ${APP_TIMEZONE:-America/Sao_Paulo}
     volumes:
@@ -58,7 +62,7 @@ name: nagibi
       TZ: ${APP_TIMEZONE:-America/Sao_Paulo}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-nagibi_central}
-      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_USER: ${MYSQL_USER:-nagibi}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     command: ["mysqld", "--default-time-zone=-03:00"]
     volumes:
@@ -99,6 +103,8 @@ name: nagibi
         INSTALL_XDEBUG: 0
     container_name: nagibi_horizon
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       TZ: ${APP_TIMEZONE:-America/Sao_Paulo}
     volumes:
@@ -123,6 +129,8 @@ name: nagibi
         INSTALL_XDEBUG: 0
     container_name: nagibi_scheduler
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       TZ: ${APP_TIMEZONE:-America/Sao_Paulo}
     volumes:
@@ -147,6 +155,8 @@ name: nagibi
         INSTALL_XDEBUG: 0
     container_name: nagibi_reverb
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       TZ: ${APP_TIMEZONE:-America/Sao_Paulo}
     ports:

@@ -7,6 +7,9 @@ cd "$ROOT_DIR"
 ENV_FILE="${ENV_FILE:-/opt/nagibi/.env}"
 DC=(docker compose -f docker-compose.prod.yml --env-file "$ENV_FILE")
 
+echo "==> Sincronizar .env do Laravel"
+ln -sfn "$ENV_FILE" "$ROOT_DIR/projects/ibigan-api/.env"
+
 echo "==> Permissões Laravel"
 chown -R 1000:1000 "$ROOT_DIR/projects/ibigan-api"
 chmod -R 775 "$ROOT_DIR/projects/ibigan-api/bootstrap/cache"
@@ -20,6 +23,15 @@ echo "==> Containers"
 
 echo "==> Aguardando serviços..."
 sleep 15
+
+echo "==> Garantir usuário MySQL"
+"${DC[@]}" exec -T mysql sh -ec "mysql -uroot -p\"\$MYSQL_ROOT_PASSWORD\" -e \"
+CREATE USER IF NOT EXISTS '\$MYSQL_USER'@'%' IDENTIFIED BY '\$MYSQL_PASSWORD';
+ALTER USER '\$MYSQL_USER'@'%' IDENTIFIED BY '\$MYSQL_PASSWORD';
+GRANT ALL PRIVILEGES ON \\\`\$MYSQL_DATABASE\\\`.* TO '\$MYSQL_USER'@'%';
+GRANT CREATE, DROP, ALTER, INDEX, REFERENCES ON *.* TO '\$MYSQL_USER'@'%';
+FLUSH PRIVILEGES;
+\""
 
 echo "==> Nginx (validar e recarregar config)"
 "${DC[@]}" exec -T nginx nginx -t
