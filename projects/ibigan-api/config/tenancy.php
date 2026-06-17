@@ -60,7 +60,7 @@ return [
          * Tenant database names are created like this:
          * prefix + tenant_id + suffix.
          */
-        'prefix' => 'ibigan_tenant_',
+        'prefix' => 'nagibi_tenant_',
         'suffix' => '',
 
         /**
@@ -72,13 +72,13 @@ return [
             'mariadb' => MySQLDatabaseManager::class,
             'pgsql' => PostgreSQLDatabaseManager::class,
 
-        /**
+            /**
          * Use this database manager for MySQL to have a DB user created for each tenant database.
          * You can customize the grants given to these users by changing the $grants property.
          */
             // 'mysql' => Stancl\Tenancy\TenantDatabaseManagers\PermissionControlledMySQLDatabaseManager::class,
 
-        /**
+            /**
          * Disable the pgsql manager above, and enable the one below if you
          * want to separate tenant DBs by schemas rather than databases.
          */
