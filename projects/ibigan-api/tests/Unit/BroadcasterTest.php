@@ -5,9 +5,6 @@ declare(strict_types=1);
 use App\Events\NotificationsInvalidated;
 use App\Support\Broadcaster;
 use Illuminate\Support\Facades\Log;
-use Tests\TestCase;
-
-uses(TestCase::class);
 
 it('ignora falhas de broadcast sem lançar exceção', function (): void {
     Log::spy();
