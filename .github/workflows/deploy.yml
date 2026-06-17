@@ -35,14 +35,34 @@ jobs:
           npm run build
         working-directory: projects/ibigan-web
 
+      - name: Validate deploy secrets
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          if [ -z "$SERVER_IP" ]; then
+            echo "::error::Missing GitHub Actions secret SERVER_IP (host/IP do servidor de produção)."
+            exit 1
+          fi
+
+          if [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "::error::Missing GitHub Actions secret SSH_PRIVATE_KEY (chave privada SSH para deploy)."
+            exit 1
+          fi
+
       - name: Setup SSH
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$SERVER_IP" >> ~/.ssh/known_hosts
 
       - name: Sync files to server
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
         run: |
           rsync -az --delete \
             --exclude='.git' \
@@ -53,11 +73,13 @@ jobs:
             --exclude='projects/ibigan-api/.env' \
             --exclude='projects/ibigan-web/node_modules' \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            ./ root@${{ secrets.SERVER_IP }}:/opt/nagibi/
+            ./ root@"$SERVER_IP":/opt/nagibi/
 
       - name: Deploy on server
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
         run: |
-          ssh -i ~/.ssh/deploy_key root@${{ secrets.SERVER_IP }} << 'EOF'
+          ssh -i ~/.ssh/deploy_key root@"$SERVER_IP" << 'EOF'
             set -e
             chmod +x /opt/nagibi/scripts/deploy-prod.sh
             /opt/nagibi/scripts/deploy-prod.sh
