@@ -25,7 +25,7 @@ Thumbs.db
 .composer/
 
 # Tenant databases (SQLite de testes)
-database/ibigan_tenant_*
+database/nagibi_tenant_*
 
 # Tenant storage files
 storage/tenant*

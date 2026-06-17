@@ -5,6 +5,16 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
+function tenantDatabaseName(string $tenantId): string
+{
+    return config('tenancy.database.prefix').$tenantId.config('tenancy.database.suffix');
+}
+
+function tenantDatabasePath(string $tenantId): string
+{
+    return database_path(tenantDatabaseName($tenantId));
+}
+
 /**
  * Encerra tenancy, purga conexões e remove arquivos SQLite do tenant.
  *
@@ -19,7 +29,7 @@ function cleanupTenantDatabaseFiles(string ...$tenantIds): void
     DB::purge('tenant');
 
     foreach ($tenantIds as $tenantId) {
-        $basePath = database_path('ibigan_tenant_'.$tenantId);
+        $basePath = tenantDatabasePath($tenantId);
 
         foreach ([$basePath, "{$basePath}-wal", "{$basePath}-shm"] as $path) {
             if (is_file($path)) {

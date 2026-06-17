@@ -48,11 +48,7 @@ afterEach(function (): void {
     RateLimiter::clear('two-factor');
     RateLimiter::clear('invite-accept');
 
-    tenancy()->end();
-    $databasePath = database_path('ibigan_tenant_'.$this->tenant->id);
-    if (file_exists($databasePath)) {
-        unlink($databasePath);
-    }
+    cleanupTenantDatabaseFiles($this->tenant->id);
 });
 
 it('bloqueia login após 5 tentativas', function (): void {

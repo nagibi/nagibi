@@ -34,11 +34,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    tenancy()->end();
-    $databasePath = database_path('ibigan_tenant_'.$this->tenant->id);
-    if (file_exists($databasePath)) {
-        unlink($databasePath);
-    }
+    cleanupTenantDatabaseFiles($this->tenant->id);
 });
 
 function reportHeaders(string $tenantId): array
