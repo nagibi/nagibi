@@ -24,10 +24,17 @@ export function usePatchUserPreferencesCache() {
   const queryClient = useQueryClient();
 
   return (patch: Partial<UserPreferencesMap>) => {
-    queryClient.setQueryData<UserPreferencesMap>(QUERY_KEY, (current) => ({
-      ...(current ?? {}),
-      ...patch,
-    }));
+    queryClient.setQueryData<UserPreferencesMap>(QUERY_KEY, (current) => {
+      const next: UserPreferencesMap = { ...(current ?? {}) };
+
+      for (const [key, value] of Object.entries(patch)) {
+        if (value !== undefined) {
+          next[key] = value;
+        }
+      }
+
+      return next;
+    });
   };
 }
 
