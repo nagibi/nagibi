@@ -1,13 +1,13 @@
+import type { EquipamentoListMode } from '@/pages/equipamentos/equipamentos-list-page';
 import { useSearchParams } from 'react-router-dom';
-import { GridBadge } from '@/components/grid/grid-badge';
-import { cn } from '@/lib/utils';
 import {
   FILTER_LABELS,
   getFiltersForMode,
   resolveContextFilter,
   type EquipamentoContextFilter,
 } from '@/lib/equipamento-filters';
-import type { EquipamentoListMode } from '@/pages/equipamentos/equipamentos-list-page';
+import { cn } from '@/lib/utils';
+import { GridBadge } from '@/components/grid/grid-badge';
 
 type EquipamentoFilterChipsProps = {
   mode: EquipamentoListMode;
@@ -49,10 +49,7 @@ export function EquipamentoFilterChips({ mode }: EquipamentoFilterChipsProps) {
             key={filter}
             size="md"
             variant={isActive ? 'primary' : 'outline'}
-            className={cn(
-              'max-w-full',
-              !isActive && 'text-muted-foreground',
-            )}
+            className={cn('max-w-full', !isActive && 'text-muted-foreground')}
             asChild
           >
             <button
