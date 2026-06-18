@@ -150,6 +150,64 @@ ensure_redis_drivers() {
   fi
 }
 
+ensure_reverb_config() {
+  local file="$1"
+  local domain
+  domain="$(env_value "$file" CENTRAL_DOMAIN)"
+  domain="${domain#https://}"
+  domain="${domain#http://}"
+  domain="${domain%%/*}"
+
+  if [[ -z "$(env_value "$file" BROADCAST_CONNECTION)" ]]; then
+    echo "==> BROADCAST_CONNECTION ausente — usando reverb"
+    set_env_var "$file" BROADCAST_CONNECTION reverb
+  fi
+
+  if [[ -z "$(env_value "$file" APP_URL)" && -n "$domain" ]]; then
+    echo "==> APP_URL ausente — usando https://${domain}"
+    set_env_var "$file" APP_URL "https://${domain}"
+  fi
+
+  if [[ -z "$(env_value "$file" REVERB_APP_ID)" ]]; then
+    echo "==> REVERB_APP_ID ausente — usando 366217 (deve coincidir com VITE_REVERB_APP_KEY no build do SPA)"
+    set_env_var "$file" REVERB_APP_ID 366217
+  fi
+
+  if [[ -z "$(env_value "$file" REVERB_APP_KEY)" ]]; then
+    echo "ERRO: defina REVERB_APP_KEY em ${file} (igual ao VITE_REVERB_APP_KEY do build do frontend)" >&2
+    exit 1
+  fi
+
+  if [[ -z "$(env_value "$file" REVERB_APP_SECRET)" ]]; then
+    echo "ERRO: defina REVERB_APP_SECRET em ${file}" >&2
+    exit 1
+  fi
+
+  if [[ -z "$(env_value "$file" REVERB_BROADCAST_HOST)" ]]; then
+    set_env_var "$file" REVERB_BROADCAST_HOST reverb
+  fi
+
+  if [[ -z "$(env_value "$file" REVERB_BROADCAST_PORT)" ]]; then
+    set_env_var "$file" REVERB_BROADCAST_PORT 8080
+  fi
+
+  if [[ -z "$(env_value "$file" REVERB_BROADCAST_SCHEME)" ]]; then
+    set_env_var "$file" REVERB_BROADCAST_SCHEME http
+  fi
+
+  if [[ -n "$domain" ]]; then
+    if [[ -z "$(env_value "$file" REVERB_PUBLIC_HOST)" ]]; then
+      set_env_var "$file" REVERB_PUBLIC_HOST "$domain"
+    fi
+    if [[ -z "$(env_value "$file" REVERB_PUBLIC_PORT)" ]]; then
+      set_env_var "$file" REVERB_PUBLIC_PORT 443
+    fi
+    if [[ -z "$(env_value "$file" REVERB_PUBLIC_SCHEME)" ]]; then
+      set_env_var "$file" REVERB_PUBLIC_SCHEME https
+    fi
+  fi
+}
+
 echo "==> Validar .env raiz (Docker)"
 for key in MYSQL_ROOT_PASSWORD MYSQL_PASSWORD MYSQL_USER MYSQL_DATABASE CENTRAL_DOMAIN; do
   require_env "$ENV_FILE" "$key"
@@ -158,6 +216,7 @@ done
 ensure_app_key "$ENV_FILE"
 sync_db_credentials "$ENV_FILE"
 ensure_redis_drivers "$ENV_FILE"
+ensure_reverb_config "$ENV_FILE"
 
 echo "==> Copiar .env raiz para Laravel (volume Docker não inclui symlink fora de /var/www)"
 cp "$ENV_FILE" "$LARAVEL_ENV"
