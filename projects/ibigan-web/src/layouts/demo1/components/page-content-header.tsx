@@ -150,7 +150,7 @@ export function PageContentHeader({
   return (
     <div
       ref={headerRef}
-      className="page-content-header shrink-0 max-xl:bg-background"
+      className="page-content-header shrink-0 max-xl:bg-background max-xl:shadow-[0_1px_0_0_var(--border)]"
     >
       <Container className={containerClassName}>{content}</Container>
     </div>

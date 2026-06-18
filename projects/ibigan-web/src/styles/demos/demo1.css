@@ -81,6 +81,11 @@
       box-shadow: 0 1px 0 var(--border);
     }
 
+    .demo1 .equipamento-mobile-toolbar {
+      background-color: var(--background);
+      box-shadow: 0 1px 0 var(--border);
+    }
+
     .demo1 .page-content-scroll.equipcontrol-page .page-content-header > .container-fluid {
       padding-bottom: 1rem;
     }
