@@ -10,12 +10,21 @@ use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
+use Tests\TestCase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     $tenantId = 'tenant-'.uniqid();
-    $this->tenant = Tenant::create(['id' => $tenantId, 'slug' => $tenantId, 'name' => 'Test']);
+
+    /** @var TestCase&object{tenant: Tenant, admin: User, viewer: User} $this */
+    $this->tenant = Tenant::create([
+        'id' => $tenantId,
+        'slug' => $tenantId,
+        'name' => 'Test',
+        'timezone' => config('app.default_timezone'),
+        'is_active' => true,
+    ]);
     $this->tenant->run(fn () => $this->seed(RolePermissionSeeder::class));
 
     $this->admin = $this->tenant->run(function (): User {
