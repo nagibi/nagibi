@@ -394,3 +394,27 @@ it('rejeita download csv com url não assinada', function (): void {
     $this->get("/api/v1/tenants/{$this->tenant->id}/reports/{$template->id}/executions/{$execution->id}/download")
         ->assertForbidden();
 });
+
+it('marca execuções antigas em running como failed ao listar histórico', function (): void {
+    $template = $this->tenant->run(fn () => ReportTemplate::factory()->create([
+        'created_by' => $this->admin->id,
+        'query' => 'SELECT id FROM users LIMIT 1',
+        'is_active' => true,
+    ]));
+
+    $this->tenant->run(fn () => \App\Models\ReportExecution::query()->create([
+        'report_template_id' => $template->id,
+        'executed_by' => $this->admin->id,
+        'parameters' => [],
+        'status' => 'running',
+        'progress_message' => 'Processando registros...',
+        'executed_at' => now()->subHours(2),
+    ]));
+
+    Sanctum::actingAs($this->admin, ['*'], 'sanctum');
+
+    $this->getJson("/api/v1/reports/{$template->id}/executions", reportHeaders($this->tenant->id))
+        ->assertOk()
+        ->assertJsonPath('result.data.0.status', 'failed')
+        ->assertJsonPath('result.data.0.error_message', 'Execução expirada ou interrompida.');
+});

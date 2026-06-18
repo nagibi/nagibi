@@ -23,6 +23,9 @@ import {
   reportParameterRules,
 } from '@/lib/report-execute-form';
 import {
+  hasRecentInProgressExecutions,
+} from '@/lib/report-execution-polling';
+import {
   reportsService,
   type ReportColumn,
   type ReportExecution,
@@ -164,7 +167,7 @@ export function ReportExecutePage() {
     enabled: Number.isFinite(reportId),
     refetchInterval: (query) => {
       const items = query.state.data?.data?.result?.data ?? [];
-      return items.some((item) => ['queued', 'running'].includes(item.status)) ? 3000 : false;
+      return hasRecentInProgressExecutions(items) ? 3000 : false;
     },
   });
 

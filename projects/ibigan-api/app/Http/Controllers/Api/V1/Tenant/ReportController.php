@@ -14,6 +14,7 @@ use App\Support\GridFilter;
 use App\Services\ReportService;
 use App\Support\ApiResponse;
 use App\Support\ReportCsvExporter;
+use App\Support\ReportExecutionStaleResolver;
 use App\Support\ReportResultStorage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -187,6 +188,8 @@ final class ReportController extends Controller
         abort_unless($request->user()->can('relatorio-visualizar'), Response::HTTP_FORBIDDEN);
         abort_unless($execution->report_template_id === $report->id, Response::HTTP_NOT_FOUND);
 
+        ReportExecutionStaleResolver::failStale($execution);
+
         return response()->json([
             'status' => 1,
             'result' => [
@@ -270,6 +273,8 @@ final class ReportController extends Controller
     {
         abort_unless($request->user()->can('relatorio-visualizar'), Response::HTTP_FORBIDDEN);
 
+        ReportExecutionStaleResolver::failStaleForReport($report->id);
+
         $executions = $report->executions()
             ->with('executor')
             ->orderByDesc('executed_at')
@@ -305,6 +310,14 @@ final class ReportController extends Controller
     public function myExecutions(Request $request): JsonResponse
     {
         abort_unless($request->user()->can('relatorio-visualizar'), Response::HTTP_FORBIDDEN);
+
+        ReportExecutionStaleResolver::staleQuery(
+            ReportExecution::query()->where('executed_by', $request->user()->id),
+        )->update([
+            'status' => 'failed',
+            'error_message' => 'Execução expirada ou interrompida.',
+            'progress_message' => 'Encerrada automaticamente.',
+        ]);
 
         $executions = ReportExecution::with('template')
             ->where('executed_by', $request->user()->id)

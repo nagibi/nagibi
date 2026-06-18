@@ -33,6 +33,7 @@ import { GridColumnsControl } from '@/components/grid/grid-columns-control';
 import { getGridRecordCount } from '@/components/grid/grid-record-count';
 import { GridResetControl } from '@/components/grid/grid-reset-control';
 import { GridViewModeControl } from '@/components/grid/grid-view-mode-control';
+import { hasRecentInProgressExecutions } from '@/lib/report-execution-polling';
 import {
   downloadReportResultCsvWithToast,
   reportsService,
@@ -136,7 +137,7 @@ export function MyExecutionsPage() {
     queryFn: () => reportsService.myExecutions(grid.page, requestPerPage),
     refetchInterval: (query) => {
       const items = query.state.data?.data.result.data ?? [];
-      return items.some((item) => ['queued', 'running'].includes(item.status)) ? 3000 : false;
+      return hasRecentInProgressExecutions(items) ? 3000 : false;
     },
   });
 

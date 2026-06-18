@@ -72,6 +72,25 @@ final class ProcessReportJob implements ShouldQueue
         }
     }
 
+    public function failed(?\Throwable $exception = null): void
+    {
+        if (! tenancy()->initialized) {
+            return;
+        }
+
+        $execution = ReportExecution::query()->find($this->executionId);
+
+        if ($execution === null || ! in_array($execution->status, ['pending', 'queued', 'running'], true)) {
+            return;
+        }
+
+        $execution->update([
+            'status' => 'failed',
+            'error_message' => $exception?->getMessage() ?? 'Falha ao processar relatório.',
+            'progress_message' => 'Erro na execução.',
+        ]);
+    }
+
     private function notifyReportCompleted(
         NotificationPreferenceService $prefService,
         User $user,
