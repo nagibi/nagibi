@@ -13,7 +13,7 @@ final class EmailLayout
         ?string $buttonUrl = null,
         ?string $afterButtonHtml = null,
     ): string {
-        $brandName = (string) config('email-branding.brand_name', 'Ibigan');
+        $brandName = (string) config('email-branding.brand_name', 'Nagibi');
         $accentColor = (string) config('email-branding.accent_color', '#F8285A');
         $logoUrl = (string) (config('email-branding.logo_url') ?: config('email-branding.logo_fallback_url'));
         $bgUrl = (string) config('email-branding.background_image_url');

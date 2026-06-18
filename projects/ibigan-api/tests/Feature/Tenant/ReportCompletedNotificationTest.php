@@ -158,7 +158,7 @@ it('monta email html com botao download', function (): void {
     expect($rendered)->toContain('Campanhas por tenant');
     expect($rendered)->toContain('DOWNLOAD');
     expect($rendered)->toContain('3 registros encontrados em 2ms');
-    expect($rendered)->toContain('Equipe Ibigan');
+    expect($rendered)->toContain('Equipe Nagibi');
 });
 
 it('define destinatario no email de relatorio concluido', function (): void {

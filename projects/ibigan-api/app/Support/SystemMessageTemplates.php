@@ -27,7 +27,7 @@ final class SystemMessageTemplates
      */
     public static function defaultDefinitions(): array
     {
-        $brand = (string) config('email-branding.brand_name', 'Ibigan');
+        $brand = (string) config('email-branding.brand_name', 'Nagibi');
 
         return [
             [
