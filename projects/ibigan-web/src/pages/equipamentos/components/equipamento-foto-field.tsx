@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ImagePlus, Star, ZoomIn, X } from 'lucide-react';
+import { Camera, ImagePlus, Star, ZoomIn, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -41,7 +41,8 @@ export function EquipamentoFotosField({
   onPrincipalChange,
   className,
 }: EquipamentoFotosFieldProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [cropOpen, setCropOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
@@ -318,18 +319,41 @@ export function EquipamentoFotosField({
         )}
 
         <div className={cn('flex flex-wrap gap-2', hasPhotos ? 'mt-3' : 'mt-0')}>
-          <Button type="button" size="sm" variant="outline" onClick={() => inputRef.current?.click()}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => galleryInputRef.current?.click()}
+          >
             <ImagePlus className="size-4" />
-            Adicionar fotos
+            Galeria
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => cameraInputRef.current?.click()}
+          >
+            <Camera className="size-4" />
+            Tirar foto
           </Button>
         </div>
       </div>
 
       <input
-        ref={inputRef}
+        ref={galleryInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
         multiple
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        capture="environment"
         className="hidden"
         onChange={handleFileChange}
       />
