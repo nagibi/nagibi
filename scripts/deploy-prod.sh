@@ -25,10 +25,47 @@ require_env() {
   fi
 }
 
+ensure_app_key() {
+  local file="$1"
+  local current
+  current="$(grep -E '^APP_KEY=' "$file" | tail -n1 | cut -d= -f2- | tr -d '\r' || true)"
+  if [[ -n "$current" ]]; then
+    return 0
+  fi
+
+  if [[ -f "$LARAVEL_ENV" ]]; then
+    current="$(grep -E '^APP_KEY=' "$LARAVEL_ENV" | tail -n1 | cut -d= -f2- | tr -d '\r' || true)"
+    if [[ -n "$current" ]]; then
+      echo "==> APP_KEY recuperada de $LARAVEL_ENV"
+      if grep -qE '^APP_KEY=' "$file"; then
+        sed -i "s|^APP_KEY=.*|APP_KEY=${current}|" "$file"
+      else
+        echo "APP_KEY=${current}" >> "$file"
+      fi
+      return 0
+    fi
+  fi
+
+  if ! command -v openssl >/dev/null 2>&1; then
+    echo "ERRO: APP_KEY ausente em ${file}. Gere com: php artisan key:generate --show" >&2
+    exit 1
+  fi
+
+  local key="base64:$(openssl rand -base64 32)"
+  echo "==> Gerar APP_KEY em ${file}"
+  if grep -qE '^APP_KEY=' "$file"; then
+    sed -i "s|^APP_KEY=.*|APP_KEY=${key}|" "$file"
+  else
+    echo "APP_KEY=${key}" >> "$file"
+  fi
+}
+
 echo "==> Validar .env raiz (Docker)"
 for key in MYSQL_ROOT_PASSWORD MYSQL_PASSWORD MYSQL_USER MYSQL_DATABASE CENTRAL_DOMAIN; do
   require_env "$ENV_FILE" "$key"
 done
+
+ensure_app_key "$ENV_FILE"
 
 echo "==> Copiar .env raiz para Laravel (volume Docker não inclui symlink fora de /var/www)"
 cp "$ENV_FILE" "$LARAVEL_ENV"
