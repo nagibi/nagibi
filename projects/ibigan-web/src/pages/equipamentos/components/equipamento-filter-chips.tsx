@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
+import { GridBadge } from '@/components/grid/grid-badge';
 import { cn } from '@/lib/utils';
 import {
   FILTER_LABELS,
@@ -39,27 +40,32 @@ export function EquipamentoFilterChips({ mode }: EquipamentoFilterChipsProps) {
   };
 
   return (
-    <div className="grid min-w-0 grid-cols-4 gap-2">
-        {filters.map((filter) => {
-          const isActive = filter === activeFilter;
+    <div className="flex flex-wrap items-center gap-2">
+      {filters.map((filter) => {
+        const isActive = filter === activeFilter;
 
-          return (
+        return (
+          <GridBadge
+            key={filter}
+            size="md"
+            variant={isActive ? 'primary' : 'outline'}
+            className={cn(
+              'max-w-full',
+              !isActive && 'text-muted-foreground',
+            )}
+            asChild
+          >
             <button
-              key={filter}
               type="button"
               aria-pressed={isActive}
               onClick={() => handleSelect(filter)}
-              className={cn(
-                'w-full min-w-0 rounded-full border px-2 py-1 text-[11px] font-medium transition-colors sm:px-3 sm:text-xs',
-                isActive
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground',
-              )}
+              className="inline-flex max-w-full items-center whitespace-nowrap"
             >
-              <span className="block truncate">{FILTER_LABELS[filter]}</span>
+              {FILTER_LABELS[filter]}
             </button>
-          );
-        })}
+          </GridBadge>
+        );
+      })}
     </div>
   );
 }

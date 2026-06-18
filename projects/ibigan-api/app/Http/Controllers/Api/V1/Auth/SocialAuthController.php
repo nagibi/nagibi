@@ -9,6 +9,7 @@ use App\Models\Central\CentralUser;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\TenantContextResolver;
+use App\Support\SocialOAuthUrl;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,6 +32,7 @@ final class SocialAuthController extends Controller
             ?? app(TenantContextResolver::class)->resolveTenantId($request);
 
         $driver = Socialite::driver($provider)
+            ->redirectUrl(SocialOAuthUrl::redirectUri($request, $provider))
             ->with(['state' => $tenantId ?? ''])
             ->stateless();
 
@@ -46,9 +48,12 @@ final class SocialAuthController extends Controller
         $this->assertProvider($provider);
 
         try {
-            $socialUser = Socialite::driver($provider)->stateless()->user();
+            $socialUser = Socialite::driver($provider)
+                ->redirectUrl(SocialOAuthUrl::redirectUri($request, $provider))
+                ->stateless()
+                ->user();
             $tenantId = $request->input('state', $request->query('state', ''));
-            $frontUrl = config('app.frontend_url');
+            $frontUrl = SocialOAuthUrl::frontendUrl($request);
 
             if ($tenantId === self::CENTRAL_OAUTH_STATE) {
                 return $this->handleCentralCallback($socialUser, $provider, $frontUrl);
@@ -67,7 +72,7 @@ final class SocialAuthController extends Controller
                 ? '/central/login?error=oauth_failed'
                 : '/auth/login?error=oauth_failed&msg='.urlencode($e->getMessage());
 
-            return redirect(config('app.frontend_url').$loginPath);
+            return redirect(SocialOAuthUrl::frontendUrl($request).$loginPath);
         }
     }
 

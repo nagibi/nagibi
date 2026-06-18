@@ -27,7 +27,7 @@ export function GridQuickFilters<T extends string>({
   const resetValue = defaultValue ?? options[0]?.value;
 
   return (
-    <div className={cn('flex shrink-0 flex-wrap items-center gap-2', className)}>
+    <div className={cn('flex flex-wrap items-center gap-2', className)}>
       {options.map((option) => {
         const Icon = option.icon;
         const isActive = value === option.value;

@@ -9,6 +9,8 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+    // LAN / OAuth dev (nip.io, sslip.io) e subdomínios locais
+    allowedHosts: ['localhost', '.localhost', '.nip.io', '.sslip.io'],
     // Browser loads the app via nginx on :80; HMR WebSocket must use the same port.
     hmr: {
       clientPort: 80,

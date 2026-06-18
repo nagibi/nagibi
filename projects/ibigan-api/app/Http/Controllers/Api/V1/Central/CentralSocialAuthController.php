@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1\Central;
 
 use App\Http\Controllers\Api\V1\Auth\SocialAuthController;
 use App\Http\Controllers\Controller;
+use App\Support\SocialOAuthUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;
@@ -20,6 +21,7 @@ final class CentralSocialAuthController extends Controller
         $this->assertProvider($provider);
 
         $driver = Socialite::driver($provider)
+            ->redirectUrl(SocialOAuthUrl::redirectUri($request, $provider))
             ->with(['state' => SocialAuthController::CENTRAL_OAUTH_STATE])
             ->stateless();
 

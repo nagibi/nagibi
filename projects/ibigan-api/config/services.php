@@ -38,7 +38,10 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET', env('GOOGLE_SECRET')),
-        'redirect' => env('GOOGLE_REDIRECT_URI'),
+        'redirect' => env(
+            'GOOGLE_REDIRECT_URI',
+            rtrim((string) env('APP_URL', 'http://localhost'), '/').'/api/v1/auth/google/callback',
+        ),
     ],
 
     'apple' => [

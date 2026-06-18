@@ -381,7 +381,7 @@ export function GridPanelToolbar({
           </div>
 
           {quickFiltersControl || (onSearch && !hideToolbarSearchOnMobile) ? (
-            <div className="flex w-full min-w-0 items-center gap-2 xl:w-auto xl:shrink-0">
+            <div className="flex w-full flex-wrap items-center gap-2 xl:w-auto xl:shrink-0">
               {quickFiltersControl}
               {onSearch && !hideToolbarSearchOnMobile ? (
                 <div className="min-w-0 flex-1 xl:w-56">
