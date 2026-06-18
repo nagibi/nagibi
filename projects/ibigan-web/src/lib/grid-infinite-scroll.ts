@@ -38,7 +38,22 @@ export function getClientInfiniteSlice<T>(items: T[], page: number, perPage: num
 }
 
 export function appendGridInfinitePage<T>(previous: T[], pageItems: T[], page: number) {
-  return page === 1 ? pageItems : [...previous, ...pageItems];
+  if (page === 1) {
+    if (previous.length === 0 && pageItems.length === 0) {
+      return previous;
+    }
+
+    if (
+      previous.length === pageItems.length
+      && previous.every((item, index) => item === pageItems[index])
+    ) {
+      return previous;
+    }
+
+    return pageItems;
+  }
+
+  return [...previous, ...pageItems];
 }
 
 export function buildServerGridInfiniteScrollProps(options: {

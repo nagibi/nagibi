@@ -21,6 +21,41 @@ export type PageToolbarConfig = {
 
 type Listener = () => void;
 
+function areBreadcrumbsEqual(
+  a?: PageBreadcrumbItem[],
+  b?: PageBreadcrumbItem[],
+): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+
+  return a.every((item, index) => {
+    const other = b[index];
+    return (
+      item.title === other.title
+      && item.path === other.path
+      && item.icon === other.icon
+    );
+  });
+}
+
+function areAlertsEqual(
+  a?: ToolbarAlertConfig | null,
+  b?: ToolbarAlertConfig | null,
+): boolean {
+  if (a === b) return true;
+  if (!a || !b) return !a && !b;
+
+  return (
+    a.variant === b.variant
+    && a.title === b.title
+    && a.id === b.id
+    && a.autoDismissMs === b.autoDismissMs
+    && a.actions === b.actions
+    && a.icon === b.icon
+    && a.onClose === b.onClose
+  );
+}
+
 function isSameToolbarConfig(
   current: PageToolbarConfig | null,
   next: PageToolbarConfig | null,
@@ -33,8 +68,8 @@ function isSameToolbarConfig(
     && current.description === next.description
     && current.headerActions === next.headerActions
     && current.actions === next.actions
-    && current.alert === next.alert
-    && current.breadcrumbs === next.breadcrumbs
+    && areAlertsEqual(current.alert, next.alert)
+    && areBreadcrumbsEqual(current.breadcrumbs, next.breadcrumbs)
   );
 }
 
@@ -52,13 +87,17 @@ class PageToolbarStore {
   setConfig = (next: PageToolbarConfig | null) => {
     if (isSameToolbarConfig(this.config, next)) return;
     this.config = next;
-    this.listeners.forEach((listener) => listener());
+    queueMicrotask(() => {
+      this.listeners.forEach((listener) => listener());
+    });
   };
 
   clearPageAlert = () => {
     if (!this.config?.alert) return;
     this.config = { ...this.config, alert: null };
-    this.listeners.forEach((listener) => listener());
+    queueMicrotask(() => {
+      this.listeners.forEach((listener) => listener());
+    });
   };
 }
 

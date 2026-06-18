@@ -89,8 +89,12 @@ export function Demo1Layout() {
   }, [resolvedTheme, setOption, settings.layouts.demo1.sidebarTheme]);
 
   useEffect(() => {
+    if (settings.layout === 'demo1') {
+      return;
+    }
+
     setOption('layout', 'demo1');
-  }, [setOption]);
+  }, [setOption, settings.layout]);
 
   useEffect(() => {
     const bodyClass = document.body.classList;

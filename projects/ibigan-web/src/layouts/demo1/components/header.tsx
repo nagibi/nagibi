@@ -87,6 +87,7 @@ export function Header() {
                     className="mobile-sidebar-sheet p-0 gap-0"
                     side="left"
                     close={false}
+                    accessibilityTitle="Menu de navegação"
                   >
                     <SheetHeader className="p-0 space-y-0" />
                     <SheetBody className="p-0">
@@ -109,6 +110,7 @@ export function Header() {
                     className="mobile-sidebar-sheet p-0 gap-0"
                     side="left"
                     close={false}
+                    accessibilityTitle="Menu de módulos"
                   >
                     <SheetHeader className="p-0 space-y-0" />
                     <SheetBody className="p-0">

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useGridInfiniteScroll } from '@/hooks/use-grid-infinite-scroll';
 import type { useGrid } from '@/hooks/use-grid';
 import type { useGridFilters } from '@/hooks/use-grid-filters';
@@ -7,7 +7,15 @@ import type { CatalogPaginationMeta } from '@/types/equipamento-catalog';
 type GridState = ReturnType<typeof useGrid>;
 type ColumnFiltersState = ReturnType<typeof useGridFilters>;
 
-export function useCatalogInfiniteDisplay<T>({
+function catalogItemsSignature<T extends { id?: number | string }>(items: T[]) {
+  if (items.length === 0) {
+    return '@empty';
+  }
+
+  return items.map((item) => String(item.id ?? '')).join(',');
+}
+
+export function useCatalogInfiniteDisplay<T extends { id?: number | string }>({
   items,
   meta,
   isLoading,
@@ -45,9 +53,14 @@ export function useCatalogInfiniteDisplay<T>({
     ],
   });
 
+  const itemsSignature = useMemo(
+    () => catalogItemsSignature(items),
+    [items],
+  );
+
   useEffect(() => {
     infiniteScroll.receivePage(items, grid.page);
-  }, [grid.page, infiniteScroll.receivePage, items]);
+  }, [grid.page, infiniteScroll.receivePage, itemsSignature]);
 
   const displayItems = infiniteScrollEnabled ? infiniteScroll.items : items;
 

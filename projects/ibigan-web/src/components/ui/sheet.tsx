@@ -56,29 +56,59 @@ const sheetVariants = cva(
   },
 );
 
+function containsSheetSlot(node: React.ReactNode, slot: 'sheet-title' | 'sheet-description'): boolean {
+  return React.Children.toArray(node).some((child) => {
+    if (!React.isValidElement(child)) {
+      return false;
+    }
+
+    if (child.props?.['data-slot'] === slot) {
+      return true;
+    }
+
+    if (child.props?.children) {
+      return containsSheetSlot(child.props.children, slot);
+    }
+
+    return false;
+  });
+}
+
 interface SheetContentProps
   extends React.ComponentProps<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {
   overlay?: boolean;
   close?: boolean;
+  /** Screen-reader title when children omit `SheetTitle`. Pass `false` to skip. */
+  accessibilityTitle?: string | false;
 }
 
 function SheetContent({
   side = 'right',
   overlay = true,
   close = true,
+  accessibilityTitle = 'Painel',
   className,
   children,
+  'aria-describedby': ariaDescribedBy,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & SheetContentProps) {
+  const hasTitle = containsSheetSlot(children, 'sheet-title');
+  const hasDescription = containsSheetSlot(children, 'sheet-description');
+  const showAutoTitle = !hasTitle && accessibilityTitle !== false;
+
   return (
     <SheetPortal>
       {overlay && <SheetOverlay />}
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(sheetVariants({ side }), className)}
+        aria-describedby={hasDescription ? ariaDescribedBy : (ariaDescribedBy ?? undefined)}
         {...props}
       >
+        {showAutoTitle ? (
+          <SheetPrimitive.Title className="sr-only">{accessibilityTitle}</SheetPrimitive.Title>
+        ) : null}
         {children}
         {close && (
           <SheetPrimitive.Close

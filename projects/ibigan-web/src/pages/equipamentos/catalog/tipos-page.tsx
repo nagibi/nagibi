@@ -9,6 +9,7 @@ import { ptBR } from 'date-fns/locale';
 import { Trash2 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { TipoEquipamentoCatalog } from '@/types/equipamento-catalog';
+import type { PageBreadcrumbItem } from '@/lib/build-page-breadcrumbs';
 import { parseGridUrlState } from '@/lib/grid-url-state';
 import { GRID_VIEW_ICON } from '@/lib/grid-view-action';
 import { toggleActiveLabelsFromEntity } from '@/lib/toggle-active-alert';
@@ -58,6 +59,11 @@ import { useCatalogInfiniteDisplay } from '@/pages/equipamentos/catalog/use-cata
 
 const TIPOS_ACTIVITY_LOG_TYPE = 'tipos';
 const GRID_COLUMNS_KEY = 'grid-columns:equipamentos-tipos';
+const EMPTY_TIPOS: TipoEquipamentoCatalog[] = [];
+const TIPOS_TOOLBAR_BREADCRUMBS: PageBreadcrumbItem[] = [
+  { title: 'Equipamentos', path: '/equipamentos' },
+  { title: 'Tipos' },
+];
 
 function formatAuditDate(value?: string | null) {
   if (!value) return '—';
@@ -75,13 +81,8 @@ export function TiposPage() {
     VIEW_PREFERENCE_KEYS.equipamentosTipos,
   );
 
-  const grid = useGrid({
-    defaultPage: initialUrlState.page,
-    defaultPerPage: initialUrlState.perPage,
-    defaultSearch: initialUrlState.search,
-    defaultSort: initialUrlState.sort,
-    defaultSortDir: initialUrlState.sortDir,
-    onActivate: async (ids) => {
+  const handleActivate = useCallback(
+    async (ids: number[]) => {
       try {
         await Promise.all(
           ids.map((itemId) =>
@@ -104,7 +105,11 @@ export function TiposPage() {
         throw error;
       }
     },
-    onDeactivate: async (ids) => {
+    [queryClient, showError, showToggleActive],
+  );
+
+  const handleDeactivate = useCallback(
+    async (ids: number[]) => {
       try {
         await Promise.all(
           ids.map((itemId) =>
@@ -127,6 +132,17 @@ export function TiposPage() {
         throw error;
       }
     },
+    [queryClient, showError, showToggleActive],
+  );
+
+  const grid = useGrid({
+    defaultPage: initialUrlState.page,
+    defaultPerPage: initialUrlState.perPage,
+    defaultSearch: initialUrlState.search,
+    defaultSort: initialUrlState.sort,
+    defaultSortDir: initialUrlState.sortDir,
+    onActivate: handleActivate,
+    onDeactivate: handleDeactivate,
   });
 
   const columnFilters = useGridFilters(() => grid.setPage(1), {
@@ -191,7 +207,7 @@ export function TiposPage() {
     staleTime: 30_000,
   });
 
-  const items = data?.data ?? [];
+  const items = data?.data ?? EMPTY_TIPOS;
   const meta = data?.meta;
   const { displayItems, infiniteScroll, resolvedMeta } = useCatalogInfiniteDisplay({
     items,
@@ -466,10 +482,7 @@ export function TiposPage() {
   usePageToolbar({
     title: 'Tipos',
     description: 'Cadastro de tipos de equipamento',
-    breadcrumbs: [
-      { title: 'Equipamentos', path: '/equipamentos' },
-      { title: 'Tipos' },
-    ],
+    breadcrumbs: TIPOS_TOOLBAR_BREADCRUMBS,
     actions: toolbarActions,
   });
 

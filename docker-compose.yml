@@ -247,6 +247,9 @@ services:
     build: ./docker/vite
     container_name: nagibi_vite
     restart: unless-stopped
+    environment:
+      VITE_DEV_API_PROXY: http://nginx:80
+      VITE_HMR_CLIENT_PORT: ${NGINX_HTTP_PORT:-80}
     ports:
       - "${VITE_PORT:-5174}:5173"
     volumes:

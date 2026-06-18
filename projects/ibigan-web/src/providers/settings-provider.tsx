@@ -97,11 +97,21 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const setOption = useCallback(<T,>(path: string, value: T) => {
-    setSettings((prev) => setToPath({ ...prev }, path, value));
+    setSettings((prev) => {
+      if (Object.is(getFromPath(prev, path), value)) {
+        return prev;
+      }
+
+      return setToPath({ ...prev }, path, value);
+    });
   }, []);
 
   const storeOption = useCallback(<T,>(path: string, value: T) => {
     setSettings((prev) => {
+      if (Object.is(getFromPath(prev, path), value)) {
+        return prev;
+      }
+
       const newSettings = setToPath({ ...prev }, path, value);
       storeLeaf(path, value);
       return newSettings;
