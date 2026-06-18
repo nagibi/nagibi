@@ -66,6 +66,10 @@ final class DevToolsLinks extends Command
         $this->line("  <fg=blue>Clockwork</>   {$clockworkUrl}");
         $this->line("  <fg=blue>Log Viewer</>  {$logViewerUrl}");
         $this->line("  <fg=blue>API Docs</>    {$apiDocsUrl}");
+        $this->line("  <fg=blue>Grafana</>     ".(string) config('dev-tools.grafana_url'));
+        $this->line("  <fg=blue>Prometheus</>  ".(string) config('dev-tools.prometheus_url'));
+        $this->line("  <fg=blue>cAdvisor</>    ".(string) config('dev-tools.cadvisor_url'));
+        $this->line("  <fg=blue>Sentry</>      ".(string) config('dev-tools.sentry_url'));
         $this->newLine();
         $this->comment('Os links redirecionam e gravam cookie de acesso (válido pelo tempo da sessão).');
 

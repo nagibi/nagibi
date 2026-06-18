@@ -20,6 +20,12 @@ final class TemplateMailable extends Mailable
         private readonly string $emailBody,
     ) {}
 
+    public static function forNotifiable(object $notifiable, string $emailSubject, string $emailBody): self
+    {
+        return (new self($emailSubject, $emailBody))
+            ->to($notifiable->routeNotificationFor('mail'));
+    }
+
     public function envelope(): Envelope
     {
         return new Envelope(subject: $this->emailSubject);

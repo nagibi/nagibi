@@ -448,6 +448,58 @@ class MenuSeeder extends Seeder
             'roles' => ['admin', 'super-admin'],
         ]);
 
+        Menu::create([
+            'title' => 'Grafana',
+            'slug' => 'grafana',
+            'icon' => 'LineChart',
+            'path' => config('dev-tools.grafana_url'),
+            'target' => '_blank',
+            'parent_id' => $ferramentas->id,
+            'order' => 7,
+            'is_active' => true,
+            'requires_auth' => true,
+            'roles' => ['admin', 'super-admin'],
+        ]);
+
+        Menu::create([
+            'title' => 'Prometheus',
+            'slug' => 'prometheus',
+            'icon' => 'Flame',
+            'path' => config('dev-tools.prometheus_url'),
+            'target' => '_blank',
+            'parent_id' => $ferramentas->id,
+            'order' => 8,
+            'is_active' => true,
+            'requires_auth' => true,
+            'roles' => ['admin', 'super-admin'],
+        ]);
+
+        Menu::create([
+            'title' => 'cAdvisor',
+            'slug' => 'cadvisor',
+            'icon' => 'Container',
+            'path' => config('dev-tools.cadvisor_url'),
+            'target' => '_blank',
+            'parent_id' => $ferramentas->id,
+            'order' => 9,
+            'is_active' => true,
+            'requires_auth' => true,
+            'roles' => ['admin', 'super-admin'],
+        ]);
+
+        Menu::create([
+            'title' => 'Sentry',
+            'slug' => 'sentry',
+            'icon' => 'Bug',
+            'path' => config('dev-tools.sentry_url'),
+            'target' => '_blank',
+            'parent_id' => $ferramentas->id,
+            'order' => 10,
+            'is_active' => true,
+            'requires_auth' => true,
+            'roles' => ['admin', 'super-admin'],
+        ]);
+
         // ── Configurações ─────────────────────────────────────────
         $configuracoes = Menu::create([
             'title' => 'Configurações',
@@ -496,6 +548,10 @@ class MenuSeeder extends Seeder
             'log-viewer' => 'menu.log_viewer',
             'phpmyadmin' => 'menu.phpmyadmin',
             'mailpit' => 'menu.mailpit',
+            'grafana' => 'menu.grafana',
+            'prometheus' => 'menu.prometheus',
+            'cadvisor' => 'menu.cadvisor',
+            'sentry' => 'menu.sentry',
             'configuracoes' => 'menu.settings',
         ];
 

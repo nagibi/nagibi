@@ -109,14 +109,21 @@ final class ProcessReportJob implements ShouldQueue
         }
 
         if ($prefService->isEnabled($user, 'report.completed', 'email')) {
-            try {
-                $user->notify(new ReportCompletedNotification($execution, 'email'));
-            } catch (\Throwable $e) {
-                Log::warning('Falha ao enviar e-mail de relatório concluído.', [
+            if (! is_string($user->email) || trim($user->email) === '') {
+                Log::warning('Relatório concluído sem e-mail: usuário sem endereço cadastrado.', [
                     'execution_id' => $execution->id,
                     'user_id' => $user->id,
-                    'error' => $e->getMessage(),
                 ]);
+            } else {
+                try {
+                    $user->notify(new ReportCompletedNotification($execution, 'email'));
+                } catch (\Throwable $e) {
+                    Log::warning('Falha ao enviar e-mail de relatório concluído.', [
+                        'execution_id' => $execution->id,
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
         }
     }

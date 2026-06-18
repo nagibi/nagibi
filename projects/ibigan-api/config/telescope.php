@@ -19,6 +19,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Record All Entries In Production
+    |--------------------------------------------------------------------------
+    |
+    | By default, only exceptions, failed requests/jobs and monitored tags are
+    | stored outside the "local" environment. Set to true to record everything
+    | (requests, queries, jobs, etc.) — useful for debugging production.
+    |
+    */
+
+    'record_all' => env('TELESCOPE_RECORD_ALL', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Telescope Domain
     |--------------------------------------------------------------------------
     |

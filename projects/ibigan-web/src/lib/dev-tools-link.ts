@@ -1,4 +1,9 @@
-import { DEV_TOOLS_URLS, resolveDevToolsUrl } from '@/lib/dev-tools-urls';
+import {
+  DEV_TOOLS_URLS,
+  EXTERNAL_DEV_TOOLS_URLS,
+  isLaravelDevToolsPathname,
+  resolveDevToolsUrl,
+} from '@/lib/dev-tools-urls';
 
 const DEV_TOOLS_PATHS = new Set<string>(Object.values(DEV_TOOLS_URLS));
 
@@ -7,19 +12,32 @@ function isDevToolsPath(path: string): boolean {
     return true;
   }
 
+  if (EXTERNAL_DEV_TOOLS_URLS.has(path)) {
+    return true;
+  }
+
   try {
     const normalized = new URL(path, 'http://localhost').pathname.replace(/\/$/, '');
 
-    return normalized === '/docs/api'
-      || normalized === '/horizon'
-      || normalized === '/telescope'
-      || normalized === '/clockwork'
-      || normalized === '/log-viewer'
-      || normalized.endsWith('/docs/api')
-      || normalized.endsWith('/horizon')
-      || normalized.endsWith('/telescope')
-      || normalized.endsWith('/clockwork')
-      || normalized.endsWith('/log-viewer');
+    return isLaravelDevToolsPathname(normalized);
+  } catch {
+    return path.includes('/docs/api')
+      || path.includes('/horizon')
+      || path.includes('/telescope')
+      || path.includes('/clockwork')
+      || path.includes('/log-viewer');
+  }
+}
+
+function requiresDevToolsAccessToken(path: string): boolean {
+  if (!isDevToolsPath(path) || EXTERNAL_DEV_TOOLS_URLS.has(path)) {
+    return false;
+  }
+
+  try {
+    const normalized = new URL(path, 'http://localhost').pathname.replace(/\/$/, '');
+
+    return isLaravelDevToolsPathname(normalized);
   } catch {
     return path.includes('/docs/api')
       || path.includes('/horizon')
@@ -45,11 +63,13 @@ function resolveTenantId(token: string): string | null {
 }
 
 export function buildDevToolsHref(path: string): string {
-  if (!isDevToolsPath(path)) {
-    return path;
+  const resolved = resolveDevToolsUrl(path);
+
+  if (!requiresDevToolsAccessToken(path)) {
+    return resolved;
   }
 
-  const url = new URL(resolveDevToolsUrl(path));
+  const url = new URL(resolved);
 
   const token = resolveAccessToken();
 

@@ -161,6 +161,38 @@ it('monta email html com botao download', function (): void {
     expect($rendered)->toContain('Equipe Ibigan');
 });
 
+it('define destinatario no email de relatorio concluido', function (): void {
+    tenancy()->initialize($this->tenant);
+
+    $template = ReportTemplate::query()->create([
+        'name' => 'Vendas mensais',
+        'slug' => 'vendas-mensais',
+        'query' => 'SELECT 1',
+        'parameters' => [],
+        'is_active' => true,
+        'created_by' => $this->user->id,
+    ]);
+
+    $execution = ReportExecution::query()->create([
+        'report_template_id' => $template->id,
+        'executed_by' => $this->user->id,
+        'parameters' => [],
+        'status' => 'completed',
+        'result_rows_count' => 10,
+        'duration_ms' => 900,
+        'result_expires_at' => now()->addDays(7),
+        'executed_at' => now(),
+    ]);
+
+    $execution->load('template');
+    URL::defaults(['tenant' => $this->tenant->id]);
+
+    $mail = (new ReportCompletedNotification($execution, 'email'))->toMail($this->user);
+
+    expect($mail)->toBeInstanceOf(TemplateMailable::class);
+    expect($mail->hasTo($this->user->email))->toBeTrue();
+});
+
 it('usa corpo do template cadastrado no banco', function (): void {
     tenancy()->initialize($this->tenant);
 

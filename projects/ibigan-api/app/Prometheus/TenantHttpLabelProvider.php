@@ -12,14 +12,15 @@ final class TenantHttpLabelProvider implements HttpLabelProvider
 {
     public function labelNames(): array
     {
-        return ['tenant', 'route', 'method', 'status'];
+        // BuiltInMetric HTTP metrics only support route, method, status.
+        // Tenant is encoded in the route label as "{tenant}|{route}".
+        return ['route', 'method', 'status'];
     }
 
     public function labelValues(Request $request, Response $response): array
     {
         return [
-            $this->resolveTenantId($request),
-            $this->resolveRouteName($request),
+            $this->resolveTenantId($request).'|'.$this->resolveRouteName($request),
             $request->getMethod(),
             (string) $response->getStatusCode(),
         ];

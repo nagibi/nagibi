@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Clock, ExternalLink, Gauge, ScrollText, Telescope } from 'lucide-react';
+import { BookOpen, Bug, Clock, Container, ExternalLink, Flame, Gauge, LineChart, ScrollText, Telescope } from 'lucide-react';
 import { usePageToolbar } from '@/hooks/use-page-toolbar';
 import { PageBody } from '@/components/common/page-body';
 import { buildDevToolsHref } from '@/lib/dev-tools-link';
-import { DEV_TOOLS_URLS } from '@/lib/dev-tools-urls';
+import { DEV_TOOLS_URLS, isLocalDevEnvironment, resolveLocalServiceUrl } from '@/lib/dev-tools-urls';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -30,6 +30,15 @@ export function AdminDevToolsPage() {
   });
 
   const tools = useMemo<DevToolItem[]>(() => {
+    const mailpitUrl = resolveLocalServiceUrl(
+      import.meta.env.VITE_DEV_MAILPIT_URL,
+      8025,
+    );
+    const phpMyAdminUrl = resolveLocalServiceUrl(
+      import.meta.env.VITE_DEV_PHPMYADMIN_URL,
+      8080,
+    );
+
     const items: DevToolItem[] = [
       {
         id: 'horizon',
@@ -66,22 +75,50 @@ export function AdminDevToolsPage() {
         url: DEV_TOOLS_URLS.apiDocs,
         icon: BookOpen,
       },
+      {
+        id: 'grafana',
+        titleKey: 'menu.grafana',
+        descriptionKey: 'admin.devtools.grafana_description',
+        url: DEV_TOOLS_URLS.grafana,
+        icon: LineChart,
+      },
+      {
+        id: 'prometheus',
+        titleKey: 'menu.prometheus',
+        descriptionKey: 'admin.devtools.prometheus_description',
+        url: DEV_TOOLS_URLS.prometheus,
+        icon: Flame,
+      },
+      {
+        id: 'cadvisor',
+        titleKey: 'menu.cadvisor',
+        descriptionKey: 'admin.devtools.cadvisor_description',
+        url: DEV_TOOLS_URLS.cAdvisor,
+        icon: Container,
+      },
+      {
+        id: 'sentry',
+        titleKey: 'menu.sentry',
+        descriptionKey: 'admin.devtools.sentry_description',
+        url: DEV_TOOLS_URLS.sentry,
+        icon: Bug,
+      },
     ];
 
-    if (import.meta.env.DEV) {
+    if (isLocalDevEnvironment()) {
       items.push(
         {
           id: 'phpmyadmin',
           titleKey: 'menu.phpmyadmin',
           descriptionKey: 'admin.devtools.phpmyadmin_description',
-          url: DEV_TOOLS_URLS.phpMyAdmin,
+          url: phpMyAdminUrl,
           icon: ExternalLink,
         },
         {
           id: 'mailpit',
           titleKey: 'menu.mailpit',
           descriptionKey: 'admin.devtools.mailpit_description',
-          url: DEV_TOOLS_URLS.mailpit,
+          url: mailpitUrl,
           icon: ExternalLink,
         },
       );

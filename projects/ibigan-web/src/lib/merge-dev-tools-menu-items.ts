@@ -12,6 +12,10 @@ const DEV_TOOL_TRANSLATION_BY_PATH: Partial<Record<string, string>> = {
   [DEV_TOOLS_URLS.logViewer]: 'menu.log_viewer',
   [DEV_TOOLS_URLS.phpMyAdmin]: 'menu.phpmyadmin',
   [DEV_TOOLS_URLS.mailpit]: 'menu.mailpit',
+  [DEV_TOOLS_URLS.grafana]: 'menu.grafana',
+  [DEV_TOOLS_URLS.prometheus]: 'menu.prometheus',
+  [DEV_TOOLS_URLS.cAdvisor]: 'menu.cadvisor',
+  [DEV_TOOLS_URLS.sentry]: 'menu.sentry',
 };
 
 const DEV_TOOL_PATH_BY_SLUG: Record<string, string> = {
@@ -22,9 +26,19 @@ const DEV_TOOL_PATH_BY_SLUG: Record<string, string> = {
   'log-viewer': DEV_TOOLS_URLS.logViewer,
   'phpmyadmin': DEV_TOOLS_URLS.phpMyAdmin,
   'mailpit': DEV_TOOLS_URLS.mailpit,
+  'grafana': DEV_TOOLS_URLS.grafana,
+  'prometheus': DEV_TOOLS_URLS.prometheus,
+  'cadvisor': DEV_TOOLS_URLS.cAdvisor,
+  'sentry': DEV_TOOLS_URLS.sentry,
 };
 
 export function isDevToolsChild(item: MenuItem): boolean {
+  const slug = (item as MenuItem & { slug?: string }).slug;
+
+  if (slug && DEV_TOOL_PATH_BY_SLUG[slug]) {
+    return true;
+  }
+
   return Boolean(item.path && (
     DEV_TOOLS_PATHS.has(item.path)
     || item.path.includes('/docs/api')
@@ -62,11 +76,17 @@ function syncDevToolChildPath(child: MenuItem): MenuItem {
             ? DEV_TOOLS_URLS.clockwork
             : child.path?.includes('/log-viewer')
               ? DEV_TOOLS_URLS.logViewer
-          : child.path?.includes('8080')
-          ? DEV_TOOLS_URLS.phpMyAdmin
-          : child.path?.includes('8025')
-            ? DEV_TOOLS_URLS.mailpit
-            : child.path;
+              : child.path?.includes('8080')
+                ? DEV_TOOLS_URLS.phpMyAdmin
+                : child.path?.includes('8025')
+                  ? DEV_TOOLS_URLS.mailpit
+                  : child.path?.includes('3001')
+                    ? DEV_TOOLS_URLS.grafana
+                    : child.path?.includes('9091')
+                      ? DEV_TOOLS_URLS.prometheus
+                      : child.path?.includes('8086')
+                        ? DEV_TOOLS_URLS.cAdvisor
+                        : child.path;
 
   return syncedPath ? { ...child, path: syncedPath, target: '_blank' as const } : child;
 }

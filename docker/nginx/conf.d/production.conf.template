@@ -98,6 +98,11 @@ server {
         try_files $uri $uri/ /index.php?$query_string;
     }
 
+    location = /metrics {
+        root /var/www/public;
+        try_files $uri /index.php?$query_string;
+    }
+
     location / {
         root /var/www/spa;
         index index.html;

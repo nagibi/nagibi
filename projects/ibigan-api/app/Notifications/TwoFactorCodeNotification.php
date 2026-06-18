@@ -33,7 +33,8 @@ final class TwoFactorCodeNotification extends Notification
     {
         $content = $this->resolveTemplate($notifiable);
 
-        return new TemplateMailable(
+        return TemplateMailable::forNotifiable(
+            $notifiable,
             emailSubject: $content['subject'],
             emailBody: $content['body'],
         );
