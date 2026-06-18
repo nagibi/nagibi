@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  usePatchUserPreferencesCache,
+  useUserPreferencesQuery,
+} from '@/hooks/use-user-preferences';
 import { getData, setData } from '@/lib/storage';
 import { userPreferencesService } from '@/services/user-preferences.service';
 import {
@@ -19,6 +23,9 @@ export function useViewMode(
 ) {
   const persist = options?.persist ?? 'api';
   const isMobile = useIsMobile();
+  const patchPreferencesCache = usePatchUserPreferencesCache();
+  const { data: preferences, isSuccess: preferencesLoaded, isError: preferencesError } =
+    useUserPreferencesQuery(persist === 'api');
   const [viewMode, setViewModeState] = useState<ViewMode>(() =>
     defaultViewMode(isMobile),
   );
@@ -26,46 +33,33 @@ export function useViewMode(
   const saveTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function loadPreference() {
-      const cached = getData<string>(`${LOCAL_CACHE_PREFIX}${preferenceKey}`);
-      if (isViewMode(cached)) {
-        setViewModeState(cached);
-      }
-
-      if (persist === 'local') {
-        if (!isViewMode(cached)) {
-          setViewModeState(defaultViewMode(isMobile));
-        }
-        if (!cancelled) setIsReady(true);
-        return;
-      }
-
-      try {
-        const response = await userPreferencesService.get();
-        const saved = response.data.result[preferenceKey];
-        if (!cancelled && isViewMode(saved)) {
-          setViewModeState(saved);
-          setData(`${LOCAL_CACHE_PREFIX}${preferenceKey}`, saved);
-        } else if (!cancelled && !isViewMode(cached)) {
-          setViewModeState(defaultViewMode(isMobile));
-        }
-      } catch {
-        if (!cancelled && !isViewMode(cached)) {
-          setViewModeState(defaultViewMode(isMobile));
-        }
-      } finally {
-        if (!cancelled) setIsReady(true);
-      }
+    const cached = getData<string>(`${LOCAL_CACHE_PREFIX}${preferenceKey}`);
+    if (isViewMode(cached)) {
+      setViewModeState(cached);
     }
 
-    void loadPreference();
+    if (persist === 'local') {
+      if (!isViewMode(cached)) {
+        setViewModeState(defaultViewMode(isMobile));
+      }
+      setIsReady(true);
+      return;
+    }
 
-    return () => {
-      cancelled = true;
-    };
-  }, [isMobile, persist, preferenceKey]);
+    if (!preferencesLoaded && !preferencesError) {
+      return;
+    }
+
+    const saved = preferences?.[preferenceKey];
+    if (isViewMode(saved)) {
+      setViewModeState(saved);
+      setData(`${LOCAL_CACHE_PREFIX}${preferenceKey}`, saved);
+    } else if (!isViewMode(cached)) {
+      setViewModeState(defaultViewMode(isMobile));
+    }
+
+    setIsReady(true);
+  }, [isMobile, persist, preferenceKey, preferences, preferencesError, preferencesLoaded]);
 
   const persistPreference = useCallback(
     (mode: ViewMode) => {
@@ -80,10 +74,14 @@ export function useViewMode(
       }
 
       saveTimerRef.current = window.setTimeout(() => {
-        void userPreferencesService.update({ [preferenceKey]: mode }).catch(() => undefined);
+        void userPreferencesService.update({ [preferenceKey]: mode })
+          .then((response) => {
+            patchPreferencesCache(response.data.result);
+          })
+          .catch(() => undefined);
       }, 400);
     },
-    [persist, preferenceKey],
+    [patchPreferencesCache, persist, preferenceKey],
   );
 
   const setViewMode = useCallback(

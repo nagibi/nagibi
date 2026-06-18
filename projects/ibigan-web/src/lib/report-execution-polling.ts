@@ -3,6 +3,10 @@ import type { ReportExecution } from '@/services/reports.service';
 /** Alinhado ao timeout do job no backend (600s). */
 export const REPORT_EXECUTION_POLL_WINDOW_MS = 10 * 60 * 1000;
 
+/** Evita estourar o throttle da API (60–120 req/min por tenant). */
+export const REPORT_EXECUTIONS_POLL_MS = 5000;
+export const REPORT_EXECUTION_STATUS_POLL_MS = 5000;
+
 const IN_PROGRESS_STATUSES = new Set(['pending', 'queued', 'running']);
 
 export function isReportExecutionInProgress(execution: {

@@ -24,6 +24,8 @@ import {
 } from '@/lib/report-execute-form';
 import {
   hasRecentInProgressExecutions,
+  REPORT_EXECUTION_STATUS_POLL_MS,
+  REPORT_EXECUTIONS_POLL_MS,
 } from '@/lib/report-execution-polling';
 import {
   reportsService,
@@ -165,9 +167,20 @@ export function ReportExecutePage() {
     queryKey: ['report-executions', id],
     queryFn: () => reportsService.executions(reportId),
     enabled: Number.isFinite(reportId),
+    retry: (failureCount, error) => {
+      if (isRateLimitError(error)) {
+        return false;
+      }
+
+      return failureCount < 2;
+    },
     refetchInterval: (query) => {
+      if (activeExecutionId != null) {
+        return false;
+      }
+
       const items = query.state.data?.data?.result?.data ?? [];
-      return hasRecentInProgressExecutions(items) ? 3000 : false;
+      return hasRecentInProgressExecutions(items) ? REPORT_EXECUTIONS_POLL_MS : false;
     },
   });
 
@@ -175,9 +188,16 @@ export function ReportExecutePage() {
     queryKey: ['report-execution-status', id, activeExecutionId],
     queryFn: () => reportsService.executionStatus(reportId, activeExecutionId!),
     enabled: Number.isFinite(reportId) && activeExecutionId != null,
+    retry: (failureCount, error) => {
+      if (isRateLimitError(error)) {
+        return false;
+      }
+
+      return failureCount < 2;
+    },
     refetchInterval: (query) => {
       const status = query.state.data?.data?.result?.status;
-      return status === 'queued' || status === 'running' ? 2000 : false;
+      return status === 'queued' || status === 'running' ? REPORT_EXECUTION_STATUS_POLL_MS : false;
     },
   });
 
@@ -546,4 +566,11 @@ function isExecutionRunning(
   }
 
   return executionStatus == null || executionStatus === 'queued' || executionStatus === 'running';
+}
+
+function isRateLimitError(error: unknown): boolean {
+  return typeof error === 'object'
+    && error !== null
+    && 'response' in error
+    && (error as { response?: { status?: number } }).response?.status === 429;
 }
