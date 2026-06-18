@@ -18,11 +18,30 @@ require_env() {
   local file="$1"
   local key="$2"
   local value
-  value="$(grep -E "^${key}=" "$file" | tail -n1 | cut -d= -f2- | tr -d '\r' || true)"
+  value="$(env_value "$file" "$key")"
   if [[ -z "$value" ]]; then
     echo "ERRO: defina ${key} em ${file}" >&2
     exit 1
   fi
+}
+
+set_env_var() {
+  local file="$1"
+  local key="$2"
+  local value="$3"
+
+  if grep -qE "^${key}=" "$file"; then
+    grep -vE "^${key}=" "$file" > "${file}.tmp"
+    mv "${file}.tmp" "$file"
+  fi
+
+  printf '%s=%s\n' "$key" "$value" >> "$file"
+}
+
+env_value() {
+  local file="$1"
+  local key="$2"
+  grep -E "^${key}=" "$file" | tail -n1 | cut -d= -f2- | tr -d '\r' || true
 }
 
 ensure_app_key() {
@@ -60,12 +79,48 @@ ensure_app_key() {
   fi
 }
 
+sync_db_credentials() {
+  local file="$1"
+  local mysql_user mysql_password mysql_database
+  mysql_user="$(env_value "$file" MYSQL_USER)"
+  mysql_password="$(env_value "$file" MYSQL_PASSWORD)"
+  mysql_database="$(env_value "$file" MYSQL_DATABASE)"
+
+  if [[ -z "$(env_value "$file" DB_PASSWORD)" && -n "$mysql_password" ]]; then
+    echo "==> DB_PASSWORD ausente — usando MYSQL_PASSWORD"
+    set_env_var "$file" DB_PASSWORD "$mysql_password"
+  fi
+
+  if [[ -z "$(env_value "$file" DB_USERNAME)" && -n "$mysql_user" ]]; then
+    echo "==> DB_USERNAME ausente — usando MYSQL_USER"
+    set_env_var "$file" DB_USERNAME "$mysql_user"
+  fi
+
+  if [[ -z "$(env_value "$file" DB_DATABASE)" && -n "$mysql_database" ]]; then
+    echo "==> DB_DATABASE ausente — usando MYSQL_DATABASE"
+    set_env_var "$file" DB_DATABASE "$mysql_database"
+  fi
+
+  if [[ -z "$(env_value "$file" DB_CONNECTION)" ]]; then
+    set_env_var "$file" DB_CONNECTION mysql
+  fi
+
+  if [[ -z "$(env_value "$file" DB_HOST)" ]]; then
+    set_env_var "$file" DB_HOST mysql
+  fi
+
+  if [[ -z "$(env_value "$file" DB_PORT)" ]]; then
+    set_env_var "$file" DB_PORT 3306
+  fi
+}
+
 echo "==> Validar .env raiz (Docker)"
 for key in MYSQL_ROOT_PASSWORD MYSQL_PASSWORD MYSQL_USER MYSQL_DATABASE CENTRAL_DOMAIN; do
   require_env "$ENV_FILE" "$key"
 done
 
 ensure_app_key "$ENV_FILE"
+sync_db_credentials "$ENV_FILE"
 
 echo "==> Copiar .env raiz para Laravel (volume Docker não inclui symlink fora de /var/www)"
 cp "$ENV_FILE" "$LARAVEL_ENV"
