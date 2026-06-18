@@ -114,6 +114,42 @@ sync_db_credentials() {
   fi
 }
 
+ensure_redis_drivers() {
+  local file="$1"
+  local cache session queue
+
+  cache="$(env_value "$file" CACHE_STORE)"
+  session="$(env_value "$file" SESSION_DRIVER)"
+  queue="$(env_value "$file" QUEUE_CONNECTION)"
+
+  if [[ -z "$cache" || "$cache" == "database" ]]; then
+    echo "==> CACHE_STORE=${cache:-ausente} — usando redis (banco central não tem tabela cache)"
+    set_env_var "$file" CACHE_STORE redis
+  fi
+
+  if [[ -z "$session" || "$session" == "database" ]]; then
+    echo "==> SESSION_DRIVER=${session:-ausente} — usando redis"
+    set_env_var "$file" SESSION_DRIVER redis
+  fi
+
+  if [[ -z "$queue" || "$queue" == "database" ]]; then
+    echo "==> QUEUE_CONNECTION=${queue:-ausente} — usando redis"
+    set_env_var "$file" QUEUE_CONNECTION redis
+  fi
+
+  if [[ -z "$(env_value "$file" REDIS_CLIENT)" ]]; then
+    set_env_var "$file" REDIS_CLIENT phpredis
+  fi
+
+  if [[ -z "$(env_value "$file" REDIS_HOST)" ]]; then
+    set_env_var "$file" REDIS_HOST redis
+  fi
+
+  if [[ -z "$(env_value "$file" REDIS_PORT)" ]]; then
+    set_env_var "$file" REDIS_PORT 6379
+  fi
+}
+
 echo "==> Validar .env raiz (Docker)"
 for key in MYSQL_ROOT_PASSWORD MYSQL_PASSWORD MYSQL_USER MYSQL_DATABASE CENTRAL_DOMAIN; do
   require_env "$ENV_FILE" "$key"
@@ -121,6 +157,7 @@ done
 
 ensure_app_key "$ENV_FILE"
 sync_db_credentials "$ENV_FILE"
+ensure_redis_drivers "$ENV_FILE"
 
 echo "==> Copiar .env raiz para Laravel (volume Docker não inclui symlink fora de /var/www)"
 cp "$ENV_FILE" "$LARAVEL_ENV"
@@ -245,9 +282,9 @@ if [[ "$USE_BEHIND_PROXY" == "true" ]]; then
 fi
 
 echo "==> Migrations e caches Laravel"
-"${DC[@]}" exec -T app php artisan optimize:clear
 "${DC[@]}" exec -T app php artisan migrate --force
 "${DC[@]}" exec -T app php artisan tenants:migrate --force
+"${DC[@]}" exec -T app php artisan optimize:clear
 "${DC[@]}" exec -T app php artisan storage:link --force || true
 "${DC[@]}" exec -T app php artisan config:cache
 "${DC[@]}" exec -T app php artisan route:cache
