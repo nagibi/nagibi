@@ -89,14 +89,16 @@ final class RateLimitServiceProvider extends ServiceProvider
                 return Limit::none();
             }
 
-            $user = $request->user();
+            $user = $request->user('sanctum') ?? $request->user('central');
             $tenantId = $request->header('X-Tenant-ID');
 
             $key = $user
                 ? 'user:'.$user->getAuthIdentifier().':tenant:'.($tenantId ?? 'central')
                 : ($tenantId ? 'tenant:'.$tenantId : 'ip:'.$request->ip());
 
-            return Limit::perMinute((int) env('API_RATE_LIMIT_PER_MINUTE', 300))
+            $perMinute = max(60, (int) config('rate-limit.api_per_minute', 600));
+
+            return Limit::perMinute($perMinute)
                 ->by($key)
                 ->response(function () {
                     return response()->json([

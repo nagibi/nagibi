@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
-import { menusService } from '@/services/menus.service';
+import { useMenusNavigationQuery } from '@/hooks/use-menus-navigation-query';
 import { mapApiMenusToConfig } from '@/lib/menu-mapper';
 import { filterMenuForUser } from '@/lib/filter-menu-for-user';
 import { filterMenuByPermissions } from '@/lib/filter-menu-by-permissions';
@@ -39,12 +38,7 @@ export function useDynamicMenu(): MenuConfig {
 
   const hasPermission = useAuthStore((state) => state.hasPermission);
 
-  const { data, isSuccess, isPending } = useQuery({
-    queryKey: ['menus', 'navigation', tenantId],
-    queryFn: () => menusService.navigation(),
-    staleTime: 5 * 60 * 1000,
-    enabled: Boolean(tenantId),
-  });
+  const { data, isSuccess, isPending } = useMenusNavigationQuery(Boolean(tenantId));
 
   return useMemo(() => {
     const fallbackMenu = buildTenantMenu(

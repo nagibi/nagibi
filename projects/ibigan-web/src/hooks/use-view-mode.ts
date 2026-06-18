@@ -33,7 +33,8 @@ export function useViewMode(
   const saveTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const cached = getData<string>(`${LOCAL_CACHE_PREFIX}${preferenceKey}`);
+    const rawCached = getData(`${LOCAL_CACHE_PREFIX}${preferenceKey}`);
+    const cached = typeof rawCached === 'string' ? rawCached : undefined;
     if (isViewMode(cached)) {
       setViewModeState(cached);
     }

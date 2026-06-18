@@ -208,6 +208,15 @@ ensure_reverb_config() {
   fi
 }
 
+ensure_api_rate_limit() {
+  local file="$1"
+
+  if [[ -z "$(env_value "$file" API_RATE_LIMIT_PER_MINUTE)" ]]; then
+    echo "==> API_RATE_LIMIT_PER_MINUTE ausente — usando 600"
+    set_env_var "$file" API_RATE_LIMIT_PER_MINUTE 600
+  fi
+}
+
 echo "==> Validar .env raiz (Docker)"
 for key in MYSQL_ROOT_PASSWORD MYSQL_PASSWORD MYSQL_USER MYSQL_DATABASE CENTRAL_DOMAIN; do
   require_env "$ENV_FILE" "$key"
@@ -217,6 +226,7 @@ ensure_app_key "$ENV_FILE"
 sync_db_credentials "$ENV_FILE"
 ensure_redis_drivers "$ENV_FILE"
 ensure_reverb_config "$ENV_FILE"
+ensure_api_rate_limit "$ENV_FILE"
 
 echo "==> Copiar .env raiz para Laravel (volume Docker não inclui symlink fora de /var/www)"
 cp "$ENV_FILE" "$LARAVEL_ENV"
