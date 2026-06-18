@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Camera, Star, ZoomIn, X } from 'lucide-react';
+import { ImagePlus, Star, ZoomIn, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -312,14 +312,14 @@ export function EquipamentoFotosField({
               className="size-16"
             />
             <p className="text-xs text-muted-foreground">
-              Adicione uma ou mais fotos. Toque na estrela para definir a principal.
+              Adicione uma ou mais fotos da galeria ou da câmera. Toque na estrela para definir a principal.
             </p>
           </div>
         )}
 
         <div className={cn('flex flex-wrap gap-2', hasPhotos ? 'mt-3' : 'mt-0')}>
           <Button type="button" size="sm" variant="outline" onClick={() => inputRef.current?.click()}>
-            <Camera className="size-4" />
+            <ImagePlus className="size-4" />
             Adicionar fotos
           </Button>
         </div>
@@ -329,7 +329,6 @@ export function EquipamentoFotosField({
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
-        capture="environment"
         multiple
         className="hidden"
         onChange={handleFileChange}
