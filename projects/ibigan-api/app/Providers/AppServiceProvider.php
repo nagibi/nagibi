@@ -92,9 +92,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(TenancyInitialized::class, function (TenancyInitialized $event): void {
             $timezone = $event->tenancy->tenant->timezone ?? null;
 
-            if (is_string($timezone) && $timezone !== '') {
-                TimezoneResolver::apply($timezone);
-            }
+            TimezoneResolver::apply(
+                is_string($timezone) && $timezone !== ''
+                    ? $timezone
+                    : (string) config('app.default_timezone'),
+            );
         });
 
         Event::listen(TenancyEnded::class, function (): void {

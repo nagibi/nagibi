@@ -26,6 +26,7 @@ beforeEach(function (): void {
         'id' => $tenantId,
         'slug' => $tenantId,
         'name' => 'Equipcontrol Test',
+        'timezone' => config('app.default_timezone'),
         'is_active' => true,
     ]);
 

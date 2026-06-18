@@ -274,19 +274,21 @@ class Equipamento extends Model
             LIMIT 1
         )';
 
+        $hoje = now()->toDateString();
+
         if (DB::connection()->getDriverName() === 'sqlite') {
             return "COALESCE(
-                CAST((julianday(date('now')) - julianday(date({$historicoSubquery}))) AS INTEGER),
-                CAST((julianday(date('now')) - julianday(date(equipamentos.data_entrada))) AS INTEGER)
+                CAST((julianday('{$hoje}') - julianday(date({$historicoSubquery}))) AS INTEGER),
+                CAST((julianday('{$hoje}') - julianday(date(equipamentos.data_entrada))) AS INTEGER)
             )";
         }
 
         return "COALESCE(
             DATEDIFF(
-                CURDATE(),
+                '{$hoje}',
                 DATE({$historicoSubquery})
             ),
-            DATEDIFF(CURDATE(), equipamentos.data_entrada)
+            DATEDIFF('{$hoje}', equipamentos.data_entrada)
         )";
     }
 }
