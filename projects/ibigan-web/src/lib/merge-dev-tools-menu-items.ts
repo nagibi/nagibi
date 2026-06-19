@@ -15,6 +15,7 @@ const DEV_TOOL_TRANSLATION_BY_PATH: Partial<Record<string, string>> = {
   [DEV_TOOLS_URLS.grafana]: 'menu.grafana',
   [DEV_TOOLS_URLS.prometheus]: 'menu.prometheus',
   [DEV_TOOLS_URLS.cAdvisor]: 'menu.cadvisor',
+  [DEV_TOOLS_URLS.meilisearch]: 'menu.meilisearch',
   [DEV_TOOLS_URLS.sentry]: 'menu.sentry',
 };
 
@@ -29,6 +30,7 @@ const DEV_TOOL_PATH_BY_SLUG: Record<string, string> = {
   'grafana': DEV_TOOLS_URLS.grafana,
   'prometheus': DEV_TOOLS_URLS.prometheus,
   'cadvisor': DEV_TOOLS_URLS.cAdvisor,
+  'meilisearch': DEV_TOOLS_URLS.meilisearch,
   'sentry': DEV_TOOLS_URLS.sentry,
 };
 
@@ -86,7 +88,9 @@ function syncDevToolChildPath(child: MenuItem): MenuItem {
                       ? DEV_TOOLS_URLS.prometheus
                       : child.path?.includes('8086')
                         ? DEV_TOOLS_URLS.cAdvisor
-                        : child.path;
+                        : child.path?.includes('7701')
+                          ? DEV_TOOLS_URLS.meilisearch
+                          : child.path;
 
   return syncedPath ? { ...child, path: syncedPath, target: '_blank' as const } : child;
 }

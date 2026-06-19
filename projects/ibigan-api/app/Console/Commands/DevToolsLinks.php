@@ -70,6 +70,7 @@ final class DevToolsLinks extends Command
         $this->line("  <fg=blue>Prometheus</>  ".(string) config('dev-tools.prometheus_url'));
         $this->line("  <fg=blue>cAdvisor</>    ".(string) config('dev-tools.cadvisor_url'));
         $this->line("  <fg=blue>Sentry</>      ".(string) config('dev-tools.sentry_url'));
+        $this->line("  <fg=blue>Meilisearch</> ".(string) config('dev-tools.meilisearch_url'));
         $this->newLine();
         $this->comment('Os links redirecionam e gravam cookie de acesso (válido pelo tempo da sessão).');
 

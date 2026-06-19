@@ -30,5 +30,6 @@ return [
     'grafana_url' => env('DEV_TOOLS_GRAFANA_URL', 'http://localhost:3001'),
     'prometheus_url' => env('DEV_TOOLS_PROMETHEUS_URL', 'http://localhost:9091'),
     'cadvisor_url' => env('DEV_TOOLS_CADVISOR_URL', 'http://localhost:8086'),
+    'meilisearch_url' => env('DEV_TOOLS_MEILISEARCH_URL', 'http://localhost:7701'),
     'sentry_url' => is_string($sentryUrl) && $sentryUrl !== '' ? $sentryUrl : 'https://sentry.io',
 ];

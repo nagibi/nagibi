@@ -126,6 +126,10 @@ export const DEV_TOOLS_URLS = {
     import.meta.env.VITE_DEV_CADVISOR_URL,
     8086,
   ),
+  meilisearch: resolveLocalServiceUrl(
+    import.meta.env.VITE_DEV_MEILISEARCH_URL,
+    7701,
+  ),
   sentry:
     import.meta.env.VITE_DEV_SENTRY_URL?.trim() || 'https://sentry.io',
 } as const;
@@ -136,6 +140,7 @@ export const EXTERNAL_DEV_TOOLS_URLS = new Set<string>([
   DEV_TOOLS_URLS.grafana,
   DEV_TOOLS_URLS.prometheus,
   DEV_TOOLS_URLS.cAdvisor,
+  DEV_TOOLS_URLS.meilisearch,
   DEV_TOOLS_URLS.sentry,
 ]);
 

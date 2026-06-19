@@ -89,6 +89,7 @@ lookup.bySlug.set('grafana', Icons.LineChart);
 lookup.bySlug.set('prometheus', Icons.Flame);
 lookup.bySlug.set('cadvisor', Icons.Container);
 lookup.bySlug.set('sentry', Icons.Bug);
+lookup.bySlug.set('meilisearch', Icons.Search);
 lookup.bySlug.set('empresas', Icons.Building2);
 lookup.byPath.set('/admin/tenants', Icons.Building2);
 lookup.byPath.set('/roles', Icons.ShieldCheck);

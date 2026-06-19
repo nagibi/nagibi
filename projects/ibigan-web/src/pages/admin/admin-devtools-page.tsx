@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Bug, Clock, Container, ExternalLink, Flame, Gauge, LineChart, ScrollText, Telescope } from 'lucide-react';
+import { BookOpen, Bug, Clock, Container, ExternalLink, Flame, Gauge, LineChart, ScrollText, Search, Telescope } from 'lucide-react';
 import { usePageToolbar } from '@/hooks/use-page-toolbar';
 import { PageBody } from '@/components/common/page-body';
 import { buildDevToolsHref } from '@/lib/dev-tools-link';
@@ -37,6 +37,10 @@ export function AdminDevToolsPage() {
     const phpMyAdminUrl = resolveLocalServiceUrl(
       import.meta.env.VITE_DEV_PHPMYADMIN_URL,
       8080,
+    );
+    const meilisearchUrl = resolveLocalServiceUrl(
+      import.meta.env.VITE_DEV_MEILISEARCH_URL,
+      7701,
     );
 
     const items: DevToolItem[] = [
@@ -120,6 +124,13 @@ export function AdminDevToolsPage() {
           descriptionKey: 'admin.devtools.mailpit_description',
           url: mailpitUrl,
           icon: ExternalLink,
+        },
+        {
+          id: 'meilisearch',
+          titleKey: 'menu.meilisearch',
+          descriptionKey: 'admin.devtools.meilisearch_description',
+          url: meilisearchUrl,
+          icon: Search,
         },
       );
     }

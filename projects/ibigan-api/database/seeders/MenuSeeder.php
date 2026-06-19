@@ -500,6 +500,19 @@ class MenuSeeder extends Seeder
             'roles' => ['admin', 'super-admin'],
         ]);
 
+        Menu::create([
+            'title' => 'Meilisearch',
+            'slug' => 'meilisearch',
+            'icon' => 'Search',
+            'path' => config('dev-tools.meilisearch_url'),
+            'target' => '_blank',
+            'parent_id' => $ferramentas->id,
+            'order' => 11,
+            'is_active' => true,
+            'requires_auth' => true,
+            'roles' => ['admin', 'super-admin'],
+        ]);
+
         // ── Configurações ─────────────────────────────────────────
         $configuracoes = Menu::create([
             'title' => 'Configurações',
@@ -552,6 +565,7 @@ class MenuSeeder extends Seeder
             'prometheus' => 'menu.prometheus',
             'cadvisor' => 'menu.cadvisor',
             'sentry' => 'menu.sentry',
+            'meilisearch' => 'menu.meilisearch',
             'configuracoes' => 'menu.settings',
         ];
 
