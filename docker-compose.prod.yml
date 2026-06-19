@@ -170,6 +170,22 @@ services:
       - redis
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
 
+  # ── Meilisearch (Scout) ───────────────────────────────────────
+  # MEILISEARCH_KEY no .env = MEILI_MASTER_KEY do container (não expor porta no host).
+  meilisearch:
+    image: getmeili/meilisearch:v1.10
+    container_name: nagibi_meilisearch
+    restart: unless-stopped
+    networks:
+      - nagibi_network
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_KEY:?defina MEILISEARCH_KEY no .env}
+      MEILI_ENV: production
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_EXPERIMENTAL_ENABLE_METRICS: "true"
+    volumes:
+      - nagibi_meili_data:/meili_data
+
 networks:
   nagibi_network:
     name: nagibi_network
@@ -180,3 +196,5 @@ volumes:
     name: nagibi_mysql_data
   nagibi_redis_data:
     name: nagibi_redis_data
+  nagibi_meili_data:
+    name: nagibi_meili_data
