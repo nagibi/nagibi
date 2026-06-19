@@ -161,7 +161,7 @@ services:
     networks:
       - nagibi_network
     environment:
-      MEILI_MASTER_KEY: masterKey
+      MEILI_MASTER_KEY: ${MEILISEARCH_KEY:-masterKey}
       MEILI_ENV: development
       MEILI_EXPERIMENTAL_ENABLE_METRICS: "true"
     volumes:
