@@ -6,8 +6,8 @@ cd "$ROOT_DIR"
 
 ENV_FILE="${ENV_FILE:-/opt/nagibi/.env}"
 LARAVEL_ENV="$ROOT_DIR/projects/ibigan-api/.env"
-DC=(docker compose -f docker-compose.prod.yml --env-file "$ENV_FILE")
-STACK_NAME="${STACK_NAME:-nagibi}"
+COMPOSE_PROJECT_NAME=nagibi
+DC=(docker compose -p "$COMPOSE_PROJECT_NAME" -f docker-compose.prod.yml --env-file "$ENV_FILE")
 
 if [[ ! -f "$ENV_FILE" ]]; then
   echo "ERRO: $ENV_FILE não encontrado" >&2
@@ -35,7 +35,76 @@ set_env_var() {
     mv "${file}.tmp" "$file"
   fi
 
-  printf '%s=%s\n' "$key" "$value" >> "$file"
+  if [[ "$value" =~ [[:space:]] ]]; then
+    printf '%s="%s"\n' "$key" "$value" >> "$file"
+  else
+    printf '%s=%s\n' "$key" "$value" >> "$file"
+  fi
+}
+
+fix_unquoted_dotenv_spaces() {
+  local file="$1"
+  local tmp="${file}.dotenv-fix.tmp"
+  local changed=false
+  local line key value
+
+  : > "$tmp"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%%$'\r'}"
+    if [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]]; then
+      printf '%s\n' "$line" >> "$tmp"
+      continue
+    fi
+
+    if [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
+      key="${BASH_REMATCH[1]}"
+      value="${BASH_REMATCH[2]}"
+      if [[ "$value" =~ [[:space:]] && ! "$value" =~ ^\".*\"$ && ! "$value" =~ ^\'.*\'$ ]]; then
+        echo "==> Corrigindo ${key} em ${file} — valor com espaço precisa de aspas"
+        printf '%s="%s"\n' "$key" "$value" >> "$tmp"
+        changed=true
+        continue
+      fi
+    fi
+
+    printf '%s\n' "$line" >> "$tmp"
+  done < "$file"
+
+  if [[ "$changed" == "true" ]]; then
+    mv "$tmp" "$file"
+  else
+    rm -f "$tmp"
+  fi
+}
+
+validate_dotenv_syntax() {
+  local file="$1"
+  local line key value
+  local -a bad_lines=()
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%%$'\r'}"
+    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]] || continue
+
+    key="${BASH_REMATCH[1]}"
+    value="${BASH_REMATCH[2]}"
+    [[ "$value" =~ ^\".*\"$ || "$value" =~ ^\'.*\'$ ]] && continue
+    [[ "$value" =~ \$\{ ]] && continue
+
+    if [[ "$value" =~ [[:space:]] ]]; then
+      bad_lines+=("${key}=${value}")
+    fi
+  done < "$file"
+
+  if [[ ${#bad_lines[@]} -gt 0 ]]; then
+    echo "ERRO: ${file} contém valores com espaço sem aspas (Laravel dotenv rejeita):" >&2
+    for line in "${bad_lines[@]}"; do
+      echo "  ${line}" >&2
+    done
+    echo '      Use aspas: APP_NAME="Nagibi APP"' >&2
+    exit 1
+  fi
 }
 
 env_value() {
@@ -243,10 +312,14 @@ ensure_reverb_config "$ENV_FILE"
 ensure_api_rate_limit "$ENV_FILE"
 ensure_telescope_config "$ENV_FILE"
 
+fix_unquoted_dotenv_spaces "$ENV_FILE"
+validate_dotenv_syntax "$ENV_FILE"
+
 echo "==> Copiar .env raiz para Laravel (volume Docker não inclui symlink fora de /var/www)"
 cp "$ENV_FILE" "$LARAVEL_ENV"
 
 echo "==> Validar .env Laravel"
+validate_dotenv_syntax "$LARAVEL_ENV"
 for key in APP_KEY DB_PASSWORD DB_USERNAME DB_DATABASE; do
   require_env "$LARAVEL_ENV" "$key"
 done
@@ -275,6 +348,11 @@ load_deploy_env() {
 }
 
 load_deploy_env "$ENV_FILE"
+
+stack_name="$(env_value "$ENV_FILE" STACK_NAME)"
+if [[ -n "$stack_name" && "$stack_name" != "$COMPOSE_PROJECT_NAME" ]]; then
+  echo "==> AVISO: STACK_NAME=${stack_name} em ${ENV_FILE} é ignorado — projeto Docker fixo: ${COMPOSE_PROJECT_NAME}"
+fi
 
 CENTRAL_DOMAIN="${CENTRAL_DOMAIN#https://}"
 CENTRAL_DOMAIN="${CENTRAL_DOMAIN#http://}"

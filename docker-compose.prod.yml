@@ -1,6 +1,7 @@
 # Produção — /opt/nagibi (Caddy no host termina TLS).
 # Defina portas no .env: NGINX_HTTP_PORT=28080, MYSQL_HOST_PORT=3306, etc.
-name: ${STACK_NAME:-nagibi}
+# Nome do projeto Compose fixo — não altere (volumes/containers usam prefixo nagibi_).
+name: nagibi
 
 services:
 
