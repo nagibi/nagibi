@@ -43,6 +43,7 @@ final class EquipamentoController extends Controller
             'em_manutencao' => $query->emManutencao(),
             'baixados' => $query->baixados(),
             'perdidos' => $query->perdidos(),
+            'baixados_todos' => $query->baixadosTodos(),
             default => null,
         };
 

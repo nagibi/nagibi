@@ -1,9 +1,8 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { LoaderCircle, LogIn } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
-import { GridBadge } from '@/components/grid/grid-badge';
 import { GridCardActions } from '@/components/grid/grid-card-actions';
+import { GridStatusSwitch } from '@/components/grid/grid-status-switch';
 import type { GridRowAction } from '@/components/grid/grid-row-actions';
 import { formatCnpj } from '@/lib/brazilian-masks';
 import type { AdminTenant } from '@/services/admin-tenants.service';
@@ -15,15 +14,17 @@ export function OrganizationCard({
   onEnter,
   enterDisabled = false,
   enterLoading = false,
+  statusUpdating = false,
+  onActiveChange,
 }: {
   tenant: AdminTenant;
   actions: GridRowAction[];
   onEnter?: () => void;
   enterDisabled?: boolean;
   enterLoading?: boolean;
+  statusUpdating?: boolean;
+  onActiveChange?: (active: boolean) => void;
 }) {
-  const { t } = useTranslation();
-
   return (
     <div className="flex h-full min-w-0 w-full max-w-full flex-col gap-3 p-4">
       <div className="flex min-w-0 items-start justify-between gap-2">
@@ -31,9 +32,13 @@ export function OrganizationCard({
           <p className="truncate">{tenant.name ?? tenant.slug}</p>
           <p className="truncate text-sm text-muted-foreground">{tenant.slug}</p>
         </div>
-        <GridBadge tone={tenant.is_active ? 'success' : 'destructive'} className="shrink-0">
-          {tenant.is_active ? t('status.active') : t('status.inactive')}
-        </GridBadge>
+        {onActiveChange ? (
+          <GridStatusSwitch
+            checked={tenant.is_active}
+            disabled={statusUpdating}
+            onCheckedChange={onActiveChange}
+          />
+        ) : null}
       </div>
 
       <div className="min-w-0 space-y-1 text-sm text-muted-foreground">

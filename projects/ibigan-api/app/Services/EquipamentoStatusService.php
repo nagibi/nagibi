@@ -17,9 +17,13 @@ use RuntimeException;
 
 final class EquipamentoStatusService
 {
+    public function __construct(
+        private readonly EquipcontrolNotificationService $notificationService,
+    ) {}
+
     public function emprestar(Equipamento $equipamento, array $dados): Emprestimo
     {
-        return DB::transaction(function () use ($equipamento, $dados) {
+        $emprestimo = DB::transaction(function () use ($equipamento, $dados) {
             $this->garantirEmEstoque($equipamento);
 
             $emprestimo = Emprestimo::create([
@@ -48,11 +52,15 @@ final class EquipamentoStatusService
 
             return $emprestimo;
         });
+
+        $this->notificationService->loanCreated($emprestimo);
+
+        return $emprestimo;
     }
 
     public function devolver(Emprestimo $emprestimo, array $dados = []): Emprestimo
     {
-        return DB::transaction(function () use ($emprestimo, $dados) {
+        $emprestimo = DB::transaction(function () use ($emprestimo, $dados) {
             $emprestimo->update([
                 'data_devolucao' => $dados['data_devolucao'] ?? now()->toDateString(),
                 'foto_equipamento_devolucao_path' => $dados['foto_equipamento_devolucao_path'] ?? null,
@@ -65,13 +73,17 @@ final class EquipamentoStatusService
                 ['dias_em_uso' => $emprestimo->dias_em_uso]
             );
 
-            return $emprestimo;
+            return $emprestimo->fresh(['equipamento.tipo', 'obra']);
         });
+
+        $this->notificationService->loanReturned($emprestimo);
+
+        return $emprestimo;
     }
 
     public function renovar(Emprestimo $emprestimo, array $dados): EmprestimoRenovacao
     {
-        return DB::transaction(function () use ($emprestimo, $dados) {
+        $renovacao = DB::transaction(function () use ($emprestimo, $dados) {
             $renovacao = EmprestimoRenovacao::create([
                 'emprestimo_id' => $emprestimo->id,
                 'data_renovacao' => $dados['data_renovacao'] ?? now()->toDateString(),
@@ -89,13 +101,17 @@ final class EquipamentoStatusService
 
             return $renovacao;
         });
+
+        $this->notificationService->loanRenewed($emprestimo->fresh(['equipamento.tipo', 'obra', 'renovacoes']), $renovacao);
+
+        return $renovacao;
     }
 
     public function enviarParaManutencao(Equipamento $equipamento, array $dados): Manutencao
     {
         $this->applyResponsavelUser($dados);
 
-        return DB::transaction(function () use ($equipamento, $dados) {
+        $manutencao = DB::transaction(function () use ($equipamento, $dados) {
             $origem = 'estoque';
             $emprestimoId = null;
 
@@ -132,11 +148,15 @@ final class EquipamentoStatusService
 
             return $manutencao;
         });
+
+        $this->notificationService->maintenanceSent($manutencao);
+
+        return $manutencao;
     }
 
     public function finalizarManutencao(Manutencao $manutencao, array $dados = []): Manutencao
     {
-        return DB::transaction(function () use ($manutencao, $dados) {
+        $manutencao = DB::transaction(function () use ($manutencao, $dados) {
             $manutencao->update([
                 'data_saida' => $dados['data_saida'] ?? now()->toDateString(),
             ]);
@@ -148,8 +168,12 @@ final class EquipamentoStatusService
                 ['dias_em_manutencao' => $manutencao->dias_em_manutencao]
             );
 
-            return $manutencao;
+            return $manutencao->fresh(['equipamento.tipo', 'responsavelUser']);
         });
+
+        $this->notificationService->maintenanceCompleted($manutencao);
+
+        return $manutencao;
     }
 
     public function baixar(Equipamento $equipamento, array $dados): Baixa

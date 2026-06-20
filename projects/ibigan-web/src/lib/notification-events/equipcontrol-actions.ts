@@ -19,10 +19,21 @@ function buildNavigate(
   return { id, label, type: 'navigate', payload: { path }, primary };
 }
 
-function withSearch(basePath: string, patrimonio: string | null, filtro?: string): string {
+function readEquipamentoId(data: Record<string, unknown>): string | null {
+  return readString(data, 'equipamento_id', 'equipment_id');
+}
+
+function withEquipamentoTarget(
+  basePath: string,
+  options: { equipamentoId: string | null; patrimonio: string | null; filtro?: string },
+): string {
   const params = new URLSearchParams();
-  if (patrimonio) params.set('q', patrimonio);
-  if (filtro) params.set('filtro', filtro);
+  if (options.equipamentoId) {
+    params.set('id', options.equipamentoId);
+  } else if (options.patrimonio) {
+    params.set('q', options.patrimonio);
+  }
+  if (options.filtro) params.set('filtro', options.filtro);
   const query = params.toString();
   return query ? `${basePath}?${query}` : basePath;
 }
@@ -36,17 +47,28 @@ export function resolveEquipcontrolNotificationActions(
   data: Record<string, unknown>,
 ): NotificationAction[] {
   const patrimonio = readString(data, 'patrimonio', 'equipamento_patrimonio', 'codigo');
+  const equipamentoId = readEquipamentoId(data);
   const obraId = readString(data, 'obra_id', 'obra');
-  const emprestimoId = readString(data, 'emprestimo_id');
 
   if (eventSlug.startsWith('loan.')) {
-    const path = emprestimoId
-      ? `/equipamentos/movimentacoes/${emprestimoId}`
-      : withSearch(
-          '/equipamentos/movimentacoes',
-          patrimonio,
-          eventSlug === 'loan.overdue' ? 'vencidos' : eventSlug === 'loan.due_soon' ? 'proximos_vencimento' : undefined,
-        );
+    if (eventSlug === 'loan.returned') {
+      const path = withEquipamentoTarget('/equipamentos/estoque', {
+        equipamentoId,
+        patrimonio,
+      });
+      return [buildNavigate('view-equipment', 'Ver equipamento', path)];
+    }
+
+    const path = withEquipamentoTarget('/equipamentos/movimentacoes', {
+      equipamentoId,
+      patrimonio,
+      filtro:
+        eventSlug === 'loan.overdue'
+          ? 'vencidos'
+          : eventSlug === 'loan.due_soon'
+            ? 'proximos_vencimento'
+            : undefined,
+    });
 
     const actions = [buildNavigate('view-loan', 'Ver empréstimo', path)];
 
@@ -55,7 +77,7 @@ export function resolveEquipcontrolNotificationActions(
         buildNavigate(
           'view-equipment',
           'Ver equipamento',
-          withSearch('/equipamentos/estoque', patrimonio),
+          withEquipamentoTarget('/equipamentos/estoque', { equipamentoId, patrimonio }),
           false,
         ),
       );
@@ -65,11 +87,19 @@ export function resolveEquipcontrolNotificationActions(
   }
 
   if (eventSlug.startsWith('maintenance.')) {
-    const path = withSearch(
-      '/equipamentos/manutencao',
+    if (eventSlug === 'maintenance.completed') {
+      const path = withEquipamentoTarget('/equipamentos/estoque', {
+        equipamentoId,
+        patrimonio,
+      });
+      return [buildNavigate('view-equipment', 'Ver equipamento', path)];
+    }
+
+    const path = withEquipamentoTarget('/equipamentos/manutencao', {
+      equipamentoId,
       patrimonio,
-      eventSlug === 'maintenance.overdue' ? 'atrasados' : undefined,
-    );
+      filtro: eventSlug === 'maintenance.overdue' ? 'atrasados' : undefined,
+    });
     return [buildNavigate('view-maintenance', 'Ver manutenção', path)];
   }
 
@@ -80,11 +110,11 @@ export function resolveEquipcontrolNotificationActions(
     || eventSlug === 'insight.reallocation'
     || eventSlug === 'insight.replacement'
   ) {
-    const path = withSearch(
-      '/equipamentos/estoque',
+    const path = withEquipamentoTarget('/equipamentos/estoque', {
+      equipamentoId,
       patrimonio,
-      eventSlug === 'equipment.idle' || eventSlug === 'critical.idle' ? 'parados' : undefined,
-    );
+      filtro: eventSlug === 'equipment.idle' || eventSlug === 'critical.idle' ? 'parados' : undefined,
+    });
     return [buildNavigate('view-equipment', 'Ver equipamento', path)];
   }
 
@@ -107,7 +137,11 @@ export function resolveEquipcontrolNotificationActions(
 
   if (patrimonio) {
     return [
-      buildNavigate('view-equipment', 'Ver equipamento', withSearch('/equipamentos/estoque', patrimonio)),
+      buildNavigate(
+        'view-equipment',
+        'Ver equipamento',
+        withEquipamentoTarget('/equipamentos/estoque', { equipamentoId, patrimonio }),
+      ),
     ];
   }
 

@@ -20,11 +20,13 @@ import {
   formatEquipamentoCurrency,
   getEquipamentoTendencia,
 } from '@/lib/equipamento-utils';
+import { EQUIPAMENTO_STATUS_LABELS } from '@/lib/equipamento-labels';
 import type { Equipamento, EquipamentoManutencaoAtiva } from '@/types/equipamento';
 import { VIEW_PREFERENCE_KEYS, type ViewPreferenceKey } from '@/types/view-mode';
 import type { EquipamentoListMode } from '@/pages/equipamentos/equipamentos-list-page';
 
-export type EquipamentoGridMode = Extract<EquipamentoListMode, 'estoque' | 'utilizacao' | 'manutencao'>;
+export type EquipamentoGridMode =
+  Extract<EquipamentoListMode, 'estoque' | 'utilizacao' | 'manutencao' | 'baixados'>;
 
 export type EquipamentoGridModalKind =
   | 'emprestar'
@@ -40,7 +42,7 @@ export type EquipamentoGridModalKind =
 export type EquipamentoGridModeConfig = {
   title: string;
   description: string;
-  status: 'em_estoque' | 'em_utilizacao' | 'em_manutencao';
+  status?: 'em_estoque' | 'em_utilizacao' | 'em_manutencao';
   columnsKey: string;
   viewPreferenceKey: ViewPreferenceKey;
   showCrudToolbar: boolean;
@@ -82,6 +84,16 @@ export const MODE_GRID_CONFIG: Record<EquipamentoGridMode, EquipamentoGridModeCo
     showStatsOnMobile: true,
     showPotencialDevolucao: false,
     doubleClickModal: 'finalizar',
+  },
+  baixados: {
+    title: 'Baixados',
+    description: 'Equipamentos devolvidos ao fornecedor ou dados como perdidos',
+    columnsKey: 'grid-columns:equipamentos-baixados-v1',
+    viewPreferenceKey: VIEW_PREFERENCE_KEYS.equipamentosBaixados,
+    showCrudToolbar: false,
+    showStatsOnMobile: false,
+    showPotencialDevolucao: false,
+    doubleClickModal: 'historico',
   },
 };
 
@@ -131,6 +143,12 @@ function getDiasEmManutencao(manutencao: EquipamentoManutencaoAtiva): number {
   );
 }
 
+function getTipoBaixaLabel(tipo?: string | null) {
+  if (tipo === 'perda') return 'Perda';
+  if (tipo === 'devolucao') return 'Devolução';
+  return tipo ?? '—';
+}
+
 function getResponsabilidadeLabel(value: EquipamentoManutencaoAtiva['responsabilidade']) {
   return value === 'fortes' ? 'Fortes' : 'Equipamento';
 }
@@ -163,6 +181,8 @@ export function getModeRowActions(
         { label: 'Finalizar', icon: CheckCircle2, onClick: open('finalizar') },
         { label: 'Histórico', icon: History, onClick: open('historico') },
       ];
+    case 'baixados':
+      return [{ label: 'Histórico', icon: History, onClick: open('historico') }];
     default:
       return [];
   }
@@ -434,7 +454,46 @@ export function getModeSpecificColumns(
     ];
   }
 
-  return [
+  if (mode === 'baixados') {
+    return [
+      {
+        id: 'obra',
+        label: 'Obra',
+        sortable: true,
+        filter: {
+          type: 'select',
+          filterKey: 'obra_id',
+          placeholder: 'Todas',
+          options: obraOptions,
+        },
+        render: (row) => row.obra?.codigo ?? '—',
+        exportValue: (row) => row.obra?.codigo ?? '',
+      },
+      ...sharedTail,
+      {
+        id: 'tipo_baixa',
+        label: 'Tipo de baixa',
+        render: (row) => getTipoBaixaLabel(row.baixa?.tipo),
+        exportValue: (row) => getTipoBaixaLabel(row.baixa?.tipo),
+      },
+      {
+        id: 'data_baixa',
+        label: 'Data da baixa',
+        sortable: true,
+        render: (row) => formatShortDate(row.baixa?.data_baixa),
+        exportValue: (row) => row.baixa?.data_baixa ?? '',
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        render: (row) => renderStatusBadge(row),
+        exportValue: (row) => row.status_label ?? EQUIPAMENTO_STATUS_LABELS[row.status] ?? '',
+      },
+    ];
+  }
+
+  if (mode === 'manutencao') {
+    return [
     {
       id: 'obra',
       label: 'Obra',
@@ -536,6 +595,25 @@ export function getModeSpecificColumns(
       exportValue: (row) => getEquipamentoTendencia(row)?.label ?? '',
     },
   ];
+  }
+
+  return [];
+}
+
+function renderStatusBadge(row: Equipamento) {
+  const label = row.status_label ?? EQUIPAMENTO_STATUS_LABELS[row.status] ?? row.status;
+  const tone =
+    row.status === 'perdido'
+      ? 'destructive'
+      : row.status === 'baixado'
+        ? 'muted'
+        : row.status === 'em_manutencao'
+          ? 'warning'
+          : row.status === 'em_utilizacao'
+            ? 'info'
+            : 'success';
+
+  return <GridBadge tone={tone}>{label}</GridBadge>;
 }
 
 function renderTendenciaBadge(row: Equipamento) {

@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
   invalidateNotifications,
@@ -57,6 +58,7 @@ export function NotificationsSheetPanel({
   const equipcontrolAlertasEnabled = useEquipcontrolAlertasEnabled();
   const [activeTab, setActiveTab] = useState('all');
 
+  const { t } = useTranslation();
   const { data, isLoading } = useNotificationsList(open);
   const alertasTotal = useEquipcontrolAlertasTotal(
     open && equipcontrolAlertasEnabled,
@@ -66,6 +68,7 @@ export function NotificationsSheetPanel({
     mutationFn: (id: string) => notificationsService.markAsRead(id),
     onSuccess: (response) => {
       upsertNotificationInCache(queryClient, response.data.result);
+      toast.success(t('notifications.marked_read'));
     },
   });
 
@@ -73,6 +76,7 @@ export function NotificationsSheetPanel({
     mutationFn: (id: string) => notificationsService.markAsUnread(id),
     onSuccess: (response) => {
       upsertNotificationInCache(queryClient, response.data.result);
+      toast.success(t('notifications.marked_unread'));
     },
   });
 
@@ -151,6 +155,7 @@ export function NotificationsSheetPanel({
             onMarkRead={(id) => markAsReadMutation.mutate(id)}
             onMarkUnread={(id) => markAsUnreadMutation.mutate(id)}
             onDelete={(id) => deleteMutation.mutate(id)}
+            onNavigate={() => onOpenChange(false)}
           />
         ))}
       </div>

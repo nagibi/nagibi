@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getNotificationActions, getNotificationRecordId } from '@/lib/notification-utils';
+import { formatNotificationBody, getNotificationActions, getNotificationDisplayBody, getNotificationRecordId } from '@/lib/notification-utils';
 import '@/lib/notification-events/index';
 import type { AppNotification } from '@/services/notifications.service';
 
@@ -14,11 +14,63 @@ function buildNotification(data: Record<string, unknown>, overrides: Partial<App
   };
 }
 
+describe('formatNotificationBody', () => {
+  it('remove tags HTML e entidades como &nbsp;', () => {
+    const html = '<table><tr><td>&nbsp; &nbsp; Manutenção concluída</td></tr></table>';
+
+    expect(formatNotificationBody(html)).toBe('Manutenção concluída');
+  });
+});
+
+describe('getNotificationDisplayBody', () => {
+  it('prioriza body_text para notificações do catálogo', () => {
+    const notification = buildNotification({
+      event_slug: 'maintenance.completed',
+      body_text: 'O equipamento foi liberado.',
+      body: '<table>&nbsp;</table>',
+      message: 'Resumo curto',
+    });
+
+    expect(getNotificationDisplayBody(notification)).toBe('O equipamento foi liberado.');
+  });
+
+  it('usa message quando body ainda é HTML legado de e-mail', () => {
+    const notification = buildNotification({
+      event_slug: 'maintenance.completed',
+      body: '<table><td>&nbsp; texto</td></table>',
+      message: 'VIBRADOR — liberado da manutenção',
+    });
+
+    expect(getNotificationDisplayBody(notification)).toBe('VIBRADOR — liberado da manutenção');
+  });
+});
+
 describe('getNotificationRecordId', () => {
-  it('prioriza record_id retornado pela API', () => {
+  it('prioriza record_id retornado pela API em eventos da plataforma', () => {
     const notification = buildNotification({}, { record_id: 42 });
 
     expect(getNotificationRecordId(notification)).toBe(42);
+  });
+
+  it('usa emprestimo_id em notificação de renovação EquipControl', () => {
+    const notification = buildNotification({
+      event_slug: 'loan.renewed',
+      emprestimo_id: 15,
+      equipamento_id: 3,
+      renovacao_id: 8,
+    }, { record_id: 99 });
+
+    expect(getNotificationRecordId(notification)).toBe(15);
+  });
+
+  it('não confunde equipamento_id com emprestimo_id em eventos de empréstimo', () => {
+    const notification = buildNotification({
+      event_slug: 'loan.created',
+      emprestimo_id: 20,
+      equipamento_id: 3,
+    }, { record_id: 99 });
+
+    expect(getNotificationRecordId(notification)).toBe(20);
   });
 
   it('não usa o UUID da rota como fallback visual', () => {

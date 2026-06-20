@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\UserApproval;
 use App\Notifications\UserPendingApprovalNotification;
 use App\Repositories\Contracts\InviteRepositoryInterface;
+use App\Services\PlatformNotificationService;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -19,6 +20,7 @@ final class AcceptInviteAction
 {
     public function __construct(
         private readonly InviteRepositoryInterface $inviteRepository,
+        private readonly PlatformNotificationService $platformNotificationService,
     ) {}
 
     /**
@@ -73,6 +75,8 @@ final class AcceptInviteAction
             'status' => InviteStatus::Accepted,
             'accepted_at' => now(),
         ]);
+
+        $this->platformNotificationService->inviteAccepted($invite, $user);
 
         $token = $user->createToken('api-token')->plainTextToken;
 

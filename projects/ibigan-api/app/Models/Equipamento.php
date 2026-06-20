@@ -186,6 +186,11 @@ class Equipamento extends Model
         return $query->whereHas('baixa', fn (Builder $q) => $q->where('tipo', 'perda'));
     }
 
+    public function scopeBaixadosTodos(Builder $query): Builder
+    {
+        return $query->whereHas('baixa');
+    }
+
     public function scopeParadoHaMaisDe(Builder $query, int $dias): Builder
     {
         return $query->comDiasParados(min: $dias);

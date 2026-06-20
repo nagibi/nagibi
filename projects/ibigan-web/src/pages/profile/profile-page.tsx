@@ -105,41 +105,47 @@ export function ProfilePage() {
     queryFn: () => profileService.show(),
   });
 
-  const { data: tenantsData, isLoading: isLoadingTenants } = useQuery({
-    queryKey: ['profile-tenants', isCentralOnly ? 'central' : 'tenant'],
-    queryFn: async () => {
-      if (isCentralOnly) {
-        return adminTenantsService.list(1, 100);
-      }
-
-      return authService.listTenants();
-    },
+  const { data: centralTenantsData, isLoading: isLoadingCentralTenants } = useQuery({
+    queryKey: ['profile-tenants', 'central'],
+    queryFn: () => adminTenantsService.list(1, 100),
+    enabled: isCentralOnly,
     staleTime: 5 * 60 * 1000,
   });
+
+  const { data: userTenantsData, isLoading: isLoadingUserTenants } = useQuery({
+    queryKey: ['profile-tenants', 'tenant'],
+    queryFn: () => authService.listTenants(),
+    enabled: !isCentralOnly,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const isLoadingTenants = isCentralOnly ? isLoadingCentralTenants : isLoadingUserTenants;
 
   const profile = data?.data.result as Profile | undefined;
 
   const tenants = useMemo<ProfileTenantItem[]>(() => {
-    if (!tenantsData) return [];
-
     if (isCentralOnly) {
-      return tenantsData.data.result.data.map((tenant: AdminTenant) => ({
+      const result = centralTenantsData?.data.result;
+      if (!result) return [];
+
+      return result.data.map((tenant) => ({
         id: tenant.id,
         name: tenant.name,
         slug: tenant.slug,
       }));
     }
 
-    return tenantsData.data.result;
-  }, [isCentralOnly, tenantsData]);
+    return userTenantsData?.data.result ?? [];
+  }, [isCentralOnly, centralTenantsData, userTenantsData]);
 
   const adminTenantsById = useMemo(() => {
-    if (!isCentralOnly || !tenantsData) return new Map<string, AdminTenant>();
+    if (!isCentralOnly) return new Map<string, AdminTenant>();
 
-    return new Map(
-      tenantsData.data.result.data.map((tenant: AdminTenant) => [tenant.id, tenant]),
-    );
-  }, [isCentralOnly, tenantsData]);
+    const result = centralTenantsData?.data.result;
+    if (!result) return new Map<string, AdminTenant>();
+
+    return new Map(result.data.map((tenant) => [tenant.id, tenant]));
+  }, [isCentralOnly, centralTenantsData]);
 
   const NotificationsIcon = notificationsMenu
     ? resolveMenuIcon({

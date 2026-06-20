@@ -4,7 +4,7 @@ import {
   invalidateNotifications,
   upsertNotificationInCache,
 } from '@/lib/notification-cache';
-import { formatNotificationBody } from '@/lib/notification-utils';
+import { getNotificationDisplayBody, formatNotificationBody } from '@/lib/notification-utils';
 import { getEcho } from '@/lib/echo';
 import { showAppToast } from '@/lib/show-app-toast';
 import { type AppNotification } from '@/services/notifications.service';

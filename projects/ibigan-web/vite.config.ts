@@ -38,7 +38,7 @@ export default defineConfig(({ mode }) => {
     },
   },
   optimizeDeps: {
-    include: ['html5-qrcode'],
+    include: ['html5-qrcode', 'qrcode.react'],
   },
   chunkSizeWarningLimit: 3000,
   test: {

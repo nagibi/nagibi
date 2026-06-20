@@ -5,14 +5,17 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Trash2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { usePageToolbar } from '@/hooks/use-page-toolbar';
 import { useApiToolbarAlert } from '@/hooks/use-api-toolbar-alert';
 import { useGridColumnLabels } from '@/hooks/use-grid-column-labels';
 import { useGrid } from '@/hooks/use-grid';
+import { useGridUrlSearchSync } from '@/hooks/use-grid-url-search-sync';
+import { useGridEquipamentoIdFilterSync } from '@/hooks/use-grid-url-filters-sync';
 import { useSyncGridUrl } from '@/hooks/use-sync-grid-url';
 import { useGridKeyboard } from '@/hooks/use-grid-keyboard';
 import { useGridColumns, type GridColumnDef } from '@/hooks/use-grid-columns';
-import { useGridFilters, dateRangeFilterFromKey, dateRangeFilterToKey } from '@/hooks/use-grid-filters';
+import { useGridFilters } from '@/hooks/use-grid-filters';
 import { useGridViewMode } from '@/hooks/use-grid-view-mode';
 import { GridColumnDataView } from '@/components/grid/grid-column-data-view';
 import { GridColumnsControl } from '@/components/grid/grid-columns-control';
@@ -21,17 +24,18 @@ import { GridPagination } from '@/components/grid/grid-pagination';
 import { GridResetControl } from '@/components/grid/grid-reset-control';
 import { GridRowActions } from '@/components/grid/grid-row-actions';
 import { GridPanelToolbar, StandardGridToolbar } from '@/components/grid/grid-toolbar';
+import { EquipamentoMobileFiltersButton } from '@/pages/equipamentos/components/equipamento-mobile-filters-button';
+import { applyEquipamentoColumnFiltersToParams } from '@/lib/equipamento-column-filters';
+import { buildEquipamentoActiveFilters } from '@/lib/equipamento-active-filters';
 import { GridViewModeControl } from '@/components/grid/grid-view-mode-control';
 import { getGridRecordCount } from '@/components/grid/grid-record-count';
-import { formatDateRangeFilterLabel } from '@/components/grid/grid-date-range-filter';
-import { formatNumberRangeFilterLabel } from '@/components/grid/grid-number-range-filter';
-import { getColumnFilterDisplayValue } from '@/lib/grid-filter-display';
 import { getApiErrorMessage } from '@/lib/get-api-error-message';
 import { showAppToast } from '@/lib/show-app-toast';
 import { GridQuickFilters } from '@/components/grid/grid-quick-filters';
 import {
   applyContextFilterToParams,
   FILTER_LABELS,
+  getDefaultContextFilter,
   getFiltersForMode,
   resolveContextFilter,
   type EquipamentoContextFilter,
@@ -48,6 +52,8 @@ import { EquipamentoThumbnail } from '@/pages/equipamentos/components/equipament
 import { EquipamentoUtilizacaoBar } from '@/pages/equipamentos/components/equipamento-utilizacao-bar';
 import { useEquipamentoPotencialDevolucao } from '@/hooks/use-equipamento-potencial-devolucao';
 import { EquipamentoQrModal } from '@/pages/equipamentos/components/equipamento-qr-modal';
+import { EquipamentoMobileToolbar } from '@/pages/equipamentos/components/equipamento-mobile-toolbar';
+import { EquipamentoSearchField } from '@/pages/equipamentos/components/equipamento-search-field';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -90,156 +96,6 @@ function getAuditUserName(
   return equipamento[field]?.name ?? '—';
 }
 
-function applyColumnFiltersToParams(
-  params: EquipamentosListParams,
-  filters: Record<string, string>,
-): EquipamentosListParams {
-  const next = { ...params };
-
-  if (filters.id?.trim()) {
-    const id = Number(filters.id.trim());
-    if (!Number.isNaN(id)) next.id = id;
-  }
-
-  if (filters.patrimonio?.trim()) {
-    next.patrimonio = filters.patrimonio.trim();
-  }
-
-  if (filters.tipo_id?.trim()) {
-    next.tipo_id = Number(filters.tipo_id);
-  }
-
-  if (filters.grupo_id?.trim()) {
-    next.grupo_id = Number(filters.grupo_id);
-  }
-
-  if (filters.obra_id?.trim()) {
-    next.obra_id = Number(filters.obra_id);
-  }
-
-  if (filters.fornecedor_id?.trim()) {
-    next.fornecedor_id = Number(filters.fornecedor_id);
-  }
-
-  if (filters.is_critico === 'true') {
-    next.is_critico = true;
-  } else if (filters.is_critico === 'false') {
-    next.is_critico = false;
-  }
-
-  if (filters.is_active === 'true') {
-    next.is_active = true;
-  } else if (filters.is_active === 'false') {
-    next.is_active = false;
-  }
-
-  const paradoFrom = filters[dateRangeFilterFromKey('parado_dias')]?.trim();
-  const paradoTo = filters[dateRangeFilterToKey('parado_dias')]?.trim();
-
-  if (paradoFrom) {
-    const min = Number(paradoFrom);
-    if (!Number.isNaN(min)) next.parado_dias_min = min;
-  }
-
-  if (paradoTo) {
-    const max = Number(paradoTo);
-    if (!Number.isNaN(max)) next.parado_dias_max = max;
-  }
-
-  const valorFrom = filters[dateRangeFilterFromKey('valor_mensal')]?.trim();
-  const valorTo = filters[dateRangeFilterToKey('valor_mensal')]?.trim();
-
-  if (valorFrom) {
-    const min = Number(valorFrom);
-    if (!Number.isNaN(min)) next.valor_mensal_min = min;
-  }
-
-  if (valorTo) {
-    const max = Number(valorTo);
-    if (!Number.isNaN(max)) next.valor_mensal_max = max;
-  }
-
-  if (filters.situacao?.trim()) {
-    next.situacao = filters.situacao.trim() as EquipamentosListParams['situacao'];
-  }
-
-  if (filters.emprestimo_alerta?.trim()) {
-    next.emprestimo_alerta = filters.emprestimo_alerta.trim() as EquipamentosListParams['emprestimo_alerta'];
-  }
-
-  if (filters.manutencao_filtro?.trim()) {
-    next.manutencao_filtro = filters.manutencao_filtro.trim() as EquipamentosListParams['manutencao_filtro'];
-  }
-
-  if (filters.colaborador?.trim()) {
-    next.colaborador = filters.colaborador.trim();
-  }
-
-  if (filters.encarregado?.trim()) {
-    next.encarregado = filters.encarregado.trim();
-  }
-
-  const retiradaFrom = filters[dateRangeFilterFromKey('data_retirada')]?.trim();
-  const retiradaTo = filters[dateRangeFilterToKey('data_retirada')]?.trim();
-  if (retiradaFrom) next.data_retirada_from = retiradaFrom;
-  if (retiradaTo) next.data_retirada_to = retiradaTo;
-
-  const diasUsoFrom = filters[dateRangeFilterFromKey('dias_em_uso')]?.trim();
-  const diasUsoTo = filters[dateRangeFilterToKey('dias_em_uso')]?.trim();
-  if (diasUsoFrom) {
-    const min = Number(diasUsoFrom);
-    if (!Number.isNaN(min)) next.dias_em_uso_min = min;
-  }
-  if (diasUsoTo) {
-    const max = Number(diasUsoTo);
-    if (!Number.isNaN(max)) next.dias_em_uso_max = max;
-  }
-
-  if (filters.motivo?.trim()) {
-    next.motivo = filters.motivo.trim();
-  }
-
-  if (filters.responsabilidade?.trim()) {
-    next.responsabilidade = filters.responsabilidade.trim() as EquipamentosListParams['responsabilidade'];
-  }
-
-  const manutencaoEntradaFrom = filters[dateRangeFilterFromKey('manutencao_data_entrada')]?.trim();
-  const manutencaoEntradaTo = filters[dateRangeFilterToKey('manutencao_data_entrada')]?.trim();
-  if (manutencaoEntradaFrom) next.manutencao_data_entrada_from = manutencaoEntradaFrom;
-  if (manutencaoEntradaTo) next.manutencao_data_entrada_to = manutencaoEntradaTo;
-
-  const diasManutencaoFrom = filters[dateRangeFilterFromKey('dias_em_manutencao')]?.trim();
-  const diasManutencaoTo = filters[dateRangeFilterToKey('dias_em_manutencao')]?.trim();
-  if (diasManutencaoFrom) {
-    const min = Number(diasManutencaoFrom);
-    if (!Number.isNaN(min)) next.dias_em_manutencao_min = min;
-  }
-  if (diasManutencaoTo) {
-    const max = Number(diasManutencaoTo);
-    if (!Number.isNaN(max)) next.dias_em_manutencao_max = max;
-  }
-
-  const createdFrom = filters[dateRangeFilterFromKey('created_at')]?.trim();
-  const createdTo = filters[dateRangeFilterToKey('created_at')]?.trim();
-  if (createdFrom) next.created_at_from = createdFrom;
-  if (createdTo) next.created_at_to = createdTo;
-
-  const updatedFrom = filters[dateRangeFilterFromKey('updated_at')]?.trim();
-  const updatedTo = filters[dateRangeFilterToKey('updated_at')]?.trim();
-  if (updatedFrom) next.updated_at_from = updatedFrom;
-  if (updatedTo) next.updated_at_to = updatedTo;
-
-  if (filters.created_by?.trim()) {
-    next.created_by = filters.created_by.trim();
-  }
-
-  if (filters.updated_by?.trim()) {
-    next.updated_by = filters.updated_by.trim();
-  }
-
-  return next;
-}
-
 function toSelectOptions(items: Array<{ id: number; nome: string; codigo?: string }>) {
   return items.map((item) => ({
     label: item.codigo ? `${item.codigo} · ${item.nome}` : item.nome,
@@ -253,6 +109,9 @@ type EquipamentosModeGridViewProps = {
 
 export function EquipamentosModeGridView({ mode }: EquipamentosModeGridViewProps) {
   const config = MODE_GRID_CONFIG[mode];
+  const isMobile = useIsMobile();
+  const showMobileSearch = isMobile && !config.showStatsOnMobile;
+  const defaultQuickFilter = getDefaultContextFilter(mode);
   const { t } = useTranslation();
   const cols = useGridColumnLabels();
   const { showError, showToggleActive } = useApiToolbarAlert();
@@ -311,11 +170,13 @@ export function EquipamentosModeGridView({ mode }: EquipamentosModeGridViewProps
         }
       : {}),
   });
+  useGridUrlSearchSync(grid.setSearch);
   const { viewMode, setViewMode } = useGridViewMode(config.viewPreferenceKey);
   const { setPage } = grid;
   const columnFilters = useGridFilters(() => setPage(1), {
     defaultFilters: initialUrlState.filters,
   });
+  useGridEquipamentoIdFilterSync(columnFilters.setFilter, columnFilters.clearFilter);
 
   const [filtro, setFiltro] = useState<EquipamentoContextFilter>(() =>
     resolveContextFilter(mode, searchParams.get('filtro')),
@@ -324,11 +185,13 @@ export function EquipamentosModeGridView({ mode }: EquipamentosModeGridViewProps
   useSyncGridUrl({
     page: grid.page,
     perPage: grid.perPage,
+    search: grid.search,
     debouncedSearch: grid.debouncedSearch,
     sort: grid.sort,
     sortDir: grid.sortDir,
+    filters: columnFilters.filters,
     debouncedFilters: columnFilters.debouncedFilters,
-    contextFilter: filtro !== 'todos' ? filtro : null,
+    contextFilter: filtro !== defaultQuickFilter ? filtro : null,
   });
 
   useEffect(() => {
@@ -351,7 +214,7 @@ export function EquipamentosModeGridView({ mode }: EquipamentosModeGridViewProps
 
   const quickFilterOptions = useMemo(
     () =>
-      getFiltersForMode(mode).map((filter) => ({
+      getFiltersForMode(mode as Parameters<typeof getFiltersForMode>[0]).map((filter) => ({
         value: filter,
         label: FILTER_LABELS[filter],
       })),
@@ -394,7 +257,6 @@ export function EquipamentosModeGridView({ mode }: EquipamentosModeGridViewProps
   const listParams = useMemo((): EquipamentosListParams => {
     const search = grid.debouncedSearch.trim();
     const params: EquipamentosListParams = {
-      ...(search ? {} : { status: config.status }),
       search: search || undefined,
       page: grid.page,
       per_page: grid.perPage,
@@ -402,8 +264,12 @@ export function EquipamentosModeGridView({ mode }: EquipamentosModeGridViewProps
       direction: grid.sort ? grid.sortDir : undefined,
     };
 
+    if (config.status) {
+      params.status = config.status;
+    }
+
     const withContext = applyContextFilterToParams(mode, filtro, params);
-    return applyColumnFiltersToParams(withContext, columnFilters.debouncedFilters);
+    return applyEquipamentoColumnFiltersToParams(withContext, columnFilters.debouncedFilters);
   }, [
     grid.debouncedSearch,
     grid.page,
@@ -702,99 +568,50 @@ export function EquipamentosModeGridView({ mode }: EquipamentosModeGridViewProps
     grid.clearSearch();
     grid.resetSettings();
     gridColumns.resetColumns();
-    setFiltro('todos');
+    setFiltro(defaultQuickFilter);
     setPage(1);
   };
 
   const handleClearAllFilters = () => {
     columnFilters.clearAllFilters();
     grid.clearSearch();
-    setFiltro('todos');
+    setFiltro(defaultQuickFilter);
   };
 
-  const activeFilters = useMemo(() => {
-    const items = [];
-
-    if (filtro !== 'todos') {
-      items.push({
-        id: 'filtro',
-        label: 'Filtro rápido',
-        value: FILTER_LABELS[filtro],
-        onRemove: () => handleQuickFilterChange('todos'),
-      });
-    }
-
-    if (grid.search.trim()) {
-      items.push({
-        id: 'search',
-        label: 'Busca',
-        value: grid.search.trim(),
-        onRemove: grid.clearSearch,
-      });
-    }
-
-    for (const column of columnDefinitions) {
-      if (!column.filter) continue;
-
-      if (column.filter.type === 'numberRange') {
-        const from =
-          columnFilters.filters[dateRangeFilterFromKey(column.filter.filterKey)]?.trim() ?? '';
-        const to =
-          columnFilters.filters[dateRangeFilterToKey(column.filter.filterKey)]?.trim() ?? '';
-        if (!from && !to) continue;
-
-        items.push({
-          id: column.filter.filterKey,
-          label: column.label,
-          value: formatNumberRangeFilterLabel(from, to, {
-            variant: column.filter.numberRangeFormat === 'currency' ? 'currency' : 'default',
-          }),
-          onRemove: () => columnFilters.clearDateRangeFilter(column.filter!.filterKey),
-        });
-        continue;
-      }
-
-      if (column.filter.type === 'dateRange') {
-        const from =
-          columnFilters.filters[dateRangeFilterFromKey(column.filter.filterKey)]?.trim() ?? '';
-        const to =
-          columnFilters.filters[dateRangeFilterToKey(column.filter.filterKey)]?.trim() ?? '';
-        if (!from && !to) continue;
-
-        items.push({
-          id: column.filter.filterKey,
-          label: column.label,
-          value: formatDateRangeFilterLabel(from, to),
-          onRemove: () => columnFilters.clearDateRangeFilter(column.filter!.filterKey),
-        });
-        continue;
-      }
-
-      const value = columnFilters.filters[column.filter.filterKey]?.trim();
-      if (!value) continue;
-
-      items.push({
-        id: column.filter.filterKey,
-        label: column.label,
-        value: getColumnFilterDisplayValue(column.filter, value),
-        onRemove: () => columnFilters.clearColumnFilter(column.filter!),
-      });
-    }
-
-    return items;
-  }, [
-    columnDefinitions,
-    columnFilters.filters,
-    columnFilters.clearColumnFilter,
-    columnFilters.clearDateRangeFilter,
-    filtro,
-    grid.clearSearch,
-    grid.search,
-    handleQuickFilterChange,
-  ]);
+  const activeFilters = useMemo(
+    () =>
+      buildEquipamentoActiveFilters({
+        columns: columnDefinitions,
+        columnFilters,
+        quickFilter:
+          filtro !== defaultQuickFilter
+            ? {
+                value: filtro,
+                defaultValue: defaultQuickFilter,
+                onChange: handleQuickFilterChange,
+              }
+            : undefined,
+        search: showMobileSearch
+          ? undefined
+          : {
+              value: grid.search,
+              onClear: grid.clearSearch,
+            },
+      }),
+    [
+      columnDefinitions,
+      columnFilters,
+      defaultQuickFilter,
+      filtro,
+      grid.clearSearch,
+      grid.search,
+      handleQuickFilterChange,
+      showMobileSearch,
+    ],
+  );
 
   const hasActiveFilters =
-    columnFilters.hasFilters || grid.hasFilters || filtro !== 'todos';
+    columnFilters.hasFilters || grid.hasFilters || filtro !== defaultQuickFilter;
   const isGridCustomized = hasActiveFilters || grid.isCustomized || gridColumns.isCustomized;
 
   const pagination = meta ? (
@@ -806,106 +623,129 @@ export function EquipamentosModeGridView({ mode }: EquipamentosModeGridViewProps
     />
   ) : null;
 
-  return (
-    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3 overflow-hidden xl:h-[calc(100dvh-var(--header-height)-var(--page-content-header-height,0px)-0.75rem)] xl:gap-3">
-      {config.showStatsOnMobile ? (
-        <EquipamentoPageStack className="shrink-0 xl:hidden">
-          <EquipamentoStatsBar />
-          <EquipamentoUtilizacaoBar />
-          {config.showPotencialDevolucao ? (
-            <EquipamentoPotencialDevolucaoBanner
-              data={potencialDevolucao}
-              isLoading={loadingPotencialDevolucao}
-            />
-          ) : null}
-        </EquipamentoPageStack>
-      ) : null}
+  const gridPanelFilters = showMobileSearch
+    ? undefined
+    : {
+        active: activeFilters,
+        onClearAll: hasActiveFilters ? handleClearAllFilters : undefined,
+        columnFilters: {
+          columns: gridColumns.visibleColumns,
+          values: columnFilters.filters,
+          onFilterChange: columnFilters.setFilter,
+          onDateRangeChange: columnFilters.setDateRangeFilter,
+          onFilterClear: columnFilters.clearColumnFilter,
+        },
+      };
 
-      <GridPanel
-        className="min-h-0 flex-1"
-        toolbar={
-          <GridPanelToolbar
-            onSelectAll={() => grid.toggleSelectAll(items.map((item) => item.id))}
-            isAllSelected={grid.isAllSelected(items.length)}
-            selectedCount={grid.selected.length}
-            onClearSelection={grid.clearSelection}
-            onRefresh={refresh}
-            isRefreshing={isFetching}
-            search={grid.search}
-            onSearch={grid.setSearch}
-            searchPlaceholder={EQUIPAMENTO_SEARCH_PLACEHOLDER}
-            quickFiltersControl={
+  const gridPanel = (
+    <GridPanel
+      className="min-h-0 flex-1"
+      toolbar={
+        <GridPanelToolbar
+          onSelectAll={() => grid.toggleSelectAll(items.map((item) => item.id))}
+          isAllSelected={grid.isAllSelected(items.length)}
+          selectedCount={grid.selected.length}
+          onClearSelection={grid.clearSelection}
+          onRefresh={refresh}
+          isRefreshing={isFetching}
+          search={showMobileSearch ? undefined : grid.search}
+          onSearch={showMobileSearch ? undefined : grid.setSearch}
+          searchPlaceholder={EQUIPAMENTO_SEARCH_PLACEHOLDER}
+          quickFiltersControl={
+            quickFilterOptions.length > 0 ? (
               <GridQuickFilters
                 value={filtro}
                 onChange={handleQuickFilterChange}
-                defaultValue="todos"
+                defaultValue={defaultQuickFilter}
                 options={quickFilterOptions}
               />
-            }
-            filters={{
-              active: activeFilters,
-              onClearAll: hasActiveFilters ? handleClearAllFilters : undefined,
-              columnFilters: {
-                columns: gridColumns.visibleColumns,
-                values: columnFilters.filters,
-                onFilterChange: columnFilters.setFilter,
-                onDateRangeChange: columnFilters.setDateRangeFilter,
-                onFilterClear: columnFilters.clearColumnFilter,
-              },
-            }}
-            columnsControl={
-              <GridColumnsControl
-                columns={columnDefinitions}
-                order={gridColumns.order}
-                hidden={gridColumns.hidden}
-                visibleCount={gridColumns.visibleCount}
-                totalCount={gridColumns.totalCount}
-                isCustomized={gridColumns.isCustomized}
-                onOrderChange={gridColumns.setColumnOrder}
-                onSetVisibility={gridColumns.setColumnVisibility}
-                canHideColumn={gridColumns.canHideColumn}
-                onShowAll={gridColumns.showAllColumns}
-                onHideAll={gridColumns.hideAllColumns}
-                onResetDefault={gridColumns.resetColumns}
-              />
-            }
-            resetControl={
-              <GridResetControl disabled={!isGridCustomized} onReset={handleResetGrid} />
-            }
-            viewModeControl={
-              <GridViewModeControl viewMode={viewMode} onViewModeChange={setViewMode} />
-            }
-            recordCount={getGridRecordCount(meta?.total ?? 0, items.length, false)}
-          />
-        }
-        footer={pagination}
-      >
-        <GridColumnDataView
-          viewMode={viewMode}
-          columns={gridColumns.visibleColumns}
-          data={items}
-          getRowKey={(row) => row.id}
-          loading={isLoading}
-          emptyMessage="Nenhum equipamento encontrado."
-          titleColumnId="patrimonio"
-          getRowActions={(row) => getModeRowActions(mode, row, openModal)}
-          columnFilters={columnFilters.filters}
-          onColumnFilterChange={columnFilters.setFilter}
-          onDateRangeFilterChange={columnFilters.setDateRangeFilter}
-          onColumnFilterClear={columnFilters.clearColumnFilter}
-          isRowSelected={(row) => grid.selected.includes(row.id)}
-          onRowClick={(row, event) =>
-            grid.selectRow(row.id, {
-              shift: event.shiftKey,
-              rangeOrder: items.map((item) => item.id),
-            })
+            ) : null
           }
-          onRowDoubleClick={(row) => openModal(row, config.doubleClickModal)}
-          sort={grid.sort}
-          sortDir={grid.sortDir}
-          onSort={grid.toggleSort}
+          filters={gridPanelFilters}
+          columnsControl={
+            <GridColumnsControl
+              columns={columnDefinitions}
+              order={gridColumns.order}
+              hidden={gridColumns.hidden}
+              visibleCount={gridColumns.visibleCount}
+              totalCount={gridColumns.totalCount}
+              isCustomized={gridColumns.isCustomized}
+              onOrderChange={gridColumns.setColumnOrder}
+              onSetVisibility={gridColumns.setColumnVisibility}
+              canHideColumn={gridColumns.canHideColumn}
+              onShowAll={gridColumns.showAllColumns}
+              onHideAll={gridColumns.hideAllColumns}
+              onResetDefault={gridColumns.resetColumns}
+            />
+          }
+          resetControl={
+            <GridResetControl disabled={!isGridCustomized} onReset={handleResetGrid} />
+          }
+          viewModeControl={
+            <GridViewModeControl viewMode={viewMode} onViewModeChange={setViewMode} />
+          }
+          recordCount={getGridRecordCount(meta?.total ?? 0, items.length, false)}
         />
-      </GridPanel>
+      }
+      footer={pagination}
+    >
+      <GridColumnDataView
+        viewMode={viewMode}
+        columns={gridColumns.visibleColumns}
+        data={items}
+        getRowKey={(row) => row.id}
+        loading={isLoading}
+        emptyMessage="Nenhum equipamento encontrado."
+        titleColumnId="patrimonio"
+        getRowActions={(row) => getModeRowActions(mode, row, openModal)}
+        columnFilters={columnFilters.filters}
+        onColumnFilterChange={columnFilters.setFilter}
+        onDateRangeFilterChange={columnFilters.setDateRangeFilter}
+        onColumnFilterClear={columnFilters.clearColumnFilter}
+        isRowSelected={(row) => grid.selected.includes(row.id)}
+        onRowClick={(row, event) =>
+          grid.selectRow(row.id, {
+            shift: event.shiftKey,
+            rangeOrder: items.map((item) => item.id),
+          })
+        }
+        onRowDoubleClick={(row) => openModal(row, config.doubleClickModal)}
+        sort={grid.sort}
+        sortDir={grid.sortDir}
+        onSort={grid.toggleSort}
+      />
+    </GridPanel>
+  );
+
+  return (
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden max-xl:flex-none max-xl:gap-3 xl:h-[calc(100dvh-var(--header-height)-var(--page-content-header-height,0px)-0.75rem)] xl:gap-3">
+      {showMobileSearch ? (
+        <EquipamentoPageStack className="min-h-0 flex-1">
+          <EquipamentoMobileToolbar compact>
+            <EquipamentoSearchField
+              value={grid.search}
+              onChange={grid.setSearch}
+              filterSlot={
+                <EquipamentoMobileFiltersButton
+                  mode={mode}
+                  filters={activeFilters}
+                  onClearAll={hasActiveFilters ? handleClearAllFilters : undefined}
+                  columnFilters={{
+                    columns: gridColumns.visibleColumns,
+                    values: columnFilters.filters,
+                    onFilterChange: columnFilters.setFilter,
+                    onDateRangeChange: columnFilters.setDateRangeFilter,
+                    onFilterClear: columnFilters.clearColumnFilter,
+                  }}
+                />
+              }
+            />
+          </EquipamentoMobileToolbar>
+          {gridPanel}
+        </EquipamentoPageStack>
+      ) : (
+        gridPanel
+      )}
 
       <EmprestarModal
         equipamento={selected}

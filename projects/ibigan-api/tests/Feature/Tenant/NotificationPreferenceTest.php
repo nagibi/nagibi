@@ -118,13 +118,35 @@ it('atualiza preferência de e-mail via PATCH', function (): void {
         ->and($result['campaign.sent']['app'])->toBeTrue();
 });
 
+it('atualiza preferência de evento equipcontrol via PATCH', function (): void {
+    Sanctum::actingAs($this->admin, ['*'], 'sanctum');
+
+    $response = $this->patchJson(
+        '/api/v1/notification-preferences',
+        [
+            'event' => 'maintenance.sent',
+            'channel' => 'email',
+            'enabled' => true,
+        ],
+        notificationPreferenceHeaders($this->tenant),
+    );
+
+    $response->assertOk()
+        ->assertJsonPath('status', 1);
+
+    $result = $response->json('result');
+
+    expect($result['maintenance.sent']['email'])->toBeTrue()
+        ->and($result['maintenance.sent']['app'])->toBeTrue();
+});
+
 it('rejeita evento inválido', function (): void {
     Sanctum::actingAs($this->admin, ['*'], 'sanctum');
 
     $response = $this->patchJson(
         '/api/v1/notification-preferences',
         [
-            'event' => 'loan.overdue',
+            'event' => 'unknown.event',
             'channel' => 'app',
             'enabled' => true,
         ],
@@ -197,11 +219,14 @@ it('retorna preferências atualizadas após múltiplas alterações', function (
         });
 });
 
-it('expõe apenas eventos definidos no serviço', function (): void {
-    expect(array_keys(NotificationPreferenceService::EVENTS))->toEqual([
+it('expõe eventos de plataforma e equipcontrol no serviço', function (): void {
+    $events = array_keys(NotificationPreferenceService::EVENTS);
+
+    expect($events)->toContain(
         'report.completed',
-        'campaign.sent',
-        'invite.accepted',
-        'user.created',
-    ]);
+        'maintenance.sent',
+        'loan.overdue',
+        'digest.weekly',
+    )
+        ->and(count($events))->toBe(33);
 });

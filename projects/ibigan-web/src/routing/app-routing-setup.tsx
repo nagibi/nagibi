@@ -47,7 +47,6 @@ import { EquipControlLayout } from '@/pages/equipamentos/equipcontrol-layout';
 import { EquipamentosBaixadosPage } from '@/pages/equipamentos/equipamentos-baixados-page';
 import { EquipamentosEstoquePage } from '@/pages/equipamentos/equipamentos-estoque-page';
 import { EquipamentosGestaoPage } from '@/pages/equipamentos/equipamentos-gestao-page';
-import { EquipamentosHistoricoPage } from '@/pages/equipamentos/equipamentos-historico-page';
 import { EquipamentosMaisPage } from '@/pages/equipamentos/equipamentos-mais-page';
 import { FornecedorFormPage } from '@/pages/equipamentos/catalog/fornecedor-form-page';
 import { FornecedoresPage } from '@/pages/equipamentos/catalog/fornecedores-page';
@@ -293,7 +292,7 @@ export function AppRoutingSetup() {
           <Route path="mais" element={<EquipamentosMaisPage />} />
           <Route path="dashboard" element={<EquipamentosGestaoPage />} />
           <Route path="gestao" element={<Navigate to="/equipamentos/dashboard" replace />} />
-          <Route path="historico" element={<EquipamentosHistoricoPage />} />
+          <Route path="historico" element={<Navigate to="/equipamentos/estoque" replace />} />
           <Route path="baixados" element={<EquipamentosBaixadosPage />} />
           <Route path="obras" element={<ObrasPage />} />
           <Route path="obras/new" element={<ObraFormPage key="obra-new" />} />

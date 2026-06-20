@@ -2,6 +2,7 @@ import type { EquipamentoListMode } from '@/pages/equipamentos/equipamentos-list
 import { useSearchParams } from 'react-router-dom';
 import {
   FILTER_LABELS,
+  getDefaultContextFilter,
   getFiltersForMode,
   resolveContextFilter,
   type EquipamentoContextFilter,
@@ -17,6 +18,7 @@ export function EquipamentoFilterChips({ mode }: EquipamentoFilterChipsProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const filtroParam = searchParams.get('filtro');
   const activeFilter = resolveContextFilter(mode, filtroParam);
+  const defaultFilter = getDefaultContextFilter(mode);
   const filters = getFiltersForMode(mode);
 
   if (filters.length === 0) {
@@ -30,7 +32,9 @@ export function EquipamentoFilterChips({ mode }: EquipamentoFilterChipsProps) {
 
     const params = new URLSearchParams(searchParams);
 
-    if (filter === 'todos') {
+    const isDefaultFilter = filter === defaultFilter;
+
+    if (isDefaultFilter) {
       params.delete('filtro');
     } else {
       params.set('filtro', filter);

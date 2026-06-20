@@ -105,6 +105,18 @@ class MenuSeeder extends Seeder
             'roles' => ['admin', 'manager', 'viewer', 'operator', 'super-admin'],
         ]);
 
+        Menu::create([
+            'title' => 'Baixados',
+            'slug' => 'equipcontrol-baixados',
+            'icon' => 'Archive',
+            'path' => '/equipamentos/baixados',
+            'parent_id' => $equipcontrolOperacao->id,
+            'order' => 4,
+            'is_active' => true,
+            'requires_auth' => true,
+            'roles' => ['admin', 'manager', 'viewer', 'operator', 'super-admin'],
+        ]);
+
         $equipcontrolCadastros = Menu::create([
             'title' => 'Cadastros',
             'slug' => 'equipcontrol-cadastros',
@@ -533,6 +545,7 @@ class MenuSeeder extends Seeder
             'equipcontrol-estoque' => 'menu.equipcontrol.stock',
             'equipcontrol-manutencao' => 'menu.equipcontrol.maintenance',
             'equipcontrol-movimentacoes' => 'menu.equipcontrol.movements',
+            'equipcontrol-baixados' => 'menu.equipcontrol.decommissioned',
             'equipcontrol-cadastros' => 'menu.equipcontrol.catalogs',
             'equipcontrol-tipos' => 'menu.equipcontrol.types',
             'equipcontrol-fornecedores' => 'menu.equipcontrol.suppliers',

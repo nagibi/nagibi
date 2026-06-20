@@ -4,8 +4,13 @@ import type { EquipamentosListParams } from '@/services/equipamentos.service';
 export type EstoqueFilter = 'todos' | 'criticos' | 'parados' | 'recem_cadastrados';
 export type MovimentacaoFilter = 'todos' | 'normais' | 'proximos_vencimento' | 'vencidos';
 export type ManutencaoFilter = 'todos' | 'hoje' | 'atrasados' | 'criticos';
+export type BaixadosFilter = 'todos' | 'devolvidos' | 'perdidos';
 
-export type EquipamentoContextFilter = EstoqueFilter | MovimentacaoFilter | ManutencaoFilter;
+export type EquipamentoContextFilter =
+  | EstoqueFilter
+  | MovimentacaoFilter
+  | ManutencaoFilter
+  | BaixadosFilter;
 
 const ESTOQUE_FILTERS: EstoqueFilter[] = ['todos', 'criticos', 'parados', 'recem_cadastrados'];
 const MOVIMENTACAO_FILTERS: MovimentacaoFilter[] = [
@@ -15,6 +20,7 @@ const MOVIMENTACAO_FILTERS: MovimentacaoFilter[] = [
   'vencidos',
 ];
 const MANUTENCAO_FILTERS: ManutencaoFilter[] = ['todos', 'hoje', 'atrasados', 'criticos'];
+const BAIXADOS_FILTERS: BaixadosFilter[] = ['todos', 'devolvidos', 'perdidos'];
 
 export const ESTOQUE_POTENCIAL_DEVOLUCAO_FILTER: EstoqueFilter = 'parados';
 
@@ -28,6 +34,8 @@ export const FILTER_LABELS: Record<EquipamentoContextFilter, string> = {
   vencidos: 'Vencidos',
   hoje: 'Hoje',
   atrasados: 'Atrasados',
+  devolvidos: 'Devolvidos',
+  perdidos: 'Perdidos',
 };
 
 export function getFiltersForMode(mode: EquipamentoListMode): EquipamentoContextFilter[] {
@@ -38,6 +46,8 @@ export function getFiltersForMode(mode: EquipamentoListMode): EquipamentoContext
       return MOVIMENTACAO_FILTERS;
     case 'manutencao':
       return MANUTENCAO_FILTERS;
+    case 'baixados':
+      return BAIXADOS_FILTERS;
     default:
       return [];
   }
@@ -53,6 +63,10 @@ export function resolveContextFilter(
     return filtroParam as EquipamentoContextFilter;
   }
 
+  return 'todos';
+}
+
+export function getDefaultContextFilter(mode: EquipamentoListMode): EquipamentoContextFilter {
   return 'todos';
 }
 
@@ -77,6 +91,16 @@ export function applyContextFilterToParams(
     if (filtro === 'hoje') params.manutencao_filtro = 'hoje';
     if (filtro === 'atrasados') params.manutencao_filtro = 'atrasados';
     if (filtro === 'criticos') params.manutencao_filtro = 'criticos';
+  }
+
+  if (mode === 'baixados') {
+    if (filtro === 'perdidos') {
+      params.status = 'perdidos';
+    } else if (filtro === 'devolvidos') {
+      params.status = 'baixados';
+    } else {
+      params.status = 'baixados_todos';
+    }
   }
 
   return params;

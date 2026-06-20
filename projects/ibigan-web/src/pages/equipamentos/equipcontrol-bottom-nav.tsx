@@ -46,6 +46,14 @@ const SPEED_DIAL_ACTIONS = [
   },
 ] as const;
 
+const MAIS_SECTION_PATHS = [
+  '/equipamentos/mais',
+  '/equipamentos/baixados',
+  '/equipamentos/tipos',
+  '/equipamentos/fornecedores',
+  '/equipamentos/obras',
+] as const;
+
 export function EquipcontrolBottomNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -53,6 +61,7 @@ export function EquipcontrolBottomNav() {
   const [speedDialOpen, setSpeedDialOpen] = useState(false);
 
   const isActive = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
+  const isMaisSectionActive = MAIS_SECTION_PATHS.some((path) => isActive(path));
 
   const itemClass = (active: boolean) =>
     cn(
@@ -193,7 +202,7 @@ export function EquipcontrolBottomNav() {
 
           <button
             type="button"
-            className={itemClass(isActive('/equipamentos/mais'))}
+            className={itemClass(isMaisSectionActive)}
             onClick={() => navigate('/equipamentos/mais')}
           >
             <MoreHorizontal className="size-5 shrink-0" />

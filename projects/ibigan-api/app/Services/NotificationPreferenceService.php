@@ -6,16 +6,12 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\UserNotificationPreference;
+use App\Support\NotificationEventDefaults;
 
 final class NotificationPreferenceService
 {
     /** @var array<string, array{email: bool, app: bool}> */
-    public const EVENTS = [
-        'report.completed' => ['email' => true, 'app' => true],
-        'campaign.sent' => ['email' => false, 'app' => true],
-        'invite.accepted' => ['email' => true, 'app' => true],
-        'user.created' => ['email' => false, 'app' => true],
-    ];
+    public const EVENTS = NotificationEventDefaults::EVENTS;
 
     public function getForUser(User $user): array
     {

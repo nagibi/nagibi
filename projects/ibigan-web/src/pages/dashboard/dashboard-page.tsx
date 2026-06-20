@@ -425,9 +425,6 @@ export function DashboardPage() {
   return (
     <PageBody className="min-w-0 max-w-full space-y-5">
       <section className="min-w-0 max-w-full">
-        <p className="text-muted-foreground mb-2 text-[10px] font-medium uppercase tracking-widest">
-          {t('dashboard.overview')}
-        </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-8">
           <StatCard
             label={t('dashboard.stats.tenants')}

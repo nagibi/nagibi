@@ -12,9 +12,43 @@ export function getNotificationType(notification: AppNotification): string {
 
 export function formatNotificationBody(body: unknown): string {
   return String(body ?? '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
     .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&#160;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]{2,}/g, ' ')
     .trim();
+}
+
+export function getNotificationDisplayBody(notification: AppNotification): string {
+  const data = notification.data;
+
+  if (data.body_text) {
+    return String(data.body_text);
+  }
+
+  const rawBody = data.body ? String(data.body) : '';
+  if (rawBody.includes('<table') && data.message) {
+    return String(data.message);
+  }
+
+  if (rawBody) {
+    return formatNotificationBody(rawBody);
+  }
+
+  if (data.message) {
+    return String(data.message);
+  }
+
+  return '';
 }
 
 export function isReportNotification(notification: AppNotification): boolean {
@@ -60,13 +94,48 @@ function parseNumericId(value: unknown): number | null {
   return null;
 }
 
-/** ID numérico do banco (distinto do UUID usado nas rotas da API). */
+function getEquipcontrolBusinessRecordId(
+  slug: string,
+  data: Record<string, unknown>,
+): number | null {
+  if (slug.startsWith('loan.')) {
+    return parseNumericId(data.emprestimo_id);
+  }
+
+  if (slug.startsWith('maintenance.')) {
+    return parseNumericId(data.manutencao_id) ?? parseNumericId(data.equipamento_id);
+  }
+
+  if (slug.startsWith('equipment.') || slug.startsWith('critical.')) {
+    return parseNumericId(data.equipamento_id);
+  }
+
+  return (
+    parseNumericId(data.emprestimo_id)
+    ?? parseNumericId(data.manutencao_id)
+    ?? parseNumericId(data.equipamento_id)
+  );
+}
+
+/** ID numérico do registro de negócio vinculado à notificação. */
 export function getNotificationRecordId(notification: AppNotification): number | null {
+  const slug = getNotificationEventSlug(notification);
+  const data = notification.data;
+
+  if (slug) {
+    const event = getNotificationEvent(slug);
+    if (event?.module === 'equipcontrol') {
+      const businessId = getEquipcontrolBusinessRecordId(slug, data);
+      if (businessId != null) {
+        return businessId;
+      }
+    }
+  }
+
   const candidates = [
     notification.record_id,
-    notification.data.record_id,
-    notification.data.notification_id,
-    notification.data.id,
+    data.record_id,
+    data.notification_id,
   ];
 
   for (const candidate of candidates) {

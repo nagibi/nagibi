@@ -11,3 +11,7 @@ Artisan::command('inspire', function () {
 Schedule::command('campaigns:dispatch-scheduled')
     ->everyMinute()
     ->withoutOverlapping();
+
+Schedule::command('tenants:run equipcontrol:scan-alerts')
+    ->dailyAt('07:00')
+    ->withoutOverlapping();

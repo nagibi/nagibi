@@ -10,6 +10,7 @@ import {
   getNotificationSeverity,
   getNotificationTitle,
   getNotificationType,
+  getNotificationDisplayBody,
   getReportDownloadMeta,
   formatNotificationBody,
   isReportNotification,
@@ -130,13 +131,13 @@ export function NotificationDetailSheet({
                 </p>
               </div>
 
-              {notification.data.body ? (
+              {getNotificationDisplayBody(notification) ? (
                 <div className="rounded-lg border border-border bg-muted/40 p-3">
-                  <p className="text-sm whitespace-pre-wrap">{formatNotificationBody(notification.data.body)}</p>
+                  <p className="text-sm whitespace-pre-wrap">{getNotificationDisplayBody(notification)}</p>
                 </div>
               ) : null}
 
-              {notification.data.message && !notification.data.body ? (
+              {notification.data.message && !getNotificationDisplayBody(notification) ? (
                 <div className="rounded-lg border border-border bg-muted/40 p-3">
                   <p className="text-sm whitespace-pre-wrap">{String(notification.data.message)}</p>
                 </div>

@@ -23,6 +23,7 @@ final class CampaignService
 {
     public function __construct(
         private readonly TemplateMailService $templateMailService,
+        private readonly PlatformNotificationService $platformNotificationService,
     ) {}
 
     public function dispatch(Campaign $campaign): void
@@ -247,7 +248,10 @@ final class CampaignService
             return;
         }
 
-        $campaign->refresh()->update([
+        $campaign->refresh();
+        $this->platformNotificationService->campaignSent($campaign);
+
+        $campaign->update([
             'stats' => $campaign->deliveryStats(),
         ]);
     }
@@ -259,5 +263,7 @@ final class CampaignService
             'finished_at' => now(),
             'stats' => $campaign->deliveryStats(),
         ]);
+
+        $this->platformNotificationService->campaignSent($campaign->fresh());
     }
 }

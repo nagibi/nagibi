@@ -1,5 +1,5 @@
 import { Check, Filter, FilterX, Search, X } from 'lucide-react';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -67,6 +67,9 @@ export interface GridFiltersControlProps {
   search?: string;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
+  triggerVariant?: 'ghost' | 'outline';
+  triggerClassName?: string;
+  quickFiltersSection?: ReactNode;
 }
 
 function FiltersTriggerButton({
@@ -74,28 +77,38 @@ function FiltersTriggerButton({
   isMobile,
   label,
   className,
+  variant = 'ghost',
   ...props
 }: ComponentProps<typeof Button> & {
   hasFilters: boolean;
   isMobile: boolean;
   label: string;
+  variant?: 'ghost' | 'outline';
 }) {
+  const isOutlineIcon = variant === 'outline' && isMobile;
+
   return (
     <Button
       type="button"
-      variant="ghost"
-      size="sm"
-      mode={isMobile ? 'icon' : 'default'}
+      variant={isOutlineIcon ? 'outline' : variant}
+      size={isOutlineIcon ? 'icon' : 'sm'}
+      mode={isMobile && !isOutlineIcon ? 'icon' : isOutlineIcon ? undefined : 'default'}
       aria-label={label}
       className={cn(
         'relative shrink-0',
-        isMobile ? 'size-8' : 'h-8 gap-1.5 px-2 text-xs font-medium',
-        hasFilters && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary',
+        isOutlineIcon
+          ? 'size-9'
+          : isMobile
+            ? 'size-8'
+            : 'h-8 gap-1.5 px-2 text-xs font-medium',
+        hasFilters && variant === 'outline'
+          ? 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary'
+          : hasFilters && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary',
         className,
       )}
       {...props}
     >
-      <Filter className="size-3.5 shrink-0" />
+      <Filter className={cn('shrink-0', isOutlineIcon ? 'size-4' : 'size-3.5')} />
       {!isMobile && label}
       {hasFilters && (
         <span className="absolute right-1 top-1 size-1.5 rounded-full bg-primary" />
@@ -244,6 +257,7 @@ function MobileFiltersSheetContent({
   search,
   onSearch,
   searchPlaceholder,
+  quickFiltersSection,
 }: {
   filters: GridActiveFilter[];
   onClearAll?: () => void;
@@ -252,6 +266,7 @@ function MobileFiltersSheetContent({
   search?: string;
   onSearch?: (value: string) => void;
   searchPlaceholder?: string;
+  quickFiltersSection?: ReactNode;
 }) {
   const { t } = useTranslation();
 
@@ -269,6 +284,8 @@ function MobileFiltersSheetContent({
           />
         </section>
       )}
+
+      {quickFiltersSection}
 
       {hasColumnFilterInputs && columnFilters ? (
         <GridColumnFiltersPanel
@@ -295,6 +312,9 @@ export function GridFiltersControl({
   search,
   onSearch,
   searchPlaceholder,
+  triggerVariant = 'ghost',
+  triggerClassName,
+  quickFiltersSection,
 }: GridFiltersControlProps) {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
@@ -320,6 +340,8 @@ export function GridFiltersControl({
               hasFilters={hasAnyFilters}
               isMobile={isMobile}
               label={t('grid.filters')}
+              variant={triggerVariant}
+              className={triggerClassName}
             />
           </DialogTrigger>
         </ToolbarTooltip>
@@ -344,6 +366,7 @@ export function GridFiltersControl({
               search={search}
               onSearch={onSearch}
               searchPlaceholder={searchPlaceholder}
+              quickFiltersSection={quickFiltersSection}
             />
           </DialogBody>
           <DialogFooter className="grid-filters-mobile-footer shrink-0 flex-col gap-2 border-t border-border bg-background px-4 pb-0 pt-3 sm:flex-col sm:space-x-0">
@@ -370,6 +393,8 @@ export function GridFiltersControl({
             hasFilters={hasAnyFilters}
             isMobile={isMobile}
             label={t('grid.filters')}
+            variant={triggerVariant}
+            className={triggerClassName}
           />
         </PopoverTrigger>
       </ToolbarTooltip>

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { GridToolbarSearch } from '@/components/grid/grid-toolbar';
 import { EQUIPAMENTO_SEARCH_PLACEHOLDER } from '@/lib/equipamento-search';
 import { cn } from '@/lib/utils';
@@ -7,11 +8,13 @@ export function EquipamentoSearchField({
   value,
   onChange,
   showQr = true,
+  filterSlot,
   className,
 }: {
   value: string;
   onChange: (value: string) => void;
   showQr?: boolean;
+  filterSlot?: ReactNode;
   className?: string;
 }) {
   return (
@@ -22,6 +25,7 @@ export function EquipamentoSearchField({
         placeholder={EQUIPAMENTO_SEARCH_PLACEHOLDER}
         className="min-w-0 flex-1 [&_input]:h-9 [&_input]:text-sm"
       />
+      {filterSlot}
       {showQr ? <EquipcontrolQrButton /> : null}
     </div>
   );

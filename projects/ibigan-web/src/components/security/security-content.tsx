@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { QRCodeSVG } from 'qrcode.react';
-import { Copy, LoaderCircle, Mail, RefreshCw, Shield, ShieldCheck, ShieldOff, Smartphone } from 'lucide-react';
+import { Copy, Info, LoaderCircle, Mail, RefreshCw, Shield, ShieldCheck, ShieldOff, Smartphone } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useApiToolbarAlert } from '@/hooks/use-api-toolbar-alert';
 import { twoFactorService, type TwoFactorMethod } from '@/services/two-factor.service';
@@ -12,6 +12,7 @@ import { FormStatusBadge } from '@/components/grid/form-record-identifier';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from '@/components/ui/form';
@@ -36,7 +37,7 @@ type DisableFormData = z.infer<typeof disableSchema>;
 
 type Step = 'idle' | 'setup' | 'confirm' | 'enabled';
 
-export function SecurityContent() {
+function SecurityContent() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { showSuccess, showError } = useApiToolbarAlert();
@@ -164,10 +165,27 @@ export function SecurityContent() {
                 : <Shield className="size-6 shrink-0 text-muted-foreground" />
               }
               <div className="min-w-0">
-                <CardTitle>Autenticação em duas etapas (2FA)</CardTitle>
-                <CardDescription>
-                  Proteja sua conta com um segundo fator de autenticação via aplicativo.
-                </CardDescription>
+                <div className="flex items-center gap-1.5">
+                  <CardTitle>Autenticação em duas etapas (2FA)</CardTitle>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+                        aria-label={t('security.two_factor.description')}
+                      >
+                        <Info className="size-4" aria-hidden="true" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      variant="light"
+                      className="max-w-xs text-left"
+                    >
+                      {t('security.two_factor.description')}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
             </div>
             <FormStatusBadge isActive={is2FAEnabled || step === 'enabled'} />
@@ -177,11 +195,21 @@ export function SecurityContent() {
           {step === 'idle' && !is2FAEnabled && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">{t('security.two_factor.choose_method')}</p>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" onClick={() => enableMutation.mutate('totp')} disabled={enableMutation.isPending}>
+              <div className="grid gap-2 sm:max-w-sm">
+                <Button
+                  variant="outline"
+                  className="w-full justify-center"
+                  onClick={() => enableMutation.mutate('totp')}
+                  disabled={enableMutation.isPending}
+                >
                   <Smartphone className="size-4 mr-2" /> {t('security.two_factor.method_totp')}
                 </Button>
-                <Button variant="outline" onClick={() => enableMutation.mutate('email')} disabled={enableMutation.isPending}>
+                <Button
+                  variant="outline"
+                  className="w-full justify-center"
+                  onClick={() => enableMutation.mutate('email')}
+                  disabled={enableMutation.isPending}
+                >
                   <Mail className="size-4 mr-2" /> {t('security.two_factor.method_email')}
                 </Button>
               </div>
@@ -356,3 +384,5 @@ export function SecurityContent() {
     </div>
   );
 }
+
+export { SecurityContent };

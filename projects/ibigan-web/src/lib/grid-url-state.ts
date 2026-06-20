@@ -20,6 +20,9 @@ export const GRID_URL_KEYS = {
 
 export const GRID_CONTEXT_FILTER_URL_KEY = 'filtro';
 
+/** Filtro exato por equipamento (deep links de notificações). */
+export const GRID_EQUIPAMENTO_ID_URL_KEY = 'id';
+
 export const ROLES_USER_URL_KEYS = ['user_id', 'user_name', 'roles'] as const;
 
 const RESERVED_URL_KEYS = new Set<string>([

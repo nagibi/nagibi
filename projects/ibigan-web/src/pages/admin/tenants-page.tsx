@@ -363,6 +363,7 @@ export function AdminTenantsPage() {
           <Switch
             checked={tenant.is_active}
             disabled={rowStatusId === tenant.id}
+            onClick={(event) => event.stopPropagation()}
             onCheckedChange={(checked) => void handleRowStatusChange(tenant, checked)}
           />
         ),
@@ -654,6 +655,8 @@ export function AdminTenantsPage() {
                   onEnter={() => void handleImpersonate(tenant)}
                   enterDisabled={Boolean(impersonatingId)}
                   enterLoading={impersonatingId === tenant.id}
+                  statusUpdating={rowStatusId === tenant.id}
+                  onActiveChange={(active) => void handleRowStatusChange(tenant, active)}
                 />
               )}
             />
@@ -674,6 +677,8 @@ export function AdminTenantsPage() {
                   onEnter={() => void handleImpersonate(tenant)}
                   enterDisabled={Boolean(impersonatingId)}
                   enterLoading={impersonatingId === tenant.id}
+                  statusUpdating={rowStatusId === tenant.id}
+                  onActiveChange={(active) => void handleRowStatusChange(tenant, active)}
                 />
               )}
             />

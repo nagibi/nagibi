@@ -24,6 +24,7 @@ export const VIEW_PREFERENCE_KEYS = {
   equipamentosEstoque: 'equipamentos.estoque.view',
   equipamentosManutencao: 'equipamentos.manutencao.view',
   equipamentosMovimentacoes: 'equipamentos.movimentacoes.view',
+  equipamentosBaixados: 'equipamentos.baixados.view',
   equipamentosTipos: 'equipamentos.tipos.view',
   equipamentosFornecedores: 'equipamentos.fornecedores.view',
   equipamentosObras: 'equipamentos.obras.view',

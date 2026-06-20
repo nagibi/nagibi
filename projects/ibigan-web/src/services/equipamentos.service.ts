@@ -71,7 +71,7 @@ export interface Baixa {
 export interface EquipamentosListParams {
   id?: number;
   patrimonio?: string;
-  status?: 'em_estoque' | 'em_utilizacao' | 'em_manutencao' | 'baixados' | 'perdidos';
+  status?: 'em_estoque' | 'em_utilizacao' | 'em_manutencao' | 'baixados' | 'perdidos' | 'baixados_todos';
   search?: string;
   obra_id?: number;
   fornecedor_id?: number;

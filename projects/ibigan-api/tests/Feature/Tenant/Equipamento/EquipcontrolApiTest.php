@@ -489,6 +489,26 @@ it('baixa equipamento em estoque', function (): void {
     $this->tenant->run(fn() => expect(Baixa::query()->where('equipamento_id', $equipamento->id)->exists())->toBeTrue());
 });
 
+it('lista baixados e perdidos com status baixados_todos', function (): void {
+    $this->tenant->run(function (): void {
+        Baixa::factory()->create(['tipo' => 'devolucao']);
+        Baixa::factory()->perda()->create();
+        Equipamento::factory()->create();
+    });
+
+    $this->getJson('/api/v1/equipamentos?status=baixados', equipHeaders($this->tenant->id))
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
+
+    $this->getJson('/api/v1/equipamentos?status=perdidos', equipHeaders($this->tenant->id))
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
+
+    $this->getJson('/api/v1/equipamentos?status=baixados_todos', equipHeaders($this->tenant->id))
+        ->assertOk()
+        ->assertJsonCount(2, 'data');
+});
+
 it('nega baixa com emprestimo ativo', function (): void {
     $equipamento = $this->tenant->run(function (): Equipamento {
         $equipamento = Equipamento::factory()->create();

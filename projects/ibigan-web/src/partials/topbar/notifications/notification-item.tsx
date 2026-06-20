@@ -15,7 +15,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { type AppNotification } from '@/services/notifications.service';
-import { getReportDownloadMeta, formatNotificationBody, getNotificationActions, getNotificationCategoryLabel, getNotificationEventSlug, getNotificationSeverity, getNotificationTitle } from '@/lib/notification-utils';
+import { getReportDownloadMeta, getNotificationDisplayBody, getNotificationActions, getNotificationCategoryLabel, getNotificationEventSlug, getNotificationSeverity, getNotificationTitle } from '@/lib/notification-utils';
 import { getNotificationEvent } from '@/lib/notification-events';
 import { downloadReportResultCsvWithToast } from '@/services/reports.service';
 import { GridDownloadIcon } from '@/components/icons/grid-download-icon';
@@ -139,9 +139,16 @@ interface NotificationItemProps {
   onMarkRead: (id: string) => void;
   onMarkUnread?: (id: string) => void;
   onDelete: (id: string) => void;
+  onNavigate?: () => void;
 }
 
-export function NotificationItem({ notification, onMarkRead, onMarkUnread, onDelete }: NotificationItemProps) {
+export function NotificationItem({
+  notification,
+  onMarkRead,
+  onMarkUnread,
+  onDelete,
+  onNavigate,
+}: NotificationItemProps) {
   const [downloading, setDownloading] = useState(false);
   const type = getType(notification);
   const data = notification.data;
@@ -330,11 +337,8 @@ export function NotificationItem({ notification, onMarkRead, onMarkUnread, onDel
     const primaryAction = notificationActions.find((action) => action.primary) ?? notificationActions[0];
     const primaryPath =
       primaryAction?.type === 'navigate' ? String(primaryAction.payload.path ?? '') : '';
-    const body = data.body
-      ? formatNotificationBody(data.body)
-      : data.message
-        ? String(data.message)
-        : equipcontrolEvent.example ?? '';
+    const body =
+      getNotificationDisplayBody(notification) || equipcontrolEvent.example || '';
 
     const SeverityIcon =
       severity === 'critical' || severity === 'warning' ? AlertTriangle : Package;
@@ -344,6 +348,11 @@ export function NotificationItem({ notification, onMarkRead, onMarkUnread, onDel
         : severity === 'warning'
           ? 'bg-amber-500/10 text-amber-700'
           : 'bg-primary/10 text-primary';
+
+    const handleNavigate = () => {
+      if (isUnread) onMarkRead(notification.id);
+      onNavigate?.();
+    };
 
     return (
       <div className={cn('flex grow items-start gap-2.5 px-5 py-4', isUnread && 'bg-primary/5')}>
@@ -358,7 +367,7 @@ export function NotificationItem({ notification, onMarkRead, onMarkUnread, onDel
                 <Link
                   to={primaryPath}
                   className="hover:text-primary"
-                  onClick={() => isUnread && onMarkRead(notification.id)}
+                  onClick={handleNavigate}
                 >
                   {title}
                 </Link>
@@ -377,7 +386,7 @@ export function NotificationItem({ notification, onMarkRead, onMarkUnread, onDel
             <Button variant="outline" size="sm" className="h-7 w-fit text-xs" asChild>
               <Link
                 to={primaryPath}
-                onClick={() => isUnread && onMarkRead(notification.id)}
+                onClick={handleNavigate}
               >
                 {primaryAction.label}
               </Link>

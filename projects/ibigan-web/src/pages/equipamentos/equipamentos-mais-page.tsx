@@ -5,7 +5,6 @@ import {
   Bell,
   Building2,
   ChevronRight,
-  History,
   LayoutDashboard,
   Shapes,
   Truck,
@@ -26,12 +25,6 @@ const MENU_ITEMS = [
     label: 'Relatórios',
     description: 'Modelos e execuções',
     icon: BarChart2,
-  },
-  {
-    to: '/equipamentos/historico',
-    label: 'Histórico',
-    description: 'Movimentações por patrimônio',
-    icon: History,
   },
   {
     to: '/equipamentos/baixados',

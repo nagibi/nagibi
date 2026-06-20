@@ -1,4 +1,5 @@
 import {
+  Archive,
   Building2,
   LayoutDashboard,
   Package,
@@ -20,6 +21,7 @@ export const EQUIPCONTROL_DESKTOP_NAV_ITEMS: EquipcontrolNavItem[] = [
   { to: '/equipamentos/estoque', label: 'Estoque', icon: Package },
   { to: '/equipamentos/movimentacoes', label: 'Movimentações', icon: Repeat2 },
   { to: '/equipamentos/manutencao', label: 'Manutenções', icon: Wrench },
+  { to: '/equipamentos/baixados', label: 'Baixados', icon: Archive },
 ];
 
 /** Cadastros (Tipos, Fornecedores, Obras) ficam no hub Mais no mobile. */

@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { usePageToolbar } from '@/hooks/use-page-toolbar';
 import { useEquipamentoUrlSearch } from '@/hooks/use-equipamento-url-search';
+import { useGridFilters } from '@/hooks/use-grid-filters';
+import { useEquipamentoFilterColumns } from '@/hooks/use-equipamento-filter-columns';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { groupEquipamentosEstoque } from '@/lib/equipamento-utils';
@@ -16,10 +18,16 @@ import {
   EquipamentoCard,
   type EquipamentoCardAction,
 } from '@/pages/equipamentos/components/equipamento-card';
-import { applyContextFilterToParams, resolveContextFilter } from '@/lib/equipamento-filters';
-import { EquipamentoFilterChips } from '@/pages/equipamentos/components/equipamento-filter-chips';
+import {
+  applyContextFilterToParams,
+  getDefaultContextFilter,
+  resolveContextFilter,
+} from '@/lib/equipamento-filters';
+import { applyEquipamentoColumnFiltersToParams } from '@/lib/equipamento-column-filters';
+import { buildEquipamentoActiveFilters } from '@/lib/equipamento-active-filters';
 import { GridHeaderRecordCount } from '@/components/grid/grid-record-count';
 import { EquipamentoSearchField } from '@/pages/equipamentos/components/equipamento-search-field';
+import { EquipamentoMobileFiltersButton } from '@/pages/equipamentos/components/equipamento-mobile-filters-button';
 import { EquipamentoMobileToolbar } from '@/pages/equipamentos/components/equipamento-mobile-toolbar';
 import { EquipamentoPageStack } from '@/pages/equipamentos/components/equipamento-page-stack';
 import { EquipamentoPotencialDevolucaoBanner } from '@/pages/equipamentos/components/equipamento-potencial-devolucao-banner';
@@ -60,29 +68,36 @@ type EquipamentosListPageProps = {
 };
 
 export function EquipamentosListPage({ mode, title, description }: EquipamentosListPageProps) {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const filtroParam = searchParams.get('filtro');
+  const equipamentoIdParam = searchParams.get('id')?.trim() ?? '';
+  const equipamentoId = equipamentoIdParam ? Number(equipamentoIdParam) : undefined;
   const { search, setSearch, qParam } = useEquipamentoUrlSearch();
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Equipamento | null>(null);
   const [activeModal, setActiveModal] = useState<ModalKind | null>(null);
 
   const filtro = resolveContextFilter(mode, filtroParam);
+  const defaultQuickFilter = getDefaultContextFilter(mode);
+  const columnFilters = useGridFilters(() => setPage(1));
+  const { filterableColumns } = useEquipamentoFilterColumns(mode);
 
   useEffect(() => {
     setPage(1);
-  }, [qParam, filtro]);
+  }, [qParam, filtro, equipamentoIdParam, columnFilters.debouncedFilters]);
 
   const listParams = useMemo((): EquipamentosListParams => {
     const params: EquipamentosListParams = {
-      ...(qParam ? {} : { status: STATUS_BY_MODE[mode] }),
+      status: STATUS_BY_MODE[mode],
+      ...(equipamentoId && !Number.isNaN(equipamentoId) ? { id: equipamentoId } : {}),
       search: qParam || undefined,
       page,
       per_page: 20,
     };
 
-    return applyContextFilterToParams(mode, filtro, params);
-  }, [mode, qParam, page, filtro]);
+    const withContext = applyContextFilterToParams(mode, filtro, params);
+    return applyEquipamentoColumnFiltersToParams(withContext, columnFilters.debouncedFilters);
+  }, [mode, qParam, page, filtro, equipamentoId, equipamentoIdParam, columnFilters.debouncedFilters]);
 
   const queryKey = useMemo(
     () => ['equipamentos', mode, listParams] as const,
@@ -158,8 +173,50 @@ export function EquipamentosListPage({ mode, title, description }: EquipamentosL
     headerActions: recordCountLabel,
   });
 
+  const handleClearQuickFilter = useCallback(() => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('filtro');
+    setSearchParams(params, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const handleClearAllFilters = () => {
+    columnFilters.clearAllFilters();
+    if (filtro !== defaultQuickFilter) {
+      handleClearQuickFilter();
+    }
+  };
+
+  const activeFilters = useMemo(
+    () =>
+      buildEquipamentoActiveFilters({
+        columns: filterableColumns,
+        columnFilters,
+        quickFilter:
+          filtro !== defaultQuickFilter
+            ? {
+                value: filtro,
+                defaultValue: defaultQuickFilter,
+                onChange: () => handleClearQuickFilter(),
+              }
+            : undefined,
+      }),
+    [
+      columnFilters,
+      defaultQuickFilter,
+      filtro,
+      filterableColumns,
+      handleClearQuickFilter,
+    ],
+  );
+
+  const hasActiveFilters = columnFilters.hasFilters || filtro !== defaultQuickFilter;
+
   const showGroupedSections =
-    mode === 'estoque' && filtro === 'todos' && !qParam && items.length > 0;
+    mode === 'estoque'
+    && filtro === 'todos'
+    && !qParam
+    && !columnFilters.hasFilters
+    && items.length > 0;
   const sections = showGroupedSections ? groupEquipamentosEstoque(items) : [];
 
   const renderCard = (equipamento: Equipamento) => (
@@ -217,27 +274,43 @@ export function EquipamentosListPage({ mode, title, description }: EquipamentosL
     <>
     <EquipamentoPageStack>
       {mode === 'estoque' ? (
-        <>
-          <div className="-mx-4 min-w-0 overflow-x-hidden px-4 sm:-mx-5 sm:px-5 xl:hidden">
-            <EquipamentoStatsBar />
-          </div>
-          <div className="xl:hidden">
-            <EquipamentoUtilizacaoBar />
-          </div>
-          <div className="xl:hidden">
-            <EquipamentoPotencialDevolucaoBanner
-              data={potencialDevolucao}
-              isLoading={loadingPotencialDevolucao}
-            />
-          </div>
-        </>
+        <div className="-mx-4 min-w-0 overflow-x-hidden px-4 max-xl:pt-3 sm:-mx-5 sm:px-5 xl:hidden">
+          <EquipamentoStatsBar />
+        </div>
+      ) : null}
+      {mode === 'estoque' ? (
+        <div className="xl:hidden">
+          <EquipamentoUtilizacaoBar />
+        </div>
+      ) : null}
+      {mode === 'estoque' && !loadingPotencialDevolucao && potencialDevolucao && potencialDevolucao.total > 0 ? (
+        <div className="xl:hidden">
+          <EquipamentoPotencialDevolucaoBanner
+            data={potencialDevolucao}
+            isLoading={loadingPotencialDevolucao}
+          />
+        </div>
       ) : null}
 
-      <EquipamentoMobileToolbar>
-        <EquipamentoSearchField value={search} onChange={setSearch} />
-        {mode !== 'baixados' ? (
-          <EquipamentoFilterChips mode={mode} />
-        ) : null}
+      <EquipamentoMobileToolbar compact>
+        <EquipamentoSearchField
+          value={search}
+          onChange={setSearch}
+          filterSlot={
+            <EquipamentoMobileFiltersButton
+              mode={mode}
+              filters={activeFilters}
+              onClearAll={hasActiveFilters ? handleClearAllFilters : undefined}
+              columnFilters={{
+                columns: filterableColumns,
+                values: columnFilters.filters,
+                onFilterChange: columnFilters.setFilter,
+                onDateRangeChange: columnFilters.setDateRangeFilter,
+                onFilterClear: columnFilters.clearColumnFilter,
+              }}
+            />
+          }
+        />
       </EquipamentoMobileToolbar>
 
       {listContent}

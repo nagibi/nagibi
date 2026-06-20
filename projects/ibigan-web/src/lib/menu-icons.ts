@@ -119,13 +119,16 @@ lookup.bySlug.set('equipcontrol', Icons.HardHat);
 lookup.byPath.set('/equipamentos/estoque', Icons.Package);
 lookup.byPath.set('/equipamentos/movimentacoes', Icons.Repeat2);
 lookup.byPath.set('/equipamentos/manutencao', Icons.Wrench);
+lookup.byPath.set('/equipamentos/baixados', Icons.Archive);
 lookup.bySlug.set('equipcontrol-estoque', Icons.Package);
 lookup.bySlug.set('equipcontrol-movimentacoes', Icons.Repeat2);
 lookup.bySlug.set('equipcontrol-manutencao', Icons.Wrench);
+lookup.bySlug.set('equipcontrol-baixados', Icons.Archive);
 lookup.byTitle.set('Estoque', Icons.Package);
 lookup.byTitle.set('Movimentações', Icons.Repeat2);
 lookup.byTitle.set('Manutenções', Icons.Wrench);
 lookup.byTitle.set('Manutenção', Icons.Wrench);
+lookup.byTitle.set('Baixados', Icons.Archive);
 
 function resolveFromLucideName(name: string): LucideIcon | null {
   const candidates = [
