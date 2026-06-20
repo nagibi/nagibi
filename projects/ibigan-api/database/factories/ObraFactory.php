@@ -15,11 +15,20 @@ class ObraFactory extends Factory
     public function definition(): array
     {
         return [
-            'codigo' => fake()->unique()->numerify('###'),
+            'codigo' => $this->uniqueCodigo(),
             'nome' => fake()->company(),
             'endereco' => fake()->streetAddress(),
             'responsavel' => fake()->name(),
             'is_ativa' => true,
         ];
+    }
+
+    private function uniqueCodigo(): string
+    {
+        do {
+            $codigo = fake()->numerify('######');
+        } while (Obra::query()->where('codigo', $codigo)->exists());
+
+        return $codigo;
     }
 }

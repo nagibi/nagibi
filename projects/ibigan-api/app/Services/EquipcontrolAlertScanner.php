@@ -80,7 +80,7 @@ final class EquipcontrolAlertScanner
             ->with(['tipo', 'obra'])
             ->emEstoque()
             ->get()
-            ->filter(fn (Equipamento $equipamento) => $equipamento->tempo_em_estoque >= $idleDays);
+            ->filter(fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= $idleDays);
 
         foreach ($parados as $equipamento) {
             $context = $this->equipcontrolNotifications->equipamentoContext($equipamento);
@@ -92,7 +92,7 @@ final class EquipcontrolAlertScanner
         $semMovimentacao = Equipamento::query()
             ->with(['tipo', 'obra'])
             ->emEstoque()
-            ->whereDoesntHave('historico', fn ($query) => $query->whereIn('evento', ['emprestado', 'manutencao_aberta', 'devolvido']))
+            ->whereDoesntHave('historico', fn($query) => $query->whereIn('evento', ['emprestado', 'manutencao_aberta', 'devolvido']))
             ->get()
             ->filter(function (Equipamento $equipamento) use ($unusedDays): bool {
                 $dias = (int) $equipamento->data_entrada->diffInDays(now()->startOfDay());
@@ -168,7 +168,7 @@ final class EquipcontrolAlertScanner
                 $query->where('data_entrada', '>=', $inicio);
             }, '>=', $frequencyThreshold)
             ->withCount([
-                'manutencoes as manutencoes_periodo' => fn ($query) => $query->where('data_entrada', '>=', $inicio),
+                'manutencoes as manutencoes_periodo' => fn($query) => $query->where('data_entrada', '>=', $inicio),
             ])
             ->get();
 
@@ -216,7 +216,7 @@ final class EquipcontrolAlertScanner
             ->where('is_critico', true)
             ->emEstoque()
             ->get()
-            ->filter(fn (Equipamento $equipamento) => $equipamento->tempo_em_estoque >= $idleDays);
+            ->filter(fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= $idleDays);
 
         foreach ($criticosParados as $equipamento) {
             $context = $this->equipcontrolNotifications->equipamentoContext($equipamento);
@@ -228,9 +228,9 @@ final class EquipcontrolAlertScanner
         $criticosVencidos = Emprestimo::query()
             ->with(['equipamento.tipo'])
             ->whereNull('data_devolucao')
-            ->whereHas('equipamento', fn ($query) => $query->where('is_critico', true))
+            ->whereHas('equipamento', fn($query) => $query->where('is_critico', true))
             ->get()
-            ->filter(fn (Emprestimo $emprestimo) => $emprestimo->is_vencido);
+            ->filter(fn(Emprestimo $emprestimo) => $emprestimo->is_vencido);
 
         foreach ($criticosVencidos as $emprestimo) {
             $context = $this->equipcontrolNotifications->emprestimoContext($emprestimo);
@@ -267,7 +267,7 @@ final class EquipcontrolAlertScanner
             ->with('obra')
             ->emEstoque()
             ->get()
-            ->filter(fn (Equipamento $equipamento) => $equipamento->tempo_em_estoque >= $idleDays)
+            ->filter(fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= $idleDays)
             ->groupBy('obra_id');
 
         foreach ($parados as $obraId => $grupo) {
@@ -280,7 +280,7 @@ final class EquipcontrolAlertScanner
                 'obra_id' => $obraId,
                 'obra_codigo' => $grupo->first()->obra?->codigo,
                 'total_ociosos' => $grupo->count(),
-                'valor_mensal' => number_format($grupo->sum(fn (Equipamento $equipamento) => (float) $equipamento->valor_mensal), 2, ',', '.'),
+                'valor_mensal' => number_format($grupo->sum(fn(Equipamento $equipamento) => (float) $equipamento->valor_mensal), 2, ',', '.'),
             ]);
             $dispatched++;
         }
@@ -289,7 +289,7 @@ final class EquipcontrolAlertScanner
             ->with('obra')
             ->whereNull('data_devolucao')
             ->get()
-            ->filter(fn (Emprestimo $emprestimo) => $emprestimo->is_vencido)
+            ->filter(fn(Emprestimo $emprestimo) => $emprestimo->is_vencido)
             ->groupBy('obra_id');
 
         foreach ($vencidos as $obraId => $grupo) {
@@ -311,7 +311,7 @@ final class EquipcontrolAlertScanner
             ->whereNull('data_devolucao')
             ->get()
             ->groupBy('obra_id')
-            ->map(fn ($grupo) => $grupo->sum(fn (Emprestimo $emprestimo) => (float) $emprestimo->equipamento->valor_mensal));
+            ->map(fn($grupo) => $grupo->sum(fn(Emprestimo $emprestimo) => (float) $emprestimo->equipamento->valor_mensal));
 
         foreach ($custos as $obraId => $valor) {
             if ($valor < $costThreshold || $obraId === null) {
@@ -342,12 +342,12 @@ final class EquipcontrolAlertScanner
             ->with('renovacoes')
             ->whereNull('data_devolucao')
             ->get()
-            ->groupBy(fn (Emprestimo $emprestimo) => $emprestimo->colaborador_nome.'|'.$emprestimo->colaborador_matricula)
-            ->map(fn ($grupo) => [
+            ->groupBy(fn(Emprestimo $emprestimo) => $emprestimo->colaborador_nome . '|' . $emprestimo->colaborador_matricula)
+            ->map(fn($grupo) => [
                 'colaborador' => $grupo->first()->colaborador_nome,
                 'matricula' => $grupo->first()->colaborador_matricula,
                 'total' => $grupo->count(),
-                'media_dias' => round($grupo->avg(fn (Emprestimo $emprestimo) => $emprestimo->dias_em_uso), 1),
+                'media_dias' => round($grupo->avg(fn(Emprestimo $emprestimo) => $emprestimo->dias_em_uso), 1),
             ]);
 
         if ($ativos->isEmpty()) {
@@ -363,7 +363,7 @@ final class EquipcontrolAlertScanner
             }
 
             $this->dispatchService->dispatch('employee.equipment_overload', [
-                'dedupe_key' => 'employee.equipment_overload:'.$item['matricula'],
+                'dedupe_key' => 'employee.equipment_overload:' . $item['matricula'],
                 'colaborador' => $item['colaborador'],
                 'colaborador_matricula' => $item['matricula'],
                 'total_equipamentos' => $item['total'],
@@ -377,7 +377,7 @@ final class EquipcontrolAlertScanner
             }
 
             $this->dispatchService->dispatch('employee.long_possession', [
-                'dedupe_key' => 'employee.long_possession:'.$item['matricula'],
+                'dedupe_key' => 'employee.long_possession:' . $item['matricula'],
                 'colaborador' => $item['colaborador'],
                 'colaborador_matricula' => $item['matricula'],
                 'media_dias' => $item['media_dias'],
@@ -397,13 +397,13 @@ final class EquipcontrolAlertScanner
             ->with(['tipo', 'obra'])
             ->emEstoque()
             ->get()
-            ->filter(fn (Equipamento $equipamento) => $equipamento->tempo_em_estoque >= $idleDays);
+            ->filter(fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= $idleDays);
 
         if ($ociosos->isNotEmpty()) {
-            $economia = $ociosos->sum(fn (Equipamento $equipamento) => (float) $equipamento->valor_mensal);
+            $economia = $ociosos->sum(fn(Equipamento $equipamento) => (float) $equipamento->valor_mensal);
 
             $this->dispatchService->dispatch('insight.cost_reduction', [
-                'dedupe_key' => 'insight.cost_reduction:'.now()->toDateString(),
+                'dedupe_key' => 'insight.cost_reduction:' . now()->toDateString(),
                 'economia_mensal' => number_format($economia, 2, ',', '.'),
                 'total_equipamentos' => $ociosos->count(),
             ]);
@@ -421,8 +421,8 @@ final class EquipcontrolAlertScanner
 
         $porObra = $ociosos->groupBy('obra_id');
         if ($porObra->count() >= 2) {
-            $origem = $porObra->sortByDesc(fn ($grupo) => $grupo->count())->first()?->first();
-            $destinoObraId = $porObra->keys()->first(fn ($obraId) => $obraId !== $origem?->obra_id);
+            $origem = $porObra->sortByDesc(fn($grupo) => $grupo->count())->first()?->first();
+            $destinoObraId = $porObra->keys()->first(fn($obraId) => $obraId !== $origem?->obra_id);
 
             if ($origem !== null && $destinoObraId !== null) {
                 $context = $this->equipcontrolNotifications->equipamentoContext($origem);
@@ -451,8 +451,8 @@ final class EquipcontrolAlertScanner
 
         if ($ociosos->count() >= 3) {
             $this->dispatchService->dispatch('insight.anomaly', [
-                'dedupe_key' => 'insight.anomaly:'.now()->toDateString(),
-                'descricao' => $ociosos->count().' equipamentos parados simultaneamente — padrão acima do esperado.',
+                'dedupe_key' => 'insight.anomaly:' . now()->toDateString(),
+                'descricao' => $ociosos->count() . ' equipamentos parados simultaneamente — padrão acima do esperado.',
             ]);
             $dispatched++;
         }
@@ -465,15 +465,15 @@ final class EquipcontrolAlertScanner
         $dispatched = 0;
         $today = now()->toDateString();
 
-        $vencidos = Emprestimo::query()->whereNull('data_devolucao')->get()->filter(fn (Emprestimo $e) => $e->is_vencido)->count();
-        $proximos = Emprestimo::query()->whereNull('data_devolucao')->get()->filter(fn (Emprestimo $e) => $e->is_proximo_vencimento)->count();
+        $vencidos = Emprestimo::query()->whereNull('data_devolucao')->get()->filter(fn(Emprestimo $e) => $e->is_vencido)->count();
+        $proximos = Emprestimo::query()->whereNull('data_devolucao')->get()->filter(fn(Emprestimo $e) => $e->is_proximo_vencimento)->count();
         $manutencoes = Manutencao::query()->whereNull('data_saida')->count();
         $parados = Equipamento::query()->emEstoque()->get()->filter(
-            fn (Equipamento $equipamento) => $equipamento->tempo_em_estoque >= (int) config('equipcontrol.alerts.equipment_idle_days', 30)
+            fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= (int) config('equipcontrol.alerts.equipment_idle_days', 30)
         )->count();
         $concluidas = Manutencao::query()->whereDate('data_saida', Carbon::today())->count();
         $economia = Equipamento::query()->emEstoque()->get()->filter(
-            fn (Equipamento $equipamento) => $equipamento->tempo_em_estoque >= (int) config('equipcontrol.alerts.equipment_idle_days', 30)
+            fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= (int) config('equipcontrol.alerts.equipment_idle_days', 30)
         )->sum('valor_mensal');
 
         $this->dispatchService->dispatch('digest.daily', [
@@ -487,7 +487,7 @@ final class EquipcontrolAlertScanner
 
         if (now()->isMonday()) {
             $this->dispatchService->dispatch('digest.weekly', [
-                'dedupe_key' => 'digest.weekly:'.now()->startOfWeek()->toDateString(),
+                'dedupe_key' => 'digest.weekly:' . now()->startOfWeek()->toDateString(),
                 'vencidos' => $vencidos,
                 'manutencoes_concluidas' => $concluidas,
                 'economia_mensal' => number_format((float) $economia, 2, ',', '.'),

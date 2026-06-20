@@ -46,7 +46,7 @@ final class SeedEquipcontrolNotificationFixturesCommand extends Command
 
         $this->seedLoanFixtures($obraA);
         $this->seedCriticalFixtures($obraA, $user);
-        $this->seedMaintenanceFixtures($user);
+        $this->seedMaintenanceFixtures($user, $obraA);
         $this->seedSiteFixtures($obraA);
         $this->seedEmployeeFixtures();
         $this->seedInsightFixtures($obraA, $obraB);
@@ -77,7 +77,7 @@ final class SeedEquipcontrolNotificationFixturesCommand extends Command
         return User::query()
             ->where('status', 'active')
             ->get()
-            ->first(fn (User $user) => $user->can('notificacao-visualizar'));
+            ->first(fn(User $user) => $user->can('notificacao-visualizar'));
     }
 
     /**
@@ -85,21 +85,23 @@ final class SeedEquipcontrolNotificationFixturesCommand extends Command
      */
     private function enableFixturePreferences(NotificationPreferenceService $preferences, User $user): void
     {
-        foreach ([
-            'loan.overdue',
-            'loan.due_soon',
-            'equipment.idle',
-            'critical.idle',
-            'critical.overdue',
-            'critical.in_maintenance',
-            'maintenance.overdue',
-            'digest.daily',
-            'digest.weekly',
-            'site.idle_equipment',
-            'employee.equipment_overload',
-            'insight.return',
-            'insight.cost_reduction',
-        ] as $event) {
+        foreach (
+            [
+                'loan.overdue',
+                'loan.due_soon',
+                'equipment.idle',
+                'critical.idle',
+                'critical.overdue',
+                'critical.in_maintenance',
+                'maintenance.overdue',
+                'digest.daily',
+                'digest.weekly',
+                'site.idle_equipment',
+                'employee.equipment_overload',
+                'insight.return',
+                'insight.cost_reduction',
+            ] as $event
+        ) {
             $preferences->update($user, $event, 'app', true);
             $preferences->update($user, $event, 'email', true);
         }
@@ -129,7 +131,7 @@ final class SeedEquipcontrolNotificationFixturesCommand extends Command
         }
 
         do {
-            $codigo = $base.'-'.random_int(1000, 9999);
+            $codigo = $base . '-' . random_int(1000, 9999);
         } while (Obra::query()->where('codigo', $codigo)->exists());
 
         return $codigo;
@@ -179,9 +181,9 @@ final class SeedEquipcontrolNotificationFixturesCommand extends Command
         ]);
     }
 
-    private function seedMaintenanceFixtures(User $user): void
+    private function seedMaintenanceFixtures(User $user, Obra $obra): void
     {
-        $equipamento = Equipamento::factory()->create();
+        $equipamento = Equipamento::factory()->create(['obra_id' => $obra->id]); // precisa receber $obra como parâmetro
         Manutencao::factory()->create([
             'equipamento_id' => $equipamento->id,
             'data_entrada' => now()->subDays(20)->toDateString(),

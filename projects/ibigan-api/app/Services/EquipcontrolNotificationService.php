@@ -63,7 +63,7 @@ final class EquipcontrolNotificationService
      */
     public function emprestimoContext(Emprestimo $emprestimo): array
     {
-        $emprestimo->loadMissing(['equipamento.tipo', 'obra']);
+        $emprestimo->loadMissing(['equipamento.tipo', 'equipamento.manutencaoAtiva', 'equipamento.emprestimoAtivo', 'equipamento.baixa', 'obra']);
 
         return [
             'emprestimo_id' => $emprestimo->id,
@@ -75,6 +75,7 @@ final class EquipcontrolNotificationService
             'obra_codigo' => $emprestimo->obra?->codigo,
             'dias_ate_vencimento' => $emprestimo->dias_ate_vencimento,
             'dias_vencido' => $emprestimo->is_vencido ? abs($emprestimo->dias_ate_vencimento) : 0,
+            'status_atual' => $emprestimo->equipamento?->status,
         ];
     }
 
@@ -83,7 +84,7 @@ final class EquipcontrolNotificationService
      */
     public function equipamentoContext(Equipamento $equipamento): array
     {
-        $equipamento->loadMissing(['tipo', 'obra']);
+        $equipamento->loadMissing(['tipo', 'obra', 'manutencaoAtiva', 'emprestimoAtivo', 'baixa']);
 
         return [
             'equipamento_id' => $equipamento->id,
@@ -93,6 +94,7 @@ final class EquipcontrolNotificationService
             'obra_codigo' => $equipamento->obra?->codigo,
             'valor_mensal' => number_format((float) $equipamento->valor_mensal, 2, ',', '.'),
             'dias_parado' => $equipamento->tempo_em_estoque,
+            'status_atual' => $equipamento->status,
         ];
     }
 
@@ -101,7 +103,7 @@ final class EquipcontrolNotificationService
      */
     private function manutencaoContext(Manutencao $manutencao): array
     {
-        $manutencao->loadMissing(['equipamento.tipo', 'responsavelUser']);
+        $manutencao->loadMissing(['equipamento.tipo', 'equipamento.manutencaoAtiva', 'equipamento.emprestimoAtivo', 'equipamento.baixa', 'responsavelUser']);
         $equipamento = $manutencao->equipamento;
 
         return [
@@ -112,6 +114,7 @@ final class EquipcontrolNotificationService
             'motivo' => $manutencao->motivo,
             'responsavel' => $manutencao->responsavel_manutencao ?? $manutencao->responsavelUser?->name,
             'data_entrada' => $manutencao->data_entrada->toDateString(),
+            'status_atual' => $equipamento?->status,
         ];
     }
 }
