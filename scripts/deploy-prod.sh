@@ -265,10 +265,16 @@ if [[ "$db_username" != "$mysql_user" ]]; then
   exit 1
 fi
 
-# shellcheck disable=SC1090
-set -a
-source "$ENV_FILE"
-set +a
+load_deploy_env() {
+  local file="$1"
+  CENTRAL_DOMAIN="$(env_value "$file" CENTRAL_DOMAIN)"
+  NGINX_BEHIND_PROXY="$(env_value "$file" NGINX_BEHIND_PROXY)"
+  NGINX_HTTP_BIND="$(env_value "$file" NGINX_HTTP_BIND)"
+  NGINX_HTTP_PORT="$(env_value "$file" NGINX_HTTP_PORT)"
+  MYSQL_ROOT_PASSWORD="$(env_value "$file" MYSQL_ROOT_PASSWORD)"
+}
+
+load_deploy_env "$ENV_FILE"
 
 CENTRAL_DOMAIN="${CENTRAL_DOMAIN#https://}"
 CENTRAL_DOMAIN="${CENTRAL_DOMAIN#http://}"
