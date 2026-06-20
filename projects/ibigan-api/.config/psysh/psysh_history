@@ -1,1 +1,435 @@
 Mail::raw('Teste local', fn ($m) => $m->to('seu@email.com')->subject('Teste Ibigan'));
+use App\Models\{Obra, Equipamento, Emprestimo, Manutencao, User};
+use App\Services\EquipcontrolAlertScanner;
+use App\Services\NotificationPreferenceService;
+$admin = User::where('status', 'active')->first();
+$obra = Obra::first() ?? Obra::factory()->create(['codigo' => '650']);
+// Preferências app para os eventos do teste
+$pref = app(NotificationPreferenceService::class);
+foreach ([
+    'loan.overdue', 'loan.due_soon', 'equipment.idle',
+    'critical.idle', 'critical.overdue', 'critical.in_maintenance',
+    'maintenance.overdue', 'digest.daily', 'digest.weekly',
+    'site.idle_equipment', 'employee.equipment_overload',
+    'insight.return', 'insight.cost_reduction',
+] as $event) {
+    $pref->update($admin, $event, 'app', true);
+}
+// 1) Empréstimo VENCIDO → loan.overdue + critical.overdue (se crítico)
+$critico = Equipamento::factory()->create([
+    'obra_id' => $obra->id,
+    'is_critico' => true,
+    'data_entrada' => now()->subDays(60)->toDateString(),
+]);
+Emprestimo::factory()->create([
+    'equipamento_id' => $critico->id,
+    'obra_id' => $obra->id,
+    'data_retirada' => now()->subDays(40)->toDateString(),
+    'prazo_dias' => 10,
+    'data_devolucao' => null,
+]);
+// 2) Empréstimo PRÓXIMO (vence em 2 dias) → loan.due_soon
+$eq2 = Equipamento::factory()->create(['obra_id' => $obra->id]);
+Emprestimo::factory()->create([
+    'equipamento_id' => $eq2->id,
+    'obra_id' => $obra->id,
+    'data_retirada' => now()->subDays(13)->toDateString(),
+    'prazo_dias' => 15,
+    'data_devolucao' => null,
+]);
+// 3) Crítico PARADO 45 dias → critical.idle + equipment.idle
+Equipamento::factory()->create([
+    'obra_id' => $obra->id,
+    'is_critico' => true,
+    'data_entrada' => now()->subDays(45)->toDateString(),
+]);
+// 4) Crítico EM MANUTENÇÃO → critical.in_maintenance
+$eqMan = Equipamento::factory()->create(['is_critico' => true]);
+Manutencao::factory()->create([
+    'equipamento_id' => $eqMan->id,
+    'data_entrada' => now()->subDays(5)->toDateString(),
+    'data_saida' => null,
+    'responsavel_user_id' => $admin->id,
+]);
+// 5) Manutenção ATRASADA (20 dias) → maintenance.overdue
+$eqAtr = Equipamento::factory()->create();
+Manutencao::factory()->create([
+    'equipamento_id' => $eqAtr->id,
+    'data_entrada' => now()->subDays(20)->toDateString(),
+    'data_saida' => null,
+    'responsavel_user_id' => $admin->id,
+]);
+// 6) Obra com 2 ociosos → site.idle_equipment
+foreach (range(1, 2) as $i) {
+    Equipamento::factory()->create([
+        'obra_id' => $obra->id,
+        'data_entrada' => now()->subDays(45)->toDateString(),
+    ]);
+}
+// 7) Colaborador com 4 equipamentos (média baixa) → employee.equipment_overload
+foreach (range(1, 4) as $i) {
+    $eq = Equipamento::factory()->create();
+    Emprestimo::factory()->create([
+        'equipamento_id' => $eq->id,
+        'colaborador_nome' => 'João Silva',
+        'colaborador_matricula' => 'A100',
+        'data_retirada' => now()->subDays(120)->toDateString(),
+        'prazo_dias' => 30,
+        'data_devolucao' => null,
+    ]);
+}
+// Disparar scanner
+$count = app(EquipcontrolAlertScanner::class)->scan();
+echo "Alertas processados: {$count}\n";
+// Conferir últimas notificações
+$admin->notifications()->latest()->take(15)->get()->pluck('data.event_slug');
+exit
+use App\Models\{Obra, Equipamento, Emprestimo, Manutencao, User};
+use App\Services\EquipcontrolAlertScanner;
+use App\Services\NotificationPreferenceService;
+$admin = User::where('status', 'active')->first();
+$obra = Obra::first() ?? Obra::factory()->create(['codigo' => '650']);
+// Preferências app para os eventos do teste
+$pref = app(NotificationPreferenceService::class);
+foreach ([
+    'loan.overdue', 'loan.due_soon', 'equipment.idle',
+    'critical.idle', 'critical.overdue', 'critical.in_maintenance',
+    'maintenance.overdue', 'digest.daily', 'digest.weekly',
+    'site.idle_equipment', 'employee.equipment_overload',
+    'insight.return', 'insight.cost_reduction',
+] as $event) {
+    $pref->update($admin, $event, 'app', true);
+}
+// 1) Empréstimo VENCIDO → loan.overdue + critical.overdue (se crítico)
+$critico = Equipamento::factory()->create([
+    'obra_id' => $obra->id,
+    'is_critico' => true,
+    'data_entrada' => now()->subDays(60)->toDateString(),
+]);
+Emprestimo::factory()->create([
+    'equipamento_id' => $critico->id,
+    'obra_id' => $obra->id,
+    'data_retirada' => now()->subDays(40)->toDateString(),
+    'prazo_dias' => 10,
+    'data_devolucao' => null,
+]);
+// 2) Empréstimo PRÓXIMO (vence em 2 dias) → loan.due_soon
+$eq2 = Equipamento::factory()->create(['obra_id' => $obra->id]);
+Emprestimo::factory()->create([
+    'equipamento_id' => $eq2->id,
+    'obra_id' => $obra->id,
+    'data_retirada' => now()->subDays(13)->toDateString(),
+    'prazo_dias' => 15,
+    'data_devolucao' => null,
+]);
+// 3) Crítico PARADO 45 dias → critical.idle + equipment.idle
+Equipamento::factory()->create([
+    'obra_id' => $obra->id,
+    'is_critico' => true,
+    'data_entrada' => now()->subDays(45)->toDateString(),
+]);
+// 4) Crítico EM MANUTENÇÃO → critical.in_maintenance
+$eqMan = Equipamento::factory()->create(['is_critico' => true]);
+Manutencao::factory()->create([
+    'equipamento_id' => $eqMan->id,
+    'data_entrada' => now()->subDays(5)->toDateString(),
+    'data_saida' => null,
+    'responsavel_user_id' => $admin->id,
+]);
+// 5) Manutenção ATRASADA (20 dias) → maintenance.overdue
+$eqAtr = Equipamento::factory()->create();
+Manutencao::factory()->create([
+    'equipamento_id' => $eqAtr->id,
+    'data_entrada' => now()->subDays(20)->toDateString(),
+    'data_saida' => null,
+    'responsavel_user_id' => $admin->id,
+]);
+// 6) Obra com 2 ociosos → site.idle_equipment
+foreach (range(1, 2) as $i) {
+    Equipamento::factory()->create([
+        'obra_id' => $obra->id,
+        'data_entrada' => now()->subDays(45)->toDateString(),
+    ]);
+}
+// 7) Colaborador com 4 equipamentos (média baixa) → employee.equipment_overload
+foreach (range(1, 4) as $i) {
+    $eq = Equipamento::factory()->create();
+    Emprestimo::factory()->create([
+        'equipamento_id' => $eq->id,
+        'colaborador_nome' => 'João Silva',
+        'colaborador_matricula' => 'A100',
+        'data_retirada' => now()->subDays(120)->toDateString(),
+        'prazo_dias' => 30,
+        'data_devolucao' => null,
+    ]);
+}
+// Disparar scanner
+$count = app(EquipcontrolAlertScanner::class)->scan();
+echo "Alertas processados: {$count}\n";
+// Conferir últimas notificações
+$admin->notifications()->latest()->take(15)->get()->pluck('data.event_slug');
+use App\Models\{Obra, Equipamento, Emprestimo, Manutencao, User};
+use App\Services\EquipcontrolAlertScanner;
+use App\Services\NotificationPreferenceService;
+$admin = User::where('status', 'active')->first();
+$obra = Obra::first() ?? Obra::factory()->create(['codigo' => '650']);
+// Preferências app para os eventos do teste
+$pref = app(NotificationPreferenceService::class);
+foreach ([
+    'loan.overdue', 'loan.due_soon', 'equipment.idle',
+    'critical.idle', 'critical.overdue', 'critical.in_maintenance',
+    'maintenance.overdue', 'digest.daily', 'digest.weekly',
+    'site.idle_equipment', 'employee.equipment_overload',
+    'insight.return', 'insight.cost_reduction',
+] as $event) {
+    $pref->update($admin, $event, 'app', true);
+}
+// 1) Empréstimo VENCIDO → loan.overdue + critical.overdue (se crítico)
+$critico = Equipamento::factory()->create([
+    'obra_id' => $obra->id,
+    'is_critico' => true,
+    'data_entrada' => now()->subDays(60)->toDateString(),
+]);
+Emprestimo::factory()->create([
+    'equipamento_id' => $critico->id,
+    'obra_id' => $obra->id,
+    'data_retirada' => now()->subDays(40)->toDateString(),
+    'prazo_dias' => 10,
+    'data_devolucao' => null,
+]);
+// 2) Empréstimo PRÓXIMO (vence em 2 dias) → loan.due_soon
+$eq2 = Equipamento::factory()->create(['obra_id' => $obra->id]);
+Emprestimo::factory()->create([
+    'equipamento_id' => $eq2->id,
+    'obra_id' => $obra->id,
+    'data_retirada' => now()->subDays(13)->toDateString(),
+    'prazo_dias' => 15,
+    'data_devolucao' => null,
+]);
+// 3) Crítico PARADO 45 dias → critical.idle + equipment.idle
+Equipamento::factory()->create([
+    'obra_id' => $obra->id,
+    'is_critico' => true,
+    'data_entrada' => now()->subDays(45)->toDateString(),
+]);
+// 4) Crítico EM MANUTENÇÃO → critical.in_maintenance
+$eqMan = Equipamento::factory()->create(['is_critico' => true]);
+Manutencao::factory()->create([
+    'equipamento_id' => $eqMan->id,
+    'data_entrada' => now()->subDays(5)->toDateString(),
+    'data_saida' => null,
+    'responsavel_user_id' => $admin->id,
+]);
+// 5) Manutenção ATRASADA (20 dias) → maintenance.overdue
+$eqAtr = Equipamento::factory()->create();
+Manutencao::factory()->create([
+    'equipamento_id' => $eqAtr->id,
+    'data_entrada' => now()->subDays(20)->toDateString(),
+    'data_saida' => null,
+    'responsavel_user_id' => $admin->id,
+]);
+// 6) Obra com 2 ociosos → site.idle_equipment
+foreach (range(1, 2) as $i) {
+    Equipamento::factory()->create([
+        'obra_id' => $obra->id,
+        'data_entrada' => now()->subDays(45)->toDateString(),
+    ]);
+}
+// 7) Colaborador com 4 equipamentos (média baixa) → employee.equipment_overload
+foreach (range(1, 4) as $i) {
+    $eq = Equipamento::factory()->create();
+    Emprestimo::factory()->create([
+        'equipamento_id' => $eq->id,
+        'colaborador_nome' => 'João Silva',
+        'colaborador_matricula' => 'A100',
+        'data_retirada' => now()->subDays(120)->toDateString(),
+        'prazo_dias' => 30,
+        'data_devolucao' => null,
+    ]);
+}
+// Disparar scanner
+$count = app(EquipcontrolAlertScanner::class)->scan();
+echo "Alertas processados: {$count}\n";
+// Conferir últimas notificações
+$admin->notifications()->latest()->take(15)->get()->pluck('data.event_slug');
+use App\Models\{Obra, Equipamento, Emprestimo, Manutencao, User};
+use App\Services\EquipcontrolAlertScanner;
+use App\Services\NotificationPreferenceService;
+$admin = User::where('status', 'active')->first();
+$obra = Obra::first() ?? Obra::factory()->create(['codigo' => '650']);
+// Preferências app para os eventos do teste
+$pref = app(NotificationPreferenceService::class);
+foreach ([
+    'loan.overdue', 'loan.due_soon', 'equipment.idle',
+    'critical.idle', 'critical.overdue', 'critical.in_maintenance',
+    'maintenance.overdue', 'digest.daily', 'digest.weekly',
+    'site.idle_equipment', 'employee.equipment_overload',
+    'insight.return', 'insight.cost_reduction',
+] as $event) {
+    $pref->update($admin, $event, 'app', true);
+}
+// 1) Empréstimo VENCIDO → loan.overdue + critical.overdue (se crítico)
+$critico = Equipamento::factory()->create([
+    'obra_id' => $obra->id,
+    'is_critico' => true,
+    'data_entrada' => now()->subDays(60)->toDateString(),
+]);
+Emprestimo::factory()->create([
+    'equipamento_id' => $critico->id,
+    'obra_id' => $obra->id,
+    'data_retirada' => now()->subDays(40)->toDateString(),
+    'prazo_dias' => 10,
+    'data_devolucao' => null,
+]);
+// 2) Empréstimo PRÓXIMO (vence em 2 dias) → loan.due_soon
+$eq2 = Equipamento::factory()->create(['obra_id' => $obra->id]);
+Emprestimo::factory()->create([
+    'equipamento_id' => $eq2->id,
+    'obra_id' => $obra->id,
+    'data_retirada' => now()->subDays(13)->toDateString(),
+    'prazo_dias' => 15,
+    'data_devolucao' => null,
+]);
+// 3) Crítico PARADO 45 dias → critical.idle + equipment.idle
+Equipamento::factory()->create([
+    'obra_id' => $obra->id,
+    'is_critico' => true,
+    'data_entrada' => now()->subDays(45)->toDateString(),
+]);
+// 4) Crítico EM MANUTENÇÃO → critical.in_maintenance
+$eqMan = Equipamento::factory()->create(['is_critico' => true]);
+Manutencao::factory()->create([
+    'equipamento_id' => $eqMan->id,
+    'data_entrada' => now()->subDays(5)->toDateString(),
+    'data_saida' => null,
+    'responsavel_user_id' => $admin->id,
+]);
+// 5) Manutenção ATRASADA (20 dias) → maintenance.overdue
+$eqAtr = Equipamento::factory()->create();
+Manutencao::factory()->create([
+    'equipamento_id' => $eqAtr->id,
+    'data_entrada' => now()->subDays(20)->toDateString(),
+    'data_saida' => null,
+    'responsavel_user_id' => $admin->id,
+]);
+// 6) Obra com 2 ociosos → site.idle_equipment
+foreach (range(1, 2) as $i) {
+    Equipamento::factory()->create([
+        'obra_id' => $obra->id,
+        'data_entrada' => now()->subDays(45)->toDateString(),
+    ]);
+}
+// 7) Colaborador com 4 equipamentos (média baixa) → employee.equipment_overload
+foreach (range(1, 4) as $i) {
+    $eq = Equipamento::factory()->create();
+    Emprestimo::factory()->create([
+        'equipamento_id' => $eq->id,
+        'colaborador_nome' => 'João Silva',
+        'colaborador_matricula' => 'A100',
+        'data_retirada' => now()->subDays(120)->toDateString(),
+        'prazo_dias' => 30,
+        'data_devolucao' => null,
+    ]);
+}
+// Disparar scanner
+$count = app(EquipcontrolAlertScanner::class)->scan();
+echo "Alertas processados: {$count}\n";
+// Conferir últimas notificações
+$admin->notifications()->latest()->take(15)->get()->pluck('data.event_slug');
+exit
+use App\Models\{Obra, Equipamento, Emprestimo, Manutencao, User};
+use App\Services\EquipcontrolAlertScanner;
+use App\Services\NotificationPreferenceService;
+
+$admin = User::where('status', 'active')->first();
+$obra = Obra::first() ?? Obra::factory()->create(['codigo' => '650']);
+
+// Preferências app para os eventos do teste
+$pref = app(NotificationPreferenceService::class);
+foreach ([
+    'loan.overdue', 'loan.due_soon', 'equipment.idle',
+    'critical.idle', 'critical.overdue', 'critical.in_maintenance',
+    'maintenance.overdue', 'digest.daily', 'digest.weekly',
+    'site.idle_equipment', 'employee.equipment_overload',
+    'insight.return', 'insight.cost_reduction',
+] as $event) {
+    $pref->update($admin, $event, 'app', true);
+}
+
+// 1) Empréstimo VENCIDO → loan.overdue + critical.overdue (se crítico)
+$critico = Equipamento::factory()->create([
+    'obra_id' => $obra->id,
+    'is_critico' => true,
+    'data_entrada' => now()->subDays(60)->toDateString(),
+]);
+Emprestimo::factory()->create([
+    'equipamento_id' => $critico->id,
+    'obra_id' => $obra->id,
+    'data_retirada' => now()->subDays(40)->toDateString(),
+    'prazo_dias' => 10,
+    'data_devolucao' => null,
+]);
+
+// 2) Empréstimo PRÓXIMO (vence em 2 dias) → loan.due_soon
+$eq2 = Equipamento::factory()->create(['obra_id' => $obra->id]);
+Emprestimo::factory()->create([
+    'equipamento_id' => $eq2->id,
+    'obra_id' => $obra->id,
+    'data_retirada' => now()->subDays(13)->toDateString(),
+    'prazo_dias' => 15,
+    'data_devolucao' => null,
+]);
+
+// 3) Crítico PARADO 45 dias → critical.idle + equipment.idle
+Equipamento::factory()->create([
+    'obra_id' => $obra->id,
+    'is_critico' => true,
+    'data_entrada' => now()->subDays(45)->toDateString(),
+]);
+
+// 4) Crítico EM MANUTENÇÃO → critical.in_maintenance
+$eqMan = Equipamento::factory()->create(['is_critico' => true]);
+Manutencao::factory()->create([
+    'equipamento_id' => $eqMan->id,
+    'data_entrada' => now()->subDays(5)->toDateString(),
+    'data_saida' => null,
+    'responsavel_user_id' => $admin->id,
+]);
+
+// 5) Manutenção ATRASADA (20 dias) → maintenance.overdue
+$eqAtr = Equipamento::factory()->create();
+Manutencao::factory()->create([
+    'equipamento_id' => $eqAtr->id,
+    'data_entrada' => now()->subDays(20)->toDateString(),
+    'data_saida' => null,
+    'responsavel_user_id' => $admin->id,
+]);
+
+// 6) Obra com 2 ociosos → site.idle_equipment
+foreach (range(1, 2) as $i) {
+    Equipamento::factory()->create([
+        'obra_id' => $obra->id,
+        'data_entrada' => now()->subDays(45)->toDateString(),
+    ]);
+}
+
+// 7) Colaborador com 4 equipamentos (média baixa) → employee.equipment_overload
+foreach (range(1, 4) as $i) {
+    $eq = Equipamento::factory()->create();
+    Emprestimo::factory()->create([
+        'equipamento_id' => $eq->id,
+        'colaborador_nome' => 'João Silva',
+        'colaborador_matricula' => 'A100',
+        'data_retirada' => now()->subDays(120)->toDateString(),
+        'prazo_dias' => 30,
+        'data_devolucao' => null,
+    ]);
+}
+
+// Disparar scanner
+$count = app(EquipcontrolAlertScanner::class)->scan();
+echo "Alertas processados: {$count}\n";
+
+// Conferir últimas notificações
+$admin->notifications()->latest()->take(15)->get()->pluck('data.event_slug');
+exit

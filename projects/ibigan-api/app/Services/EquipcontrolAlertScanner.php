@@ -18,18 +18,26 @@ final class EquipcontrolAlertScanner
 
     public function scan(): int
     {
-        $dispatched = 0;
+        $this->dispatchService->deferEmails(true);
 
-        $dispatched += $this->scanLoans();
-        $dispatched += $this->scanEquipment();
-        $dispatched += $this->scanMaintenance();
-        $dispatched += $this->scanCritical();
-        $dispatched += $this->scanSites();
-        $dispatched += $this->scanEmployees();
-        $dispatched += $this->scanInsights();
-        $dispatched += $this->scanDigests();
+        try {
+            $dispatched = 0;
 
-        return $dispatched;
+            $dispatched += $this->scanLoans();
+            $dispatched += $this->scanEquipment();
+            $dispatched += $this->scanMaintenance();
+            $dispatched += $this->scanCritical();
+            $dispatched += $this->scanSites();
+            $dispatched += $this->scanEmployees();
+            $dispatched += $this->scanInsights();
+            $dispatched += $this->scanDigests();
+
+            $this->dispatchService->flushDeferredEmails();
+
+            return $dispatched;
+        } finally {
+            $this->dispatchService->deferEmails(false);
+        }
     }
 
     private function scanLoans(): int

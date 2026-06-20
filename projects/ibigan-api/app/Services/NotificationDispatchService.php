@@ -6,14 +6,63 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Notifications\CatalogEventNotification;
+use App\Support\EmailLayout;
 use App\Support\NotificationEventCatalog;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 final class NotificationDispatchService
 {
+    private bool $deferEmails = false;
+
+    /** @var array<int, array<string, list<array{subject: string, body: string, body_text?: string, severity: string, summary?: string}>>> */
+    private array $deferredEmails = [];
+
     public function __construct(
         private readonly NotificationPreferenceService $preferenceService,
     ) {}
+
+    public function deferEmails(bool $defer = true): void
+    {
+        $this->deferEmails = $defer;
+
+        if (! $defer) {
+            $this->deferredEmails = [];
+        }
+    }
+
+    public function flushDeferredEmails(): void
+    {
+        foreach ($this->deferredEmails as $userId => $byEvent) {
+            $user = User::query()->find($userId);
+
+            if ($user === null || $byEvent === []) {
+                continue;
+            }
+
+            if ($this->alreadySentScannerEmailToday($user)) {
+                continue;
+            }
+
+            $content = $this->mergeAllScannerEmailContent($byEvent);
+
+            if ($content === null) {
+                continue;
+            }
+
+            try {
+                $this->sendEmailToUser($user, 'scanner.batch', $content);
+                $this->markScannerEmailSent($user);
+            } catch (\Throwable $e) {
+                Log::warning('Falha ao enviar e-mail consolidado de alertas.', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $this->deferredEmails = [];
+    }
 
     /**
      * @param  array<string, mixed>  $context
@@ -42,19 +91,27 @@ final class NotificationDispatchService
                 continue;
             }
 
-            $this->notifyUser($user, $eventSlug, $content, $context);
+            $this->notifyUser($user, $eventSlug, $content, $context, $dedupeKey);
         }
     }
 
     /**
-     * @param  array{subject: string, body: string, severity: string, summary?: string}  $content
+     * @param  array{subject: string, body: string, body_text?: string, severity: string, summary?: string}  $content
      * @param  array<string, mixed>  $context
      */
-    private function notifyUser(User $user, string $eventSlug, array $content, array $context): void
-    {
+    private function notifyUser(
+        User $user,
+        string $eventSlug,
+        array $content,
+        array $context,
+        ?string $dedupeKey,
+    ): void {
+        $delivered = false;
+
         if ($this->preferenceService->isEnabled($user, $eventSlug, 'app')) {
             try {
                 $user->notify(new CatalogEventNotification($eventSlug, 'app', $content, $context));
+                $delivered = true;
             } catch (\Throwable $e) {
                 Log::warning('Falha ao enviar notificação in-app.', [
                     'event_slug' => $eventSlug,
@@ -64,31 +121,138 @@ final class NotificationDispatchService
             }
         }
 
-        if (! $this->preferenceService->isEnabled($user, $eventSlug, 'email')) {
-            return;
+        if ($this->preferenceService->isEnabled($user, $eventSlug, 'email')
+            && is_string($user->email)
+            && trim($user->email) !== '') {
+            if ($this->deferEmails) {
+                $this->deferredEmails[$user->id][$eventSlug][] = $content;
+                $delivered = true;
+            } else {
+                try {
+                    $this->sendEmailToUser($user, $eventSlug, $content);
+                    $delivered = true;
+                } catch (\Throwable $e) {
+                    Log::warning('Falha ao enviar e-mail de notificação.', [
+                        'event_slug' => $eventSlug,
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
         }
 
-        if (! is_string($user->email) || trim($user->email) === '') {
-            return;
+        if ($delivered && $dedupeKey !== null) {
+            $this->markDispatched($user, $eventSlug, $dedupeKey);
+        }
+    }
+
+    /**
+     * @param  array{subject: string, body: string, body_text?: string, severity: string, summary?: string}  $content
+     */
+    private function sendEmailToUser(User $user, string $eventSlug, array $content): void
+    {
+        $user->notify(new CatalogEventNotification($eventSlug, 'email', $content, []));
+    }
+
+    /**
+     * @param  array<string, list<array{subject: string, body: string, body_text?: string, severity: string, summary?: string}>>  $byEvent
+     * @return array{subject: string, body: string, body_text?: string, severity: string, summary?: string}|null
+     */
+    private function mergeAllScannerEmailContent(array $byEvent): ?array
+    {
+        if ($byEvent === []) {
+            return null;
         }
 
-        try {
-            $user->notify(new CatalogEventNotification($eventSlug, 'email', $content, $context));
-        } catch (\Throwable $e) {
-            Log::warning('Falha ao enviar e-mail de notificação.', [
-                'event_slug' => $eventSlug,
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
+        $lines = [];
+        $totalAlerts = 0;
+        $highestSeverity = 'info';
+
+        foreach ($byEvent as $items) {
+            $count = count($items);
+            $totalAlerts += $count;
+            $first = $items[0];
+            $highestSeverity = $this->higherSeverity($highestSeverity, $first['severity']);
+
+            if ($count === 1) {
+                $lines[] = '• '.$first['subject'].': '.($first['summary'] ?? $first['subject']);
+                continue;
+            }
+
+            $lines[] = '• '.$first['subject'].' ('.$count.' alertas)';
+            foreach (array_slice($items, 0, 3) as $item) {
+                $lines[] = '&nbsp;&nbsp;– '.($item['summary'] ?? $item['subject']);
+            }
+
+            if ($count > 3) {
+                $lines[] = '&nbsp;&nbsp;– ... e mais '.($count - 3).' nesta categoria';
+            }
         }
+
+        $subject = 'Alertas EquipControl ('.$totalAlerts.')';
+        $bodyText = implode("\n", array_map(
+            static fn (string $line): string => html_entity_decode(strip_tags($line), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            $lines,
+        ));
+
+        return [
+            'subject' => $subject,
+            'body' => EmailLayout::render(
+                title: $subject,
+                contentHtml: EmailLayout::paragraph(implode('<br>', $lines)),
+            ),
+            'body_text' => $bodyText,
+            'severity' => $highestSeverity,
+            'summary' => $totalAlerts.' alertas consolidados',
+        ];
     }
 
     private function alreadyNotifiedRecently(User $user, string $eventSlug, string $dedupeKey): bool
     {
+        if (Cache::has($this->dedupeCacheKey($user, $eventSlug, $dedupeKey))) {
+            return true;
+        }
+
         return $user->notifications()
             ->where('created_at', '>=', now()->subDay())
             ->where('data->event_slug', $eventSlug)
             ->where('data->dedupe_key', $dedupeKey)
             ->exists();
+    }
+
+    private function markDispatched(User $user, string $eventSlug, string $dedupeKey): void
+    {
+        Cache::put(
+            $this->dedupeCacheKey($user, $eventSlug, $dedupeKey),
+            true,
+            now()->addDay(),
+        );
+    }
+
+    private function dedupeCacheKey(User $user, string $eventSlug, string $dedupeKey): string
+    {
+        return sprintf('notification_dedupe:%s:%s:%s', $user->id, $eventSlug, $dedupeKey);
+    }
+
+    private function scannerEmailCacheKey(User $user): string
+    {
+        return sprintf('notification_scanner_email:%s:%s', $user->id, now()->toDateString());
+    }
+
+    private function alreadySentScannerEmailToday(User $user): bool
+    {
+        return Cache::has($this->scannerEmailCacheKey($user));
+    }
+
+    private function markScannerEmailSent(User $user): void
+    {
+        Cache::put($this->scannerEmailCacheKey($user), true, now()->endOfDay());
+    }
+
+    private function higherSeverity(string $current, string $next): string
+    {
+        $rank = ['info' => 0, 'warning' => 1, 'critical' => 2];
+
+        return ($rank[$next] ?? 0) > ($rank[$current] ?? 0) ? $next : $current;
     }
 }

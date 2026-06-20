@@ -26,31 +26,31 @@ final class NotificationEventDefaults
         'loan.created' => ['email' => false, 'app' => true],
         'loan.returned' => ['email' => false, 'app' => true],
 
-        'equipment.idle' => ['email' => true, 'app' => true],
+        'equipment.idle' => ['email' => false, 'app' => true],
         'equipment.unused_since_registration' => ['email' => false, 'app' => true],
-        'equipment.below_minimum_stock' => ['email' => true, 'app' => true],
+        'equipment.below_minimum_stock' => ['email' => false, 'app' => true],
 
         'maintenance.sent' => ['email' => false, 'app' => true],
         'maintenance.completed' => ['email' => false, 'app' => true],
         'maintenance.overdue' => ['email' => true, 'app' => true],
-        'maintenance.frequency_high' => ['email' => true, 'app' => true],
-        'maintenance.cost_high' => ['email' => true, 'app' => true],
+        'maintenance.frequency_high' => ['email' => false, 'app' => true],
+        'maintenance.cost_high' => ['email' => false, 'app' => true],
 
         'critical.idle' => ['email' => true, 'app' => true],
         'critical.overdue' => ['email' => true, 'app' => true],
         'critical.in_maintenance' => ['email' => true, 'app' => true],
 
-        'site.idle_equipment' => ['email' => true, 'app' => true],
-        'site.overdue_equipment' => ['email' => true, 'app' => true],
-        'site.high_cost' => ['email' => true, 'app' => true],
+        'site.idle_equipment' => ['email' => false, 'app' => true],
+        'site.overdue_equipment' => ['email' => false, 'app' => true],
+        'site.high_cost' => ['email' => false, 'app' => true],
 
         'employee.equipment_overload' => ['email' => false, 'app' => true],
         'employee.long_possession' => ['email' => false, 'app' => true],
 
-        'insight.return' => ['email' => true, 'app' => true],
-        'insight.reallocation' => ['email' => true, 'app' => true],
-        'insight.replacement' => ['email' => true, 'app' => true],
-        'insight.cost_reduction' => ['email' => true, 'app' => true],
+        'insight.return' => ['email' => false, 'app' => true],
+        'insight.reallocation' => ['email' => false, 'app' => true],
+        'insight.replacement' => ['email' => false, 'app' => true],
+        'insight.cost_reduction' => ['email' => false, 'app' => true],
         'insight.anomaly' => ['email' => false, 'app' => true],
 
         'digest.daily' => ['email' => true, 'app' => false],
