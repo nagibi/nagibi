@@ -89,12 +89,12 @@
       margin-top: -0.75rem;
     }
 
-    .demo1 .page-content-scroll.equipcontrol-page .page-content-header > .container-fluid {
+    .demo1 .page-content-scroll.equipamento-page .page-content-header > .container-fluid {
       padding-top: 0.5rem;
       padding-bottom: 0;
     }
 
-    .demo1 .page-content-scroll.equipcontrol-page > .container-fluid:last-child {
+    .demo1 .page-content-scroll.equipamento-page > .container-fluid:last-child {
       flex: 0 0 auto;
       padding-top: 0;
     }

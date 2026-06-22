@@ -14,7 +14,7 @@ return new class extends Migration
             return;
         }
 
-        $parentId = DB::table('menus')->where('slug', 'equipcontrol-operacao')->value('id');
+        $parentId = DB::table('menus')->where('slug', 'equipamento-operacao')->value('id');
 
         if ($parentId === null) {
             return;
@@ -25,20 +25,20 @@ return new class extends Migration
 
         $items = [
             [
-                'slug' => 'equipcontrol-baixados',
+                'slug' => 'equipamento-baixados',
                 'title' => 'Baixados',
                 'icon' => 'Archive',
                 'path' => '/equipamentos/baixados',
                 'order' => 4,
-                'translation_key' => 'menu.equipcontrol.decommissioned',
+                'translation_key' => 'menu.equipamento.decommissioned',
             ],
             [
-                'slug' => 'equipcontrol-historico',
+                'slug' => 'equipamento-historico',
                 'title' => 'Histórico',
                 'icon' => 'History',
                 'path' => '/equipamentos/historico',
                 'order' => 5,
-                'translation_key' => 'menu.equipcontrol.equipment_history',
+                'translation_key' => 'menu.equipamento.equipment_history',
             ],
         ];
 
@@ -87,7 +87,7 @@ return new class extends Migration
         }
 
         DB::table('menus')
-            ->whereIn('slug', ['equipcontrol-baixados', 'equipcontrol-historico'])
+            ->whereIn('slug', ['equipamento-baixados', 'equipamento-historico'])
             ->delete();
     }
 };

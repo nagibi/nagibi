@@ -1,15 +1,15 @@
 import { useEffect } from 'react';
+import { EquipamentoBottomNav } from '@/pages/equipamentos/equipamento-bottom-nav';
 import { Outlet } from 'react-router-dom';
 import { PageBody } from '@/components/common/page-body';
-import { EquipcontrolBottomNav } from '@/pages/equipamentos/equipcontrol-bottom-nav';
 
-export function EquipControlLayout() {
+export function EquipamentosLayout() {
   useEffect(() => {
     const scrollRoot = document.querySelector('.page-content-scroll');
-    scrollRoot?.classList.add('equipcontrol-page');
+    scrollRoot?.classList.add('equipamentos-page');
 
     return () => {
-      scrollRoot?.classList.remove('equipcontrol-page');
+      scrollRoot?.classList.remove('equipamento-page');
     };
   }, []);
 
@@ -20,7 +20,7 @@ export function EquipControlLayout() {
           <Outlet />
         </div>
       </PageBody>
-      <EquipcontrolBottomNav />
+      <EquipamentoBottomNav />
     </>
   );
 }

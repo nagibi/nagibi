@@ -1,16 +1,16 @@
 import type { ReactNode } from 'react';
+import { useEquipamentoAlertasTotal } from '@/pages/equipamentos/components/equipamento-alertas-panel';
+import { useEquipamentoAlertasEnabled } from '@/hooks/use-equipamento-alertas-enabled';
 import { useNotificationsUnreadCount } from '@/hooks/use-notifications-list';
-import { useEquipcontrolAlertasEnabled } from '@/hooks/use-equipcontrol-alertas-enabled';
 import { useNotificationsSheet } from '@/providers/notifications-sheet-provider';
-import { useEquipcontrolAlertasTotal } from '@/pages/equipamentos/components/equipcontrol-alertas-panel';
 import { Badge } from '@/components/ui/badge';
 
 export function NotificationsSheet({ trigger }: { trigger: ReactNode }) {
   const { open: openSheet, isOpen } = useNotificationsSheet();
   const unread = useNotificationsUnreadCount(isOpen);
-  const equipcontrolAlertasEnabled = useEquipcontrolAlertasEnabled();
-  const alertasTotal = useEquipcontrolAlertasTotal(equipcontrolAlertasEnabled);
-  const badgeCount = unread + (equipcontrolAlertasEnabled ? alertasTotal : 0);
+  const equipamentoAlertasEnabled = useEquipamentoAlertasEnabled();
+  const alertasTotal = useEquipamentoAlertasTotal(equipamentoAlertasEnabled);
+  const badgeCount = unread + (equipamentoAlertasEnabled ? alertasTotal : 0);
 
   return (
     <div className="relative inline-flex cursor-pointer" onClick={openSheet}>

@@ -15,7 +15,7 @@ return new class extends Migration
         }
 
         DB::table('menus')
-            ->where('slug', 'equipcontrol-historico')
+            ->where('slug', 'equipamento-historico')
             ->delete();
     }
 
@@ -25,13 +25,13 @@ return new class extends Migration
             return;
         }
 
-        $parentId = DB::table('menus')->where('slug', 'equipcontrol-operacao')->value('id');
+        $parentId = DB::table('menus')->where('slug', 'equipamento-operacao')->value('id');
 
         if ($parentId === null) {
             return;
         }
 
-        $exists = DB::table('menus')->where('slug', 'equipcontrol-historico')->exists();
+        $exists = DB::table('menus')->where('slug', 'equipamento-historico')->exists();
 
         if ($exists) {
             return;
@@ -41,7 +41,7 @@ return new class extends Migration
 
         DB::table('menus')->insert([
             'title' => 'Histórico',
-            'slug' => 'equipcontrol-historico',
+            'slug' => 'equipamento-historico',
             'icon' => 'History',
             'path' => '/equipamentos/historico',
             'target' => '_self',
@@ -50,7 +50,7 @@ return new class extends Migration
             'is_active' => true,
             'requires_auth' => true,
             'roles' => json_encode(['admin', 'manager', 'viewer', 'operator', 'super-admin']),
-            'translation_key' => 'menu.equipcontrol.equipment_history',
+            'translation_key' => 'menu.equipamento.equipment_history',
             'created_at' => $now,
             'updated_at' => $now,
         ]);

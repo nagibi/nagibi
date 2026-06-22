@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { CadastroEquipamentoModal } from '@/pages/equipamentos/components/equipamento-modals';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -8,9 +8,9 @@ import {
   Wrench,
   X,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { CadastroEquipamentoModal } from '@/pages/equipamentos/components/equipamento-modals';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const SPEED_DIAL_ACTIONS = [
   {
@@ -43,7 +43,7 @@ const SPEED_DIAL_ACTIONS = [
   },
 ] as const;
 
-export function EquipcontrolFab() {
+export function EquipamentoFab() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [cadastroOpen, setCadastroOpen] = useState(false);
@@ -91,7 +91,9 @@ export function EquipcontrolFab() {
                   style={{ animationDelay: `${index * 40}ms` }}
                   onClick={() => handleAction(action)}
                 >
-                  <span className="text-sm font-medium text-foreground">{action.label}</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {action.label}
+                  </span>
                   <span
                     className={cn(
                       'flex size-9 shrink-0 items-center justify-center rounded-full text-white shadow-md',
@@ -129,7 +131,10 @@ export function EquipcontrolFab() {
         </Button>
       </div>
 
-      <CadastroEquipamentoModal open={cadastroOpen} onOpenChange={setCadastroOpen} />
+      <CadastroEquipamentoModal
+        open={cadastroOpen}
+        onOpenChange={setCadastroOpen}
+      />
     </>
   );
 }

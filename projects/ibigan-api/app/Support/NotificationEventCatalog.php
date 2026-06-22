@@ -93,9 +93,9 @@ final class NotificationEventCatalog
     {
         $campaign = (string) ($context['campaign_name'] ?? 'Campanha');
 
-        return self::build('Campanha enviada', 'info', $campaign.' foi enviada com sucesso.', [
-            'A campanha <strong>'.$campaign.'</strong> foi enviada.',
-            'Destinatários: '.(string) ($context['recipients_count'] ?? '—'),
+        return self::build('Campanha enviada', 'info', $campaign . ' foi enviada com sucesso.', [
+            'A campanha <strong>' . $campaign . '</strong> foi enviada.',
+            'Destinatários: ' . (string) ($context['recipients_count'] ?? '—'),
         ]);
     }
 
@@ -104,9 +104,9 @@ final class NotificationEventCatalog
     {
         $name = (string) ($context['user_name'] ?? 'Usuário');
 
-        return self::build('Convite aceito', 'info', $name.' aceitou o convite.', [
-            '<strong>'.$name.'</strong> aceitou o convite e entrou na organização.',
-            'Perfil: '.(string) ($context['role'] ?? '—'),
+        return self::build('Convite aceito', 'info', $name . ' aceitou o convite.', [
+            '<strong>' . $name . '</strong> aceitou o convite e entrou na organização.',
+            'Perfil: ' . (string) ($context['role'] ?? '—'),
         ]);
     }
 
@@ -116,9 +116,9 @@ final class NotificationEventCatalog
         $label = self::equipamentoLabel($context);
 
         return self::build('Próximo do vencimento', 'warning', "{$label} vence em breve", [
-            "O empréstimo de <strong>{$label}</strong> vence em ".(string) ($context['dias_ate_vencimento'] ?? '—').' dias.',
-            'Colaborador: '.(string) ($context['colaborador'] ?? '—'),
-            'Obra: '.(string) ($context['obra_codigo'] ?? '—'),
+            "O empréstimo de <strong>{$label}</strong> vence em " . (string) ($context['dias_ate_vencimento'] ?? '—') . ' dias.',
+            'Colaborador: ' . (string) ($context['colaborador'] ?? '—'),
+            'Obra: ' . (string) ($context['obra_codigo'] ?? '—'),
         ]);
     }
 
@@ -128,8 +128,8 @@ final class NotificationEventCatalog
         $label = self::equipamentoLabel($context);
 
         return self::build('Empréstimo vencido', 'critical', "{$label} está vencido", [
-            "O empréstimo de <strong>{$label}</strong> está vencido há ".(string) ($context['dias_vencido'] ?? '—').' dias.',
-            'Colaborador: '.(string) ($context['colaborador'] ?? '—'),
+            "O empréstimo de <strong>{$label}</strong> está vencido há " . (string) ($context['dias_vencido'] ?? '—') . ' dias.',
+            'Colaborador: ' . (string) ($context['colaborador'] ?? '—'),
         ]);
     }
 
@@ -140,7 +140,7 @@ final class NotificationEventCatalog
 
         return self::build('Renovação realizada', 'info', "{$label} foi renovado", [
             "O empréstimo de <strong>{$label}</strong> foi renovado.",
-            'Prazo adicional: '.(string) ($context['prazo_adicional_dias'] ?? '—').' dias',
+            'Prazo adicional: ' . (string) ($context['prazo_adicional_dias'] ?? '—') . ' dias',
         ]);
     }
 
@@ -150,7 +150,7 @@ final class NotificationEventCatalog
         $label = self::equipamentoLabel($context);
 
         return self::build('Excesso de renovações', 'warning', "{$label} ultrapassou renovações recomendadas", [
-            "O empréstimo de <strong>{$label}</strong> atingiu ".(string) ($context['total_renovacoes'] ?? '—').' renovações.',
+            "O empréstimo de <strong>{$label}</strong> atingiu " . (string) ($context['total_renovacoes'] ?? '—') . ' renovações.',
             'Avalie devolução ou substituição do equipamento.',
         ]);
     }
@@ -162,8 +162,8 @@ final class NotificationEventCatalog
 
         return self::build('Novo empréstimo', 'info', "{$label} emprestado", [
             "O equipamento <strong>{$label}</strong> foi emprestado.",
-            'Colaborador: '.(string) ($context['colaborador'] ?? '—'),
-            'Obra: '.(string) ($context['obra_codigo'] ?? '—'),
+            'Colaborador: ' . (string) ($context['colaborador'] ?? '—'),
+            'Obra: ' . (string) ($context['obra_codigo'] ?? '—'),
         ]);
     }
 
@@ -174,7 +174,7 @@ final class NotificationEventCatalog
 
         return self::build('Devolução registrada', 'info', "{$label} devolvido", [
             "O equipamento <strong>{$label}</strong> foi devolvido.",
-            'Dias em uso: '.(string) ($context['dias_em_uso'] ?? '—'),
+            'Dias em uso: ' . (string) ($context['dias_em_uso'] ?? '—'),
         ]);
     }
 
@@ -184,8 +184,8 @@ final class NotificationEventCatalog
         $label = self::equipamentoLabel($context);
 
         return self::build('Equipamento parado', 'warning', "{$label} sem uso prolongado", [
-            "O equipamento <strong>{$label}</strong> está parado há ".(string) ($context['dias_parado'] ?? '—').' dias.',
-            'Custo mensal: R$ '.(string) ($context['valor_mensal'] ?? '—'),
+            "O equipamento <strong>{$label}</strong> está parado há " . (string) ($context['dias_parado'] ?? '—') . ' dias.',
+            'Custo mensal: R$ ' . (string) ($context['valor_mensal'] ?? '—'),
         ]);
     }
 
@@ -195,7 +195,7 @@ final class NotificationEventCatalog
         $label = self::equipamentoLabel($context);
 
         return self::build('Cadastrado sem utilização', 'warning', "{$label} sem movimentação", [
-            "O equipamento <strong>{$label}</strong> foi cadastrado há ".(string) ($context['dias_cadastrado'] ?? '—').' dias sem movimentação.',
+            "O equipamento <strong>{$label}</strong> foi cadastrado há " . (string) ($context['dias_cadastrado'] ?? '—') . ' dias sem movimentação.',
         ]);
     }
 
@@ -205,8 +205,8 @@ final class NotificationEventCatalog
         $tipo = (string) ($context['tipo_nome'] ?? 'Tipo');
 
         return self::build('Estoque abaixo do mínimo', 'warning', "{$tipo} com estoque baixo", [
-            "O tipo <strong>{$tipo}</strong> possui ".(string) ($context['disponiveis'] ?? '—').' disponíveis.',
-            'Mínimo configurado: '.(string) ($context['minimo'] ?? '—'),
+            "O tipo <strong>{$tipo}</strong> possui " . (string) ($context['disponiveis'] ?? '—') . ' disponíveis.',
+            'Mínimo configurado: ' . (string) ($context['minimo'] ?? '—'),
         ]);
     }
 
@@ -217,8 +217,8 @@ final class NotificationEventCatalog
 
         return self::build('Enviado para manutenção', 'info', "{$label} enviado para manutenção", [
             "O equipamento <strong>{$label}</strong> foi encaminhado para manutenção.",
-            'Motivo: '.(string) ($context['motivo'] ?? '—'),
-            'Responsável: '.(string) ($context['responsavel'] ?? '—'),
+            'Motivo: ' . (string) ($context['motivo'] ?? '—'),
+            'Responsável: ' . (string) ($context['responsavel'] ?? '—'),
         ]);
     }
 
@@ -229,7 +229,7 @@ final class NotificationEventCatalog
 
         return self::build('Manutenção concluída', 'info', "{$label} liberado da manutenção", [
             "O equipamento <strong>{$label}</strong> foi liberado e está pronto para utilização.",
-            'Dias em manutenção: '.(string) ($context['dias_em_manutencao'] ?? '—'),
+            'Dias em manutenção: ' . (string) ($context['dias_em_manutencao'] ?? '—'),
         ]);
     }
 
@@ -239,7 +239,7 @@ final class NotificationEventCatalog
         $label = self::equipamentoLabel($context);
 
         return self::build('Manutenção atrasada', 'critical', "{$label} em manutenção além do prazo", [
-            "O equipamento <strong>{$label}</strong> está em manutenção há ".(string) ($context['dias_em_manutencao'] ?? '—').' dias.',
+            "O equipamento <strong>{$label}</strong> está em manutenção há " . (string) ($context['dias_em_manutencao'] ?? '—') . ' dias.',
         ]);
     }
 
@@ -249,7 +249,7 @@ final class NotificationEventCatalog
         $label = self::equipamentoLabel($context);
 
         return self::build('Excesso de manutenções', 'warning', "{$label} com alta frequência de manutenção", [
-            "O equipamento <strong>{$label}</strong> registrou ".(string) ($context['total_manutencoes'] ?? '—').' manutenções no período.',
+            "O equipamento <strong>{$label}</strong> registrou " . (string) ($context['total_manutencoes'] ?? '—') . ' manutenções no período.',
         ]);
     }
 
@@ -259,7 +259,7 @@ final class NotificationEventCatalog
         $label = self::equipamentoLabel($context);
 
         return self::build('Custo elevado de manutenção', 'warning', "{$label} com custo elevado", [
-            "O equipamento <strong>{$label}</strong> acumulou custo estimado de R$ ".(string) ($context['custo_total'] ?? '—').' no período.',
+            "O equipamento <strong>{$label}</strong> acumulou custo estimado de R$ " . (string) ($context['custo_total'] ?? '—') . ' no período.',
         ]);
     }
 
@@ -269,7 +269,7 @@ final class NotificationEventCatalog
         $label = self::equipamentoLabel($context);
 
         return self::build('Crítico parado', 'critical', "{$label} crítico sem uso", [
-            "O equipamento crítico <strong>{$label}</strong> está parado há ".(string) ($context['dias_parado'] ?? '—').' dias.',
+            "O equipamento crítico <strong>{$label}</strong> está parado há " . (string) ($context['dias_parado'] ?? '—') . ' dias.',
         ]);
     }
 
@@ -299,8 +299,8 @@ final class NotificationEventCatalog
         $obra = (string) ($context['obra_codigo'] ?? 'Obra');
 
         return self::build('Equipamentos ociosos na obra', 'warning', "{$obra} com equipamentos ociosos", [
-            "A obra <strong>{$obra}</strong> possui ".(string) ($context['total_ociosos'] ?? '—').' equipamentos parados.',
-            'Custo mensal: R$ '.(string) ($context['valor_mensal'] ?? '—'),
+            "A obra <strong>{$obra}</strong> possui " . (string) ($context['total_ociosos'] ?? '—') . ' equipamentos parados.',
+            'Custo mensal: R$ ' . (string) ($context['valor_mensal'] ?? '—'),
         ]);
     }
 
@@ -310,7 +310,7 @@ final class NotificationEventCatalog
         $obra = (string) ($context['obra_codigo'] ?? 'Obra');
 
         return self::build('Muitos vencimentos na obra', 'critical', "{$obra} com empréstimos vencidos", [
-            "A obra <strong>{$obra}</strong> possui ".(string) ($context['total_vencidos'] ?? '—').' equipamentos vencidos.',
+            "A obra <strong>{$obra}</strong> possui " . (string) ($context['total_vencidos'] ?? '—') . ' equipamentos vencidos.',
         ]);
     }
 
@@ -320,7 +320,7 @@ final class NotificationEventCatalog
         $obra = (string) ($context['obra_codigo'] ?? 'Obra');
 
         return self::build('Custo elevado na obra', 'warning', "{$obra} com custo elevado", [
-            "A obra <strong>{$obra}</strong> possui custo mensal de R$ ".(string) ($context['valor_mensal'] ?? '—').'.',
+            "A obra <strong>{$obra}</strong> possui custo mensal de R$ " . (string) ($context['valor_mensal'] ?? '—') . '.',
         ]);
     }
 
@@ -330,7 +330,7 @@ final class NotificationEventCatalog
         $colaborador = (string) ($context['colaborador'] ?? 'Colaborador');
 
         return self::build('Excesso de equipamentos', 'warning', "{$colaborador} com muitos equipamentos", [
-            "<strong>{$colaborador}</strong> possui ".(string) ($context['total_equipamentos'] ?? '—').' equipamentos ativos.',
+            "<strong>{$colaborador}</strong> possui " . (string) ($context['total_equipamentos'] ?? '—') . ' equipamentos ativos.',
         ]);
     }
 
@@ -340,7 +340,7 @@ final class NotificationEventCatalog
         $colaborador = (string) ($context['colaborador'] ?? 'Colaborador');
 
         return self::build('Maior tempo médio de posse', 'info', "{$colaborador} com posse prolongada", [
-            "<strong>{$colaborador}</strong> possui média de posse de ".(string) ($context['media_dias'] ?? '—').' dias.',
+            "<strong>{$colaborador}</strong> possui média de posse de " . (string) ($context['media_dias'] ?? '—') . ' dias.',
         ]);
     }
 
@@ -350,8 +350,8 @@ final class NotificationEventCatalog
         $label = self::equipamentoLabel($context);
 
         return self::build('Devolução sugerida', 'info', "Sugestão de devolução: {$label}", [
-            'Recomenda-se devolver <strong>'.$label.'</strong> para reduzir custo de ociosidade.',
-            'Economia estimada: R$ '.(string) ($context['economia_mensal'] ?? '—').'/mês',
+            'Recomenda-se devolver <strong>' . $label . '</strong> para reduzir custo de ociosidade.',
+            'Economia estimada: R$ ' . (string) ($context['economia_mensal'] ?? '—') . '/mês',
         ]);
     }
 
@@ -362,8 +362,8 @@ final class NotificationEventCatalog
 
         return self::build('Realocação sugerida', 'info', "Sugestão de realocação: {$label}", [
             "O equipamento <strong>{$label}</strong> está ocioso e pode ser realocado.",
-            'Obra origem: '.(string) ($context['obra_origem'] ?? '—'),
-            'Obra destino: '.(string) ($context['obra_destino'] ?? '—'),
+            'Obra origem: ' . (string) ($context['obra_origem'] ?? '—'),
+            'Obra destino: ' . (string) ($context['obra_destino'] ?? '—'),
         ]);
     }
 
@@ -374,7 +374,7 @@ final class NotificationEventCatalog
 
         return self::build('Substituição sugerida', 'warning', "Sugestão de substituição: {$label}", [
             "O equipamento <strong>{$label}</strong> possui histórico que indica substituição.",
-            'Manutenções no período: '.(string) ($context['total_manutencoes'] ?? '—'),
+            'Manutenções no período: ' . (string) ($context['total_manutencoes'] ?? '—'),
         ]);
     }
 
@@ -383,8 +383,8 @@ final class NotificationEventCatalog
     {
         return self::build('Redução de custo', 'info', 'Oportunidade de economia identificada', [
             'Foram identificadas oportunidades de redução de custo no parque.',
-            'Economia potencial: R$ '.(string) ($context['economia_mensal'] ?? '—').'/mês',
-            'Equipamentos envolvidos: '.(string) ($context['total_equipamentos'] ?? '—'),
+            'Economia potencial: R$ ' . (string) ($context['economia_mensal'] ?? '—') . '/mês',
+            'Equipamentos envolvidos: ' . (string) ($context['total_equipamentos'] ?? '—'),
         ]);
     }
 
@@ -399,21 +399,21 @@ final class NotificationEventCatalog
     /** @param array<string, mixed> $context */
     private static function digestDaily(array $context): array
     {
-        return self::build('Resumo diário EquipControl', 'info', 'Resumo diário disponível', [
-            'Vencidos: '.(string) ($context['vencidos'] ?? '0'),
-            'Próximos do vencimento: '.(string) ($context['proximos'] ?? '0'),
-            'Em manutenção: '.(string) ($context['manutencoes'] ?? '0'),
-            'Parados: '.(string) ($context['parados'] ?? '0'),
+        return self::build('Resumo diário Equipamento', 'info', 'Resumo diário disponível', [
+            'Vencidos: ' . (string) ($context['vencidos'] ?? '0'),
+            'Próximos do vencimento: ' . (string) ($context['proximos'] ?? '0'),
+            'Em manutenção: ' . (string) ($context['manutencoes'] ?? '0'),
+            'Parados: ' . (string) ($context['parados'] ?? '0'),
         ]);
     }
 
     /** @param array<string, mixed> $context */
     private static function digestWeekly(array $context): array
     {
-        return self::build('Resumo semanal EquipControl', 'info', 'Resumo semanal disponível', [
-            'Vencidos: '.(string) ($context['vencidos'] ?? '0'),
-            'Manutenções concluídas: '.(string) ($context['manutencoes_concluidas'] ?? '0'),
-            'Economia potencial: R$ '.(string) ($context['economia_mensal'] ?? '0').'/mês',
+        return self::build('Resumo semanal Equipamento', 'info', 'Resumo semanal disponível', [
+            'Vencidos: ' . (string) ($context['vencidos'] ?? '0'),
+            'Manutenções concluídas: ' . (string) ($context['manutencoes_concluidas'] ?? '0'),
+            'Economia potencial: R$ ' . (string) ($context['economia_mensal'] ?? '0') . '/mês',
         ]);
     }
 
@@ -424,7 +424,7 @@ final class NotificationEventCatalog
     private static function build(string $subject, string $severity, string $summary, array $lines): array
     {
         $bodyText = implode("\n", array_map(
-            static fn (string $line): string => html_entity_decode(
+            static fn(string $line): string => html_entity_decode(
                 strip_tags(str_replace(['<br>', '<br/>', '<br />'], "\n", $line)),
                 ENT_QUOTES | ENT_HTML5,
                 'UTF-8',

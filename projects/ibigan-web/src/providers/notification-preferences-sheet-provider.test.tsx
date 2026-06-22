@@ -1,5 +1,5 @@
-import { act, renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
+import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
   NotificationPreferencesSheetProvider,
@@ -9,20 +9,24 @@ import {
 describe('NotificationPreferencesSheetProvider', () => {
   it('armazena filtro de módulo ao abrir preferências', () => {
     const wrapper = ({ children }: { children: ReactNode }) => (
-      <NotificationPreferencesSheetProvider>{children}</NotificationPreferencesSheetProvider>
+      <NotificationPreferencesSheetProvider>
+        {children}
+      </NotificationPreferencesSheetProvider>
     );
 
-    const { result } = renderHook(() => useNotificationPreferencesSheet(), { wrapper });
+    const { result } = renderHook(() => useNotificationPreferencesSheet(), {
+      wrapper,
+    });
 
     expect(result.current.moduleFilter).toBeNull();
     expect(result.current.isOpen).toBe(false);
 
     act(() => {
-      result.current.open({ module: 'equipcontrol' });
+      result.current.open({ module: 'equipamento' });
     });
 
     expect(result.current.isOpen).toBe(true);
-    expect(result.current.moduleFilter).toBe('equipcontrol');
+    expect(result.current.moduleFilter).toBe('equipamento');
 
     act(() => {
       result.current.close();

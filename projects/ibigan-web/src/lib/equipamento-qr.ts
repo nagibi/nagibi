@@ -1,6 +1,6 @@
 import type { Equipamento } from '@/types/equipamento';
 
-const QR_PREFIX = 'equipcontrol:';
+const QR_PREFIX = 'equipamento:';
 
 export function buildEquipamentoQrValue(patrimonio: string): string {
   return `${QR_PREFIX}${patrimonio}`;

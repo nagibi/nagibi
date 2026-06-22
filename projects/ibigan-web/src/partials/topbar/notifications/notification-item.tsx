@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   AlertTriangle,
   BarChart2,
@@ -11,25 +12,31 @@ import {
   Trash2,
   Wrench,
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { type AppNotification } from '@/services/notifications.service';
-import { getReportDownloadMeta, getNotificationDisplayBody, getNotificationActions, getNotificationCategoryLabel, getNotificationEventSlug, getNotificationSeverity, getNotificationTitle } from '@/lib/notification-utils';
+import { getInitials, toAbsoluteUrl } from '@/lib/helpers';
 import { getNotificationEvent } from '@/lib/notification-events';
+import {
+  getNotificationActions,
+  getNotificationCategoryLabel,
+  getNotificationDisplayBody,
+  getNotificationEventSlug,
+  getNotificationSeverity,
+  getNotificationTitle,
+  getReportDownloadMeta,
+} from '@/lib/notification-utils';
+import { cn } from '@/lib/utils';
+import { type AppNotification } from '@/services/notifications.service';
 import { downloadReportResultCsvWithToast } from '@/services/reports.service';
-import { GridDownloadIcon } from '@/components/icons/grid-download-icon';
-import { getInitials } from '@/lib/helpers';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import {
   Avatar,
   AvatarFallback,
   AvatarIndicator,
   AvatarStatus,
 } from '@/components/ui/avatar';
-import { toAbsoluteUrl } from '@/lib/helpers';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { GridDownloadIcon } from '@/components/icons/grid-download-icon';
 
 function getType(notification: AppNotification): string {
   return notification.type.split('\\').pop() ?? '';
@@ -112,7 +119,9 @@ function NotificationFileCard({
         <img src={toAbsoluteUrl(icon)} className="h-6 shrink-0" alt="" />
         <div className="flex min-w-0 flex-col gap-0.5">
           {fileLabel}
-          <span className="text-xs font-medium text-muted-foreground">{fileMeta}</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {fileMeta}
+          </span>
         </div>
       </div>
       <Button
@@ -159,7 +168,8 @@ export function NotificationItem({
   });
 
   async function handleDownloadReport() {
-    const { templateId, executionId, templateName } = getReportDownloadMeta(notification);
+    const { templateId, executionId, templateName } =
+      getReportDownloadMeta(notification);
 
     if (!templateId || !executionId) {
       toast.error('Dados do relatório indisponíveis.');
@@ -168,7 +178,11 @@ export function NotificationItem({
 
     setDownloading(true);
     try {
-      await downloadReportResultCsvWithToast(templateId, executionId, templateName);
+      await downloadReportResultCsvWithToast(
+        templateId,
+        executionId,
+        templateName,
+      );
       if (isUnread) onMarkRead(notification.id);
     } catch {
       // Toast de erro já exibido pelo helper de download.
@@ -216,11 +230,17 @@ export function NotificationItem({
   );
 
   if (type === 'ReportCompletedNotification') {
-    const { templateId, templateName, fileName, fileMeta } = getReportDownloadMeta(notification);
+    const { templateId, templateName, fileName, fileMeta } =
+      getReportDownloadMeta(notification);
     const headline = data.subject ? String(data.subject) : templateName;
 
     return (
-      <div className={cn('flex grow items-start gap-2.5 px-5 py-4', isUnread && 'bg-primary/5')}>
+      <div
+        className={cn(
+          'flex grow items-start gap-2.5 px-5 py-4',
+          isUnread && 'bg-primary/5',
+        )}
+      >
         <NotificationAvatar className="bg-green-500/10 text-green-700">
           <BarChart2 className="size-4" />
         </NotificationAvatar>
@@ -241,7 +261,10 @@ export function NotificationItem({
                 <span className="font-semibold text-mono">{headline}</span>
               )}
               {!data.subject ? (
-                <span className="text-secondary-foreground"> disponibilizou 1 anexo</span>
+                <span className="text-secondary-foreground">
+                  {' '}
+                  disponibilizou 1 anexo
+                </span>
               ) : null}
             </div>
             <NotificationMeta timeAgo={timeAgo} category="Relatórios" />
@@ -288,7 +311,12 @@ export function NotificationItem({
     const userId = data.user_id;
 
     return (
-      <div className={cn('flex grow items-start gap-2.5 px-5 py-4', isUnread && 'bg-primary/5')}>
+      <div
+        className={cn(
+          'flex grow items-start gap-2.5 px-5 py-4',
+          isUnread && 'bg-primary/5',
+        )}
+      >
         <NotificationAvatar className="bg-primary/10 text-primary">
           {getInitials(userName, 2)}
         </NotificationAvatar>
@@ -297,14 +325,19 @@ export function NotificationItem({
           <div className="flex flex-col gap-1 pe-14">
             <div className="text-sm font-medium">
               <span className="font-semibold text-mono">{userName}</span>
-              <span className="text-secondary-foreground"> foi adicionado como usuário</span>
+              <span className="text-secondary-foreground">
+                {' '}
+                foi adicionado como usuário
+              </span>
             </div>
             <NotificationMeta timeAgo={timeAgo} category="Usuários" />
           </div>
 
           <Card className="flex min-h-[52px] flex-row items-center justify-between gap-2 rounded-lg bg-muted/70 p-2.5 shadow-none">
             <div className="min-w-0">
-              <span className="block truncate text-xs font-medium text-mono">{userName}</span>
+              <span className="block truncate text-xs font-medium text-mono">
+                {userName}
+              </span>
               {userEmail && (
                 <span className="block truncate text-xs font-medium text-muted-foreground">
                   {userEmail}
@@ -327,21 +360,30 @@ export function NotificationItem({
   }
 
   const eventSlug = getNotificationEventSlug(notification);
-  const equipcontrolEvent = eventSlug ? getNotificationEvent(eventSlug) : null;
+  const equipamentoEvent = eventSlug ? getNotificationEvent(eventSlug) : null;
   const notificationActions = getNotificationActions(notification);
 
-  if (equipcontrolEvent?.module === 'equipcontrol') {
+  if (equipamentoEvent?.module === 'equipamento') {
     const title = getNotificationTitle(notification);
-    const category = getNotificationCategoryLabel(notification) ?? 'EquipControl';
+    const category =
+      getNotificationCategoryLabel(notification) ?? 'Equipamento';
     const severity = getNotificationSeverity(notification);
-    const primaryAction = notificationActions.find((action) => action.primary) ?? notificationActions[0];
+    const primaryAction =
+      notificationActions.find((action) => action.primary) ??
+      notificationActions[0];
     const primaryPath =
-      primaryAction?.type === 'navigate' ? String(primaryAction.payload.path ?? '') : '';
+      primaryAction?.type === 'navigate'
+        ? String(primaryAction.payload.path ?? '')
+        : '';
     const body =
-      getNotificationDisplayBody(notification) || equipcontrolEvent.example || '';
+      getNotificationDisplayBody(notification) ||
+      equipamentoEvent.example ||
+      '';
 
     const SeverityIcon =
-      severity === 'critical' || severity === 'warning' ? AlertTriangle : Package;
+      severity === 'critical' || severity === 'warning'
+        ? AlertTriangle
+        : Package;
     const avatarClass =
       severity === 'critical'
         ? 'bg-red-500/10 text-red-700'
@@ -355,14 +397,25 @@ export function NotificationItem({
     };
 
     return (
-      <div className={cn('flex grow items-start gap-2.5 px-5 py-4', isUnread && 'bg-primary/5')}>
+      <div
+        className={cn(
+          'flex grow items-start gap-2.5 px-5 py-4',
+          isUnread && 'bg-primary/5',
+        )}
+      >
         <NotificationAvatar className={avatarClass}>
-          {eventSlug?.startsWith('maintenance.') ? <Wrench className="size-4" /> : <SeverityIcon className="size-4" />}
+          {eventSlug?.startsWith('maintenance.') ? (
+            <Wrench className="size-4" />
+          ) : (
+            <SeverityIcon className="size-4" />
+          )}
         </NotificationAvatar>
         <div className="relative flex min-w-0 grow flex-col gap-3.5">
           <div className="absolute end-0 top-0 z-10">{actions}</div>
           <div className="flex flex-col gap-1 pe-14">
-            <div className={cn('text-sm font-medium', isUnread && 'font-semibold')}>
+            <div
+              className={cn('text-sm font-medium', isUnread && 'font-semibold')}
+            >
               {primaryPath ? (
                 <Link
                   to={primaryPath}
@@ -379,15 +432,19 @@ export function NotificationItem({
           </div>
           {body ? (
             <Card className="rounded-lg bg-muted/70 p-2.5 shadow-none">
-              <p className="line-clamp-3 text-xs text-secondary-foreground">{body}</p>
+              <p className="line-clamp-3 text-xs text-secondary-foreground">
+                {body}
+              </p>
             </Card>
           ) : null}
           {primaryPath && primaryAction ? (
-            <Button variant="outline" size="sm" className="h-7 w-fit text-xs" asChild>
-              <Link
-                to={primaryPath}
-                onClick={handleNavigate}
-              >
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 w-fit text-xs"
+              asChild
+            >
+              <Link to={primaryPath} onClick={handleNavigate}>
                 {primaryAction.label}
               </Link>
             </Button>
@@ -402,19 +459,30 @@ export function NotificationItem({
     const body = data.body ? formatNotificationBody(data.body) : '';
 
     return (
-      <div className={cn('flex grow items-start gap-2.5 px-5 py-4', isUnread && 'bg-primary/5')}>
+      <div
+        className={cn(
+          'flex grow items-start gap-2.5 px-5 py-4',
+          isUnread && 'bg-primary/5',
+        )}
+      >
         <NotificationAvatar className="bg-blue-500/10 text-blue-600">
           <Mail className="size-4" />
         </NotificationAvatar>
         <div className="relative flex min-w-0 grow flex-col gap-3.5">
           <div className="absolute end-0 top-0 z-10">{actions}</div>
           <div className="flex flex-col gap-1 pe-14">
-            <div className={cn('text-sm font-medium', isUnread && 'font-semibold')}>{subject}</div>
+            <div
+              className={cn('text-sm font-medium', isUnread && 'font-semibold')}
+            >
+              {subject}
+            </div>
             <NotificationMeta timeAgo={timeAgo} category="Mensagens" />
           </div>
           {body && (
             <Card className="rounded-lg bg-muted/70 p-2.5 shadow-none">
-              <p className="line-clamp-3 text-xs text-secondary-foreground">{body}</p>
+              <p className="line-clamp-3 text-xs text-secondary-foreground">
+                {body}
+              </p>
             </Card>
           )}
         </div>
@@ -423,13 +491,23 @@ export function NotificationItem({
   }
 
   return (
-    <div className={cn('flex grow items-start gap-2.5 px-5 py-4', isUnread && 'bg-primary/5')}>
+    <div
+      className={cn(
+        'flex grow items-start gap-2.5 px-5 py-4',
+        isUnread && 'bg-primary/5',
+      )}
+    >
       <NotificationAvatar className="border border-green-500/20 bg-green-500/10 text-green-600">
         <CheckCircle className="size-4" />
       </NotificationAvatar>
       <div className="relative flex min-w-0 grow flex-col gap-1">
         <div className="absolute end-0 top-0 z-10">{actions}</div>
-        <span className={cn('pe-14 text-sm font-medium text-secondary-foreground', isUnread && 'font-semibold')}>
+        <span
+          className={cn(
+            'pe-14 text-sm font-medium text-secondary-foreground',
+            isUnread && 'font-semibold',
+          )}
+        >
           Nova notificação
         </span>
         <NotificationMeta timeAgo={timeAgo} category="Sistema" />

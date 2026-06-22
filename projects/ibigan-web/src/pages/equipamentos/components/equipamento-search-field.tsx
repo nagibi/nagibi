@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { GridToolbarSearch } from '@/components/grid/grid-toolbar';
+import { EquipamentoQrButton } from '@/pages/equipamentos/components/equipamento-qr-button';
 import { EQUIPAMENTO_SEARCH_PLACEHOLDER } from '@/lib/equipamento-search';
 import { cn } from '@/lib/utils';
-import { EquipcontrolQrButton } from '@/pages/equipamentos/components/equipcontrol-qr-button';
+import { GridToolbarSearch } from '@/components/grid/grid-toolbar';
 
 export function EquipamentoSearchField({
   value,
@@ -26,7 +26,7 @@ export function EquipamentoSearchField({
         className="min-w-0 flex-1 [&_input]:h-9 [&_input]:text-sm"
       />
       {filterSlot}
-      {showQr ? <EquipcontrolQrButton /> : null}
+      {showQr ? <EquipamentoQrButton /> : null}
     </div>
   );
 }

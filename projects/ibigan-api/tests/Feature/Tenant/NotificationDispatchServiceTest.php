@@ -16,7 +16,7 @@ use Tests\TestCase;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    $tenantId = 'notif-dispatch-'.uniqid();
+    $tenantId = 'notif-dispatch-' . uniqid();
 
     /** @var TestCase&object{tenant: Tenant, admin: User} $this */
     $this->tenant = Tenant::create([
@@ -103,9 +103,9 @@ it('agrupa emails do scanner em um unico email consolidado', function (): void {
         Notification::assertSentTo(
             $this->admin,
             CatalogEventNotification::class,
-            fn (CatalogEventNotification $notification): bool => str_contains(
+            fn(CatalogEventNotification $notification): bool => str_contains(
                 (string) $notification->toMail($this->admin)->envelope()->subject,
-                'Alertas EquipControl (6)',
+                'Alertas Equipamento (6)',
             ),
         );
     });

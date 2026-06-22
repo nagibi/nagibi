@@ -1,20 +1,20 @@
 /**
- * Eventos do módulo EquipControl.
+ * Eventos do módulo Equipamento.
  *
  * Na branch `main` este arquivo NÃO é importado — a plataforma de notificações
  * funciona apenas com eventos genéricos (`platform-events.ts`).
  *
  * Na branch `controle-equipamento`, registre em `index.ts`:
- *   import { EQUIPCONTROL_NOTIFICATION_EVENTS } from './modules/equipcontrol-events';
- *   registerNotificationEvents(EQUIPCONTROL_NOTIFICATION_EVENTS);
+ *   import { EQUIPAMENTO_NOTIFICATION_EVENTS } from './modules/equipamento-events';
+ *   registerNotificationEvents(EQUIPAMENTO_NOTIFICATION_EVENTS);
  */
 import { defineNotificationEvent } from '@/lib/notification-events/define-event';
 import type { NotificationEventDefinition } from '@/types/notification-events';
 
-export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
+export const EQUIPAMENTO_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   defineNotificationEvent({
     slug: 'loan.due_soon',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'loans',
     label: 'Próximo do vencimento',
     description: 'Aviso quando um empréstimo estiver próximo da data limite.',
@@ -26,7 +26,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'loan.overdue',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'loans',
     label: 'Empréstimo vencido',
     description: 'Alerta quando um equipamento ultrapassar o prazo máximo permitido.',
@@ -38,7 +38,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'loan.renewed',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'loans',
     label: 'Renovação realizada',
     description: 'Aviso sempre que um empréstimo for renovado.',
@@ -49,7 +49,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'loan.renewal_limit_exceeded',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'loans',
     label: 'Excesso de renovações',
     description: 'Alerta quando um equipamento ultrapassar a quantidade recomendada de renovações.',
@@ -60,7 +60,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'loan.created',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'loans',
     label: 'Novo empréstimo',
     description: 'Aviso sempre que um equipamento for emprestado.',
@@ -71,7 +71,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'loan.returned',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'loans',
     label: 'Devolução registrada',
     description: 'Confirmação de devolução de equipamento.',
@@ -81,7 +81,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'equipment.idle',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'inventory',
     label: 'Equipamento parado',
     description: 'Alerta quando um equipamento permanecer sem utilização por determinado período.',
@@ -92,7 +92,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'equipment.unused_since_registration',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'inventory',
     label: 'Cadastrado sem utilização',
     description: 'Equipamento recém-cadastrado sem nenhuma movimentação registrada.',
@@ -103,7 +103,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'equipment.below_minimum_stock',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'inventory',
     label: 'Estoque abaixo do mínimo',
     description: 'Quando a quantidade disponível ficar abaixo do mínimo configurado.',
@@ -114,7 +114,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'maintenance.sent',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'maintenance',
     label: 'Enviado para manutenção',
     description: 'Quando um equipamento for encaminhado para manutenção.',
@@ -125,7 +125,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'maintenance.completed',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'maintenance',
     label: 'Manutenção concluída',
     description: 'Equipamento liberado e pronto para utilização.',
@@ -135,7 +135,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'maintenance.overdue',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'maintenance',
     label: 'Manutenção atrasada',
     description: 'Equipamento em manutenção além do prazo previsto.',
@@ -147,7 +147,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'maintenance.frequency_high',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'maintenance',
     label: 'Excesso de manutenções',
     description: 'Equipamento com frequência elevada de manutenções no período.',
@@ -158,7 +158,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'maintenance.cost_high',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'maintenance',
     label: 'Custo elevado de manutenção',
     description: 'Equipamento acumulou custo elevado de manutenção no período.',
@@ -169,7 +169,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'critical.idle',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'critical',
     label: 'Crítico parado',
     description: 'Equipamento crítico sem utilização por período prolongado.',
@@ -181,7 +181,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'critical.overdue',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'critical',
     label: 'Crítico vencido',
     description: 'Equipamento crítico com empréstimo vencido.',
@@ -192,7 +192,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'critical.in_maintenance',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'critical',
     label: 'Crítico em manutenção',
     description: 'Equipamento crítico indisponível por estar em manutenção.',
@@ -203,7 +203,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'site.idle_equipment',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'sites',
     label: 'Equipamentos ociosos na obra',
     description: 'Obra com equipamentos sem uso e custo associado.',
@@ -214,7 +214,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'site.overdue_equipment',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'sites',
     label: 'Muitos vencimentos na obra',
     description: 'Obra com volume elevado de equipamentos vencidos.',
@@ -225,7 +225,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'site.high_cost',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'sites',
     label: 'Custo elevado na obra',
     description: 'Obra com custo mensal de equipamentos acima do esperado.',
@@ -236,7 +236,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'employee.equipment_overload',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'employees',
     label: 'Excesso de equipamentos',
     description: 'Colaborador com quantidade de equipamentos acima da média da empresa.',
@@ -247,7 +247,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'employee.long_possession',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'employees',
     label: 'Maior tempo médio de posse',
     description: 'Colaborador com tempo médio de posse acima do padrão.',
@@ -258,7 +258,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'insight.return',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'insight',
     label: 'Devolução sugerida',
     description: 'Recomendação de devolução para reduzir custo de ociosidade.',
@@ -270,7 +270,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'insight.reallocation',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'insight',
     label: 'Realocação sugerida',
     description: 'Equipamento ocioso em uma obra com demanda em outra.',
@@ -282,7 +282,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'insight.replacement',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'insight',
     label: 'Substituição sugerida',
     description: 'Equipamento com histórico que indica substituição.',
@@ -294,7 +294,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'insight.cost_reduction',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'insight',
     label: 'Redução de custo',
     description: 'Oportunidade agregada de economia no parque.',
@@ -306,7 +306,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'insight.anomaly',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'insight',
     label: 'Comportamento atípico',
     description: 'Padrão de uso ou custo fora do esperado para o parque.',
@@ -317,7 +317,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'digest.daily',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'digest',
     label: 'Resumo diário',
     description: 'Consolidação diária dos principais indicadores e alertas.',
@@ -331,7 +331,7 @@ export const EQUIPCONTROL_NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
   }),
   defineNotificationEvent({
     slug: 'digest.weekly',
-    module: 'equipcontrol',
+    module: 'equipamento',
     category: 'digest',
     label: 'Resumo semanal',
     description: 'Visão consolidada semanal para gestão executiva.',

@@ -9,29 +9,6 @@ import {
   Smartphone,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { NotificationPreferencesSkeleton } from '@/components/common/side-panel-skeleton';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { useNotificationEventCatalog } from '@/hooks/use-notification-event-catalog';
-import { groupEventsByCategory } from '@/lib/notification-catalog-merge';
-import { NOTIFICATION_CATEGORY_LABELS, NOTIFICATION_CATEGORY_ORDER } from '@/lib/notification-events';
-import {
-  formatEventHint,
-  isChannelAllowed,
-  mergeNotificationPreferences,
-  resolveEventChannelPrefs,
-} from '@/lib/notification-preference-utils';
-import { cn } from '@/lib/utils';
-import { notificationPreferencesService } from '@/services/notification-preferences.service';
 import type {
   NotificationChannel,
   NotificationEventCategory,
@@ -39,6 +16,40 @@ import type {
   NotificationModule,
   NotificationSeverity,
 } from '@/types/notification-events';
+import { groupEventsByCategory } from '@/lib/notification-catalog-merge';
+import {
+  NOTIFICATION_CATEGORY_LABELS,
+  NOTIFICATION_CATEGORY_ORDER,
+} from '@/lib/notification-events';
+import {
+  formatEventHint,
+  isChannelAllowed,
+  mergeNotificationPreferences,
+  resolveEventChannelPrefs,
+} from '@/lib/notification-preference-utils';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useNotificationEventCatalog } from '@/hooks/use-notification-event-catalog';
+import { notificationPreferencesService } from '@/services/notification-preferences.service';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { NotificationPreferencesSkeleton } from '@/components/common/side-panel-skeleton';
 
 const VISIBLE_CHANNELS: Array<{
   key: NotificationChannel;
@@ -52,13 +63,17 @@ const VISIBLE_CHANNELS: Array<{
 
 const DEFAULT_OPEN_CATEGORIES: NotificationEventCategory[] = ['platform'];
 
-const EQUIPCONTROL_OPEN_CATEGORIES: NotificationEventCategory[] = [
+const EQUIPAMENTO_OPEN_CATEGORIES: NotificationEventCategory[] = [
   'loans',
   'inventory',
   'maintenance',
 ];
 
-export function NotificationPreferencesColumnHeader({ className }: { className?: string }) {
+export function NotificationPreferencesColumnHeader({
+  className,
+}: {
+  className?: string;
+}) {
   return (
     <div
       className={cn(
@@ -174,15 +189,26 @@ function ChannelToggles({
     >
       {VISIBLE_CHANNELS.map(({ key, label, icon: Icon }) => {
         if (!isChannelAllowed(event, key)) {
-          return <span key={key} className="size-8 justify-self-center" aria-hidden />;
+          return (
+            <span
+              key={key}
+              className="size-8 justify-self-center"
+              aria-hidden
+            />
+          );
         }
 
         return (
           <div key={key} className="flex flex-col items-center gap-1">
             {showLabels ? (
               <>
-                <Icon className="size-3.5 text-muted-foreground sm:hidden" aria-hidden />
-                <span className="text-[10px] leading-none text-muted-foreground sm:hidden">{label}</span>
+                <Icon
+                  className="size-3.5 text-muted-foreground sm:hidden"
+                  aria-hidden
+                />
+                <span className="text-[10px] leading-none text-muted-foreground sm:hidden">
+                  {label}
+                </span>
               </>
             ) : null}
             <Switch
@@ -215,9 +241,17 @@ function PreferenceRow({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1">
             <p className="text-sm font-medium leading-snug">{event.label}</p>
-            <SeverityIndicator severity={event.severity} hint={formatEventHint(event)} />
+            <SeverityIndicator
+              severity={event.severity}
+              hint={formatEventHint(event)}
+            />
             {event.supports_escalation ? (
-              <Badge variant="primary" appearance="light" size="sm" className="font-semibold">
+              <Badge
+                variant="primary"
+                appearance="light"
+                size="sm"
+                className="font-semibold"
+              >
                 Escalonável
               </Badge>
             ) : null}
@@ -249,11 +283,17 @@ export function NotificationPreferencesContent({
   showColumnHeader = true,
 }: NotificationPreferencesContentProps = {}) {
   const queryClient = useQueryClient();
-  const { catalog: fullCatalog, eventsByCategory: fullEventsByCategory, isRemote } =
-    useNotificationEventCatalog();
+  const {
+    catalog: fullCatalog,
+    eventsByCategory: fullEventsByCategory,
+    isRemote,
+  } = useNotificationEventCatalog();
 
   const catalog = useMemo(
-    () => (module ? fullCatalog.filter((event) => event.module === module) : fullCatalog),
+    () =>
+      module
+        ? fullCatalog.filter((event) => event.module === module)
+        : fullCatalog,
     [fullCatalog, module],
   );
 
@@ -262,9 +302,10 @@ export function NotificationPreferencesContent({
     return groupEventsByCategory(catalog);
   }, [catalog, fullEventsByCategory, module]);
 
-  const defaultOpenCategories = module === 'equipcontrol'
-    ? EQUIPCONTROL_OPEN_CATEGORIES
-    : DEFAULT_OPEN_CATEGORIES;
+  const defaultOpenCategories =
+    module === 'equipamento'
+      ? EQUIPAMENTO_OPEN_CATEGORIES
+      : DEFAULT_OPEN_CATEGORIES;
 
   const { data, isLoading } = useQuery({
     queryKey: ['notification-preferences'],
@@ -272,8 +313,15 @@ export function NotificationPreferencesContent({
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ event, channel, enabled }: { event: string; channel: string; enabled: boolean }) =>
-      notificationPreferencesService.update(event, channel, enabled),
+    mutationFn: ({
+      event,
+      channel,
+      enabled,
+    }: {
+      event: string;
+      channel: string;
+      enabled: boolean;
+    }) => notificationPreferencesService.update(event, channel, enabled),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-preferences'] });
     },
@@ -296,8 +344,8 @@ export function NotificationPreferencesContent({
   return (
     <div className="space-y-3">
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Configure quais eventos deseja receber e por qual canal. As preferências respeitam os limites
-        definidos pela sua empresa.
+        Configure quais eventos deseja receber e por qual canal. As preferências
+        respeitam os limites definidos pela sua empresa.
         {isRemote ? (
           <span className="mt-1 block text-[11px] text-muted-foreground/80">
             Catálogo sincronizado com o servidor.
@@ -306,7 +354,9 @@ export function NotificationPreferencesContent({
       </p>
 
       <div>
-        {showColumnHeader ? <NotificationPreferencesColumnHeader className="mb-2" /> : null}
+        {showColumnHeader ? (
+          <NotificationPreferencesColumnHeader className="mb-2" />
+        ) : null}
 
         <Accordion
           type="multiple"
@@ -327,7 +377,12 @@ export function NotificationPreferencesContent({
                 <AccordionTrigger className="px-0 py-2.5 text-sm hover:no-underline sm:py-3">
                   <span className="flex items-center gap-2">
                     {NOTIFICATION_CATEGORY_LABELS[category]}
-                    <Badge variant="primary" appearance="light" size="sm" className="font-semibold">
+                    <Badge
+                      variant="primary"
+                      appearance="light"
+                      size="sm"
+                      className="font-semibold"
+                    >
                       {events.length}
                     </Badge>
                   </span>
@@ -338,10 +393,17 @@ export function NotificationPreferencesContent({
                       <PreferenceRow
                         key={event.slug}
                         event={event}
-                        prefs={resolveEventChannelPrefs(event, preferences[event.slug])}
+                        prefs={resolveEventChannelPrefs(
+                          event,
+                          preferences[event.slug],
+                        )}
                         isPending={updateMutation.isPending}
                         onToggle={(channel, enabled) =>
-                          updateMutation.mutate({ event: event.slug, channel, enabled })
+                          updateMutation.mutate({
+                            event: event.slug,
+                            channel,
+                            enabled,
+                          })
                         }
                       />
                     ))}

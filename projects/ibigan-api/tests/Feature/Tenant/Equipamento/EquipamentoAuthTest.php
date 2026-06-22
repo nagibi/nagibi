@@ -7,12 +7,12 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('nega acesso aos endpoints de equipcontrol sem autenticacao', function (): void {
-    $tenantId = 'tenant-'.uniqid();
+it('nega acesso aos endpoints de equipamento sem autenticacao', function (): void {
+    $tenantId = 'tenant-' . uniqid();
     $tenant = Tenant::create([
         'id' => $tenantId,
         'slug' => $tenantId,
-        'name' => 'Equipcontrol Auth Test',
+        'name' => 'Equipamento Auth Test',
         'is_active' => true,
     ]);
 

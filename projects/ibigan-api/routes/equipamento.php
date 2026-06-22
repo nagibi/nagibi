@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\Tenant\Equipamento\AlertSettingsController;
 use App\Http\Controllers\Api\V1\Tenant\Equipamento\BaixaController;
 use App\Http\Controllers\Api\V1\Tenant\Equipamento\EmprestimoController;
 use App\Http\Controllers\Api\V1\Tenant\Equipamento\EquipamentoController;
@@ -26,6 +27,13 @@ Route::apiResource('obras', ObraController::class);
 Route::apiResource('fornecedores', FornecedorController::class)->parameters(['fornecedores' => 'fornecedor']);
 Route::apiResource('grupos', GrupoEquipamentoController::class);
 Route::apiResource('tipos', TipoEquipamentoController::class);
+
+Route::prefix('equipamentos/alert-settings')->group(function (): void {
+    Route::get('/', [AlertSettingsController::class, 'index']);
+    Route::put('/', [AlertSettingsController::class, 'update']);
+    Route::delete('/{key}', [AlertSettingsController::class, 'destroy']);
+});
+
 
 Route::apiResource('equipamentos', EquipamentoController::class);
 Route::patch('equipamentos/{equipamento}/toggle-active', [EquipamentoController::class, 'toggleActive']);

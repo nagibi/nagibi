@@ -17,13 +17,13 @@ use Tests\TestCase;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    $tenantId = 'equip-notif-actions-'.uniqid();
+    $tenantId = 'equip-notif-actions-' . uniqid();
 
     /** @var TestCase&object{tenant: Tenant, admin: User, obra: Obra} $this */
     $this->tenant = Tenant::create([
         'id' => $tenantId,
         'slug' => $tenantId,
-        'name' => 'Equipcontrol Action Notifications',
+        'name' => 'Equipamento Action Notifications',
     ]);
 
     $this->tenant->run(function (): void {
@@ -37,7 +37,7 @@ beforeEach(function (): void {
         return $user;
     });
 
-    $this->obra = $this->tenant->run(fn () => Obra::factory()->create(['codigo' => '650']));
+    $this->obra = $this->tenant->run(fn() => Obra::factory()->create(['codigo' => '650']));
 });
 
 afterEach(function (): void {
@@ -49,18 +49,20 @@ function equipNotifHeaders(Tenant $tenant): array
     return ['X-Tenant-ID' => $tenant->id];
 }
 
-function enableAllEquipcontrolPreferences(User $user): void
+function enableAllEquipamentoPreferences(User $user): void
 {
     $service = app(NotificationPreferenceService::class);
 
-    foreach ([
-        'loan.created',
-        'loan.returned',
-        'loan.renewed',
-        'loan.renewal_limit_exceeded',
-        'maintenance.sent',
-        'maintenance.completed',
-    ] as $event) {
+    foreach (
+        [
+            'loan.created',
+            'loan.returned',
+            'loan.renewed',
+            'loan.renewal_limit_exceeded',
+            'maintenance.sent',
+            'maintenance.completed',
+        ] as $event
+    ) {
         $service->update($user, $event, 'app', true);
     }
 }
@@ -69,16 +71,16 @@ function latestEventSlug(User $user, string $eventSlug): ?string
 {
     $notification = $user->notifications()
         ->get()
-        ->last(fn ($notification) => ($notification->data['event_slug'] ?? null) === $eventSlug);
+        ->last(fn($notification) => ($notification->data['event_slug'] ?? null) === $eventSlug);
 
     return $notification?->data['event_slug'] ?? null;
 }
 
 it('dispara loan.created ao emprestar equipamento', function (): void {
     Sanctum::actingAs($this->admin, ['*'], 'sanctum');
-    $this->tenant->run(fn () => enableAllEquipcontrolPreferences($this->admin));
+    $this->tenant->run(fn() => enableAllEquipamentoPreferences($this->admin));
 
-    $equipamento = $this->tenant->run(fn () => Equipamento::factory()->create());
+    $equipamento = $this->tenant->run(fn() => Equipamento::factory()->create());
 
     $this->postJson("/api/v1/equipamentos/{$equipamento->id}/emprestar", [
         'obra_id' => $this->obra->id,
@@ -96,7 +98,7 @@ it('dispara loan.created ao emprestar equipamento', function (): void {
 
 it('dispara loan.returned ao devolver equipamento', function (): void {
     Sanctum::actingAs($this->admin, ['*'], 'sanctum');
-    $this->tenant->run(fn () => enableAllEquipcontrolPreferences($this->admin));
+    $this->tenant->run(fn() => enableAllEquipamentoPreferences($this->admin));
 
     $emprestimo = $this->tenant->run(function (): Emprestimo {
         $equipamento = Equipamento::factory()->create();
@@ -121,14 +123,14 @@ function latestNotificationData(User $user, string $eventSlug): ?array
 {
     $notification = $user->notifications()
         ->get()
-        ->last(fn ($notification) => ($notification->data['event_slug'] ?? null) === $eventSlug);
+        ->last(fn($notification) => ($notification->data['event_slug'] ?? null) === $eventSlug);
 
     return $notification?->data;
 }
 
 it('dispara loan.renewed ao renovar emprestimo', function (): void {
     Sanctum::actingAs($this->admin, ['*'], 'sanctum');
-    $this->tenant->run(fn () => enableAllEquipcontrolPreferences($this->admin));
+    $this->tenant->run(fn() => enableAllEquipamentoPreferences($this->admin));
 
     $emprestimo = $this->tenant->run(function (): Emprestimo {
         $equipamento = Equipamento::factory()->create();
@@ -157,9 +159,9 @@ it('dispara loan.renewed ao renovar emprestimo', function (): void {
 
 it('dispara maintenance.completed ao finalizar manutencao', function (): void {
     Sanctum::actingAs($this->admin, ['*'], 'sanctum');
-    $this->tenant->run(fn () => enableAllEquipcontrolPreferences($this->admin));
+    $this->tenant->run(fn() => enableAllEquipamentoPreferences($this->admin));
 
-    $equipamento = $this->tenant->run(fn () => Equipamento::factory()->create());
+    $equipamento = $this->tenant->run(fn() => Equipamento::factory()->create());
 
     $manutencaoId = $this->postJson("/api/v1/equipamentos/{$equipamento->id}/manutencao", [
         'responsabilidade' => 'equipamento',
@@ -179,7 +181,7 @@ it('dispara maintenance.completed ao finalizar manutencao', function (): void {
 
 it('dispara loan.renewal_limit_exceeded apos limite de renovacoes', function (): void {
     Sanctum::actingAs($this->admin, ['*'], 'sanctum');
-    $this->tenant->run(fn () => enableAllEquipcontrolPreferences($this->admin));
+    $this->tenant->run(fn() => enableAllEquipamentoPreferences($this->admin));
 
     $emprestimo = $this->tenant->run(function (): Emprestimo {
         $equipamento = Equipamento::factory()->create();

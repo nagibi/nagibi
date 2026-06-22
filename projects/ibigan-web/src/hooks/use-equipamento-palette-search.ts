@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from '@/hooks/use-debounce';
-import { useEquipcontrolAlertasEnabled } from '@/hooks/use-equipcontrol-alertas-enabled';
+import { useEquipamentoAlertasEnabled } from '@/hooks/use-equipamento-alertas-enabled';
 import { EQUIPAMENTO_STATUS_LABELS } from '@/lib/equipamento-labels';
 import { getEquipamentoRoute } from '@/lib/equipamento-qr';
 import { equipamentosService } from '@/services/equipamentos.service';
@@ -20,7 +20,7 @@ function mapEquipamentoToSearchHit(equipamento: Equipamento): SearchHit {
 
 export function useEquipamentoPaletteSearch(term: string, open = true) {
   const debounced = useDebounce(term.trim(), 250);
-  const equipcontrolEnabled = useEquipcontrolAlertasEnabled();
+  const equipamentoEnabled = useEquipamentoAlertasEnabled();
   const hasQuery = debounced.length >= 2;
 
   return useQuery({
@@ -29,7 +29,7 @@ export function useEquipamentoPaletteSearch(term: string, open = true) {
       const result = await equipamentosService.globalSearch(debounced, 8);
       return result.data.map(mapEquipamentoToSearchHit);
     },
-    enabled: open && equipcontrolEnabled && hasQuery,
+    enabled: open && equipamentoEnabled && hasQuery,
     staleTime: 30_000,
   });
 }

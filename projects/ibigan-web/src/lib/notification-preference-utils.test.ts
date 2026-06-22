@@ -14,7 +14,7 @@ describe('notification-preference-utils — app e e-mail', () => {
   const loanOverdue = getNotificationEvent('loan.overdue')!;
   const campaignSent = getNotificationEvent('campaign.sent')!;
 
-  it('aplica defaults de app e e-mail a partir do catálogo EquipControl', () => {
+  it('aplica defaults de app e e-mail a partir do catálogo Equipamento', () => {
     const prefs = resolveEventChannelPrefs(loanOverdue, null);
 
     expect(prefs.app).toBe(true);

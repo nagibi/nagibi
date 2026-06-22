@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import {
   Archive,
   BarChart2,
@@ -9,9 +8,10 @@ import {
   Shapes,
   Truck,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { usePageToolbar } from '@/hooks/use-page-toolbar';
-import { Card, CardContent } from '@/components/ui/card';
 import { useNotificationPreferencesSheet } from '@/providers/notification-preferences-sheet-provider';
+import { Card, CardContent } from '@/components/ui/card';
 
 const MENU_ITEMS = [
   {
@@ -65,23 +65,23 @@ export function EquipamentosMaisPage() {
       {MENU_ITEMS.map(({ to, label, description, icon: Icon }) => (
         <Link key={to} to={to} className="block">
           <Card className="transition-colors hover:bg-muted/30">
-              <CardContent className="flex items-center gap-3 px-4 py-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                  <Icon className="size-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">{label}</p>
-                  <p className="text-xs text-muted-foreground">{description}</p>
-                </div>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-              </CardContent>
+            <CardContent className="flex items-center gap-3 px-4 py-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Icon className="size-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">{label}</p>
+                <p className="text-xs text-muted-foreground">{description}</p>
+              </div>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            </CardContent>
           </Card>
         </Link>
       ))}
 
       <button
         type="button"
-        onClick={() => openPreferences({ module: 'equipcontrol' })}
+        onClick={() => openPreferences({ module: 'equipamento' })}
         className="flex w-full items-center gap-3 rounded-xl border border-border px-4 py-3 text-left transition-colors hover:bg-muted/30"
       >
         <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">

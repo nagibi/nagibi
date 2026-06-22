@@ -6,7 +6,7 @@ import type { AppNotification } from '@/services/notifications.service';
 function buildNotification(data: Record<string, unknown>, overrides: Partial<AppNotification> = {}): AppNotification {
   return {
     id: '26cc93f6-af2a-4595-bce9-b33c38a6c076',
-    type: 'App\\Notifications\\EquipcontrolNotification',
+    type: 'App\\Notifications\\EquipamentoNotification',
     data,
     read_at: null,
     created_at: '2026-06-16T12:00:00.000Z',
@@ -52,7 +52,7 @@ describe('getNotificationRecordId', () => {
     expect(getNotificationRecordId(notification)).toBe(42);
   });
 
-  it('usa emprestimo_id em notificação de renovação EquipControl', () => {
+  it('usa emprestimo_id em notificação de renovação Equipamento', () => {
     const notification = buildNotification({
       event_slug: 'loan.renewed',
       emprestimo_id: 15,
@@ -78,7 +78,7 @@ describe('getNotificationRecordId', () => {
   });
 });
 
-describe('getNotificationActions — EquipControl', () => {
+describe('getNotificationActions — Equipamento', () => {
   it('prioriza ações enviadas pela API', () => {
     const notification = buildNotification({
       event_slug: 'loan.overdue',
@@ -104,7 +104,7 @@ describe('getNotificationActions — EquipControl', () => {
     ]);
   });
 
-  it('usa fallback de navegação EquipControl quando a API não envia ações', () => {
+  it('usa fallback de navegação Equipamento quando a API não envia ações', () => {
     const notification = buildNotification({
       event_slug: 'loan.overdue',
       patrimonio: 'EQ-100',

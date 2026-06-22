@@ -18,7 +18,7 @@ use RuntimeException;
 final class EquipamentoStatusService
 {
     public function __construct(
-        private readonly EquipcontrolNotificationService $notificationService,
+        private readonly EquipamentoNotificationService $notificationService,
     ) {}
 
     public function emprestar(Equipamento $equipamento, array $dados): Emprestimo

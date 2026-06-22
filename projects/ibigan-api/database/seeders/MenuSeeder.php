@@ -16,7 +16,7 @@ class MenuSeeder extends Seeder
         if (! tenancy()->initialized) {
             throw new RuntimeException(
                 'MenuSeeder deve ser executado no contexto de um tenant. '
-                .'Use: php artisan tenants:seed --class=MenuSeeder',
+                    . 'Use: php artisan tenants:seed --class=MenuSeeder',
             );
         }
 
@@ -34,9 +34,9 @@ class MenuSeeder extends Seeder
             'roles' => ['admin', 'manager', 'viewer', 'operator', 'super-admin'],
         ]);
 
-        $equipcontrol = Menu::create([
+        $equipamento = Menu::create([
             'title' => 'Equipamentos',
-            'slug' => 'equipcontrol',
+            'slug' => 'equipamento',
             'icon' => 'HardHat',
             'path' => '/equipamentos',
             'order' => 1,
@@ -45,12 +45,12 @@ class MenuSeeder extends Seeder
             'roles' => ['admin', 'manager', 'viewer', 'operator', 'super-admin'],
         ]);
 
-        $equipcontrolOperacao = Menu::create([
+        $equipamentoOperacao = Menu::create([
             'title' => 'Operação',
-            'slug' => 'equipcontrol-operacao',
+            'slug' => 'equipamento-operacao',
             'icon' => null,
             'path' => null,
-            'parent_id' => $equipcontrol->id,
+            'parent_id' => $equipamento->id,
             'order' => 0,
             'is_active' => true,
             'requires_auth' => true,
@@ -59,10 +59,10 @@ class MenuSeeder extends Seeder
 
         Menu::create([
             'title' => 'Dashboard',
-            'slug' => 'equipcontrol-gestao',
+            'slug' => 'equipamento-gestao',
             'icon' => 'LayoutDashboard',
             'path' => '/equipamentos/dashboard',
-            'parent_id' => $equipcontrolOperacao->id,
+            'parent_id' => $equipamentoOperacao->id,
             'order' => 0,
             'is_active' => true,
             'requires_auth' => true,
@@ -71,10 +71,10 @@ class MenuSeeder extends Seeder
 
         Menu::create([
             'title' => 'Estoque',
-            'slug' => 'equipcontrol-estoque',
+            'slug' => 'equipamento-estoque',
             'icon' => 'Package',
             'path' => '/equipamentos/estoque',
-            'parent_id' => $equipcontrolOperacao->id,
+            'parent_id' => $equipamentoOperacao->id,
             'order' => 1,
             'is_active' => true,
             'requires_auth' => true,
@@ -83,10 +83,10 @@ class MenuSeeder extends Seeder
 
         Menu::create([
             'title' => 'Movimentações',
-            'slug' => 'equipcontrol-movimentacoes',
+            'slug' => 'equipamento-movimentacoes',
             'icon' => 'Repeat2',
             'path' => '/equipamentos/movimentacoes',
-            'parent_id' => $equipcontrolOperacao->id,
+            'parent_id' => $equipamentoOperacao->id,
             'order' => 2,
             'is_active' => true,
             'requires_auth' => true,
@@ -95,10 +95,10 @@ class MenuSeeder extends Seeder
 
         Menu::create([
             'title' => 'Manutenções',
-            'slug' => 'equipcontrol-manutencao',
+            'slug' => 'equipamento-manutencao',
             'icon' => 'Wrench',
             'path' => '/equipamentos/manutencao',
-            'parent_id' => $equipcontrolOperacao->id,
+            'parent_id' => $equipamentoOperacao->id,
             'order' => 3,
             'is_active' => true,
             'requires_auth' => true,
@@ -107,22 +107,22 @@ class MenuSeeder extends Seeder
 
         Menu::create([
             'title' => 'Baixados',
-            'slug' => 'equipcontrol-baixados',
+            'slug' => 'equipamento-baixados',
             'icon' => 'Archive',
             'path' => '/equipamentos/baixados',
-            'parent_id' => $equipcontrolOperacao->id,
+            'parent_id' => $equipamentoOperacao->id,
             'order' => 4,
             'is_active' => true,
             'requires_auth' => true,
             'roles' => ['admin', 'manager', 'viewer', 'operator', 'super-admin'],
         ]);
 
-        $equipcontrolCadastros = Menu::create([
+        $equipamentoCadastros = Menu::create([
             'title' => 'Cadastros',
-            'slug' => 'equipcontrol-cadastros',
+            'slug' => 'equipamento-cadastros',
             'icon' => null,
             'path' => null,
-            'parent_id' => $equipcontrol->id,
+            'parent_id' => $equipamento->id,
             'order' => 1,
             'is_active' => true,
             'requires_auth' => true,
@@ -131,10 +131,10 @@ class MenuSeeder extends Seeder
 
         Menu::create([
             'title' => 'Tipos',
-            'slug' => 'equipcontrol-tipos',
+            'slug' => 'equipamento-tipos',
             'icon' => 'Shapes',
             'path' => '/equipamentos/tipos',
-            'parent_id' => $equipcontrolCadastros->id,
+            'parent_id' => $equipamentoCadastros->id,
             'order' => 0,
             'is_active' => true,
             'requires_auth' => true,
@@ -143,10 +143,10 @@ class MenuSeeder extends Seeder
 
         Menu::create([
             'title' => 'Fornecedores',
-            'slug' => 'equipcontrol-fornecedores',
+            'slug' => 'equipamento-fornecedores',
             'icon' => 'Truck',
             'path' => '/equipamentos/fornecedores',
-            'parent_id' => $equipcontrolCadastros->id,
+            'parent_id' => $equipamentoCadastros->id,
             'order' => 1,
             'is_active' => true,
             'requires_auth' => true,
@@ -155,10 +155,10 @@ class MenuSeeder extends Seeder
 
         Menu::create([
             'title' => 'Obras',
-            'slug' => 'equipcontrol-obras',
+            'slug' => 'equipamento-obras',
             'icon' => 'Building2',
             'path' => '/equipamentos/obras',
-            'parent_id' => $equipcontrolCadastros->id,
+            'parent_id' => $equipamentoCadastros->id,
             'order' => 2,
             'is_active' => true,
             'requires_auth' => true,
@@ -539,17 +539,17 @@ class MenuSeeder extends Seeder
 
         $translationKeys = [
             'dashboard' => 'menu.dashboard',
-            'equipcontrol' => 'menu.equipcontrol',
-            'equipcontrol-operacao' => 'menu.equipcontrol.operation',
-            'equipcontrol-gestao' => 'menu.equipcontrol.management',
-            'equipcontrol-estoque' => 'menu.equipcontrol.stock',
-            'equipcontrol-manutencao' => 'menu.equipcontrol.maintenance',
-            'equipcontrol-movimentacoes' => 'menu.equipcontrol.movements',
-            'equipcontrol-baixados' => 'menu.equipcontrol.decommissioned',
-            'equipcontrol-cadastros' => 'menu.equipcontrol.catalogs',
-            'equipcontrol-tipos' => 'menu.equipcontrol.types',
-            'equipcontrol-fornecedores' => 'menu.equipcontrol.suppliers',
-            'equipcontrol-obras' => 'menu.equipcontrol.projects',
+            'equipamento' => 'menu.equipamento',
+            'equipamento-operacao' => 'menu.equipamento.operation',
+            'equipamento-gestao' => 'menu.equipamento.management',
+            'equipamento-estoque' => 'menu.equipamento.stock',
+            'equipamento-manutencao' => 'menu.equipamento.maintenance',
+            'equipamento-movimentacoes' => 'menu.equipamento.movements',
+            'equipamento-baixados' => 'menu.equipamento.decommissioned',
+            'equipamento-cadastros' => 'menu.equipamento.catalogs',
+            'equipamento-tipos' => 'menu.equipamento.types',
+            'equipamento-fornecedores' => 'menu.equipamento.suppliers',
+            'equipamento-obras' => 'menu.equipamento.projects',
             'gestao' => 'menu.management',
             'usuarios' => 'menu.users',
             'aprovacoes' => 'menu.user_approvals',

@@ -13,14 +13,14 @@ return new class extends Migration
     public function up(): void
     {
         DB::table('menus')
-            ->where('slug', 'equipcontrol-movimentacoes')
+            ->where('slug', 'equipamento-movimentacoes')
             ->update(['icon' => 'Repeat2']);
     }
 
     public function down(): void
     {
         DB::table('menus')
-            ->where('slug', 'equipcontrol-movimentacoes')
+            ->where('slug', 'equipamento-movimentacoes')
             ->update(['icon' => 'ArrowLeftRight']);
     }
 };

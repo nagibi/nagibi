@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import {
-  EquipcontrolAlertasPanel,
-  useEquipcontrolAlertasTotal,
-} from '@/pages/equipamentos/components/equipcontrol-alertas-panel';
+  EquipamentoAlertasPanel,
+  useEquipamentoAlertasTotal,
+} from '@/pages/equipamentos/components/equipamento-alertas-panel';
 import { NotificationItem } from '@/partials/topbar/notifications/notification-item';
 import { useAuthStore } from '@/stores/auth.store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -14,8 +14,8 @@ import {
   Settings,
   X,
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   invalidateNotifications,
@@ -25,7 +25,7 @@ import {
 } from '@/lib/notification-cache';
 import { isReportNotification } from '@/lib/notification-utils';
 import { useCentralOnlySession } from '@/hooks/use-central-only-session';
-import { useEquipcontrolAlertasEnabled } from '@/hooks/use-equipcontrol-alertas-enabled';
+import { useEquipamentoAlertasEnabled } from '@/hooks/use-equipamento-alertas-enabled';
 import { useNotificationsList } from '@/hooks/use-notifications-list';
 import { useNotificationPreferencesSheet } from '@/providers/notification-preferences-sheet-provider';
 import { notificationsService } from '@/services/notifications.service';
@@ -55,13 +55,13 @@ export function NotificationsSheetPanel({
   const { open: openPreferences } = useNotificationPreferencesSheet();
   const isCentralOnly = useCentralOnlySession();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const equipcontrolAlertasEnabled = useEquipcontrolAlertasEnabled();
+  const equipamentoAlertasEnabled = useEquipamentoAlertasEnabled();
   const [activeTab, setActiveTab] = useState('all');
 
   const { t } = useTranslation();
   const { data, isLoading } = useNotificationsList(open);
-  const alertasTotal = useEquipcontrolAlertasTotal(
-    open && equipcontrolAlertasEnabled,
+  const alertasTotal = useEquipamentoAlertasTotal(
+    open && equipamentoAlertasEnabled,
   );
 
   const markAsReadMutation = useMutation({
@@ -188,8 +188,8 @@ export function NotificationsSheetPanel({
                 window.setTimeout(
                   () =>
                     openPreferences(
-                      equipcontrolAlertasEnabled
-                        ? { module: 'equipcontrol' }
+                      equipamentoAlertasEnabled
+                        ? { module: 'equipamento' }
                         : undefined,
                     ),
                   0,
@@ -224,7 +224,7 @@ export function NotificationsSheetPanel({
                 variant="line"
                 size="sm"
                 className={`mb-5 w-full min-w-0 max-w-full !grid px-2 sm:!flex sm:justify-start sm:gap-4 sm:px-5 ${
-                  equipcontrolAlertasEnabled ? 'grid-cols-4' : 'grid-cols-3'
+                  equipamentoAlertasEnabled ? 'grid-cols-4' : 'grid-cols-3'
                 }`}
               >
                 <TabsTrigger value="all" className={tabTriggerClassName}>
@@ -242,7 +242,7 @@ export function NotificationsSheetPanel({
                     <span className="absolute end-0 top-0.5 size-1.5 rounded-full bg-green-500 sm:end-0.5 sm:top-1" />
                   )}
                 </TabsTrigger>
-                {equipcontrolAlertasEnabled ? (
+                {equipamentoAlertasEnabled ? (
                   <TabsTrigger value="alertas" className={tabTriggerClassName}>
                     Alertas
                     {alertasTotal > 0 && (
@@ -289,13 +289,13 @@ export function NotificationsSheetPanel({
                 )}
               </TabsContent>
 
-              {equipcontrolAlertasEnabled ? (
+              {equipamentoAlertasEnabled ? (
                 <TabsContent value="alertas" className="mt-0">
                   <p className="mb-4 px-5 text-xs text-muted-foreground">
                     Panorama operacional ao vivo de equipamentos — empréstimos,
                     manutenções e equipamentos parados.
                   </p>
-                  <EquipcontrolAlertasPanel
+                  <EquipamentoAlertasPanel
                     enabled={open}
                     onNavigate={() => onOpenChange(false)}
                     showDashboardLink={false}
@@ -307,7 +307,7 @@ export function NotificationsSheetPanel({
         </SheetBody>
 
         <SheetFooter className="border-t border-border p-5">
-          {activeTab === 'alertas' && equipcontrolAlertasEnabled ? (
+          {activeTab === 'alertas' && equipamentoAlertasEnabled ? (
             <Button
               type="button"
               variant="outline"

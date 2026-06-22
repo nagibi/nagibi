@@ -84,7 +84,7 @@ final class NotificationDispatchService
         $users = User::query()
             ->where('status', 'active')
             ->get()
-            ->filter(fn (User $user) => $user->can('notificacao-visualizar'));
+            ->filter(fn(User $user) => $user->can('notificacao-visualizar'));
 
         foreach ($users as $user) {
             if ($dedupeKey !== null && $this->alreadyNotifiedRecently($user, $eventSlug, $dedupeKey)) {
@@ -121,9 +121,11 @@ final class NotificationDispatchService
             }
         }
 
-        if ($this->preferenceService->isEnabled($user, $eventSlug, 'email')
+        if (
+            $this->preferenceService->isEnabled($user, $eventSlug, 'email')
             && is_string($user->email)
-            && trim($user->email) !== '') {
+            && trim($user->email) !== ''
+        ) {
             if ($this->deferEmails) {
                 $this->deferredEmails[$user->id][$eventSlug][] = $content;
                 $delivered = true;
@@ -175,23 +177,23 @@ final class NotificationDispatchService
             $highestSeverity = $this->higherSeverity($highestSeverity, $first['severity']);
 
             if ($count === 1) {
-                $lines[] = '• '.$first['subject'].': '.($first['summary'] ?? $first['subject']);
+                $lines[] = '• ' . $first['subject'] . ': ' . ($first['summary'] ?? $first['subject']);
                 continue;
             }
 
-            $lines[] = '• '.$first['subject'].' ('.$count.' alertas)';
+            $lines[] = '• ' . $first['subject'] . ' (' . $count . ' alertas)';
             foreach (array_slice($items, 0, 3) as $item) {
-                $lines[] = '&nbsp;&nbsp;– '.($item['summary'] ?? $item['subject']);
+                $lines[] = '&nbsp;&nbsp;– ' . ($item['summary'] ?? $item['subject']);
             }
 
             if ($count > 3) {
-                $lines[] = '&nbsp;&nbsp;– ... e mais '.($count - 3).' nesta categoria';
+                $lines[] = '&nbsp;&nbsp;– ... e mais ' . ($count - 3) . ' nesta categoria';
             }
         }
 
-        $subject = 'Alertas EquipControl ('.$totalAlerts.')';
+        $subject = 'Alertas Equipamento (' . $totalAlerts . ')';
         $bodyText = implode("\n", array_map(
-            static fn (string $line): string => html_entity_decode(strip_tags($line), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+            static fn(string $line): string => html_entity_decode(strip_tags($line), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
             $lines,
         ));
 
@@ -203,7 +205,7 @@ final class NotificationDispatchService
             ),
             'body_text' => $bodyText,
             'severity' => $highestSeverity,
-            'summary' => $totalAlerts.' alertas consolidados',
+            'summary' => $totalAlerts . ' alertas consolidados',
         ];
     }
 

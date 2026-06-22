@@ -8,7 +8,7 @@ use App\Models\Manutencao;
 use App\Models\Obra;
 use App\Models\Tenant;
 use App\Models\User;
-use App\Services\EquipcontrolAlertScanner;
+use App\Services\EquipamentoAlertScanner;
 use App\Services\NotificationPreferenceService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,13 +18,13 @@ use Tests\TestCase;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    $tenantId = 'equip-notif-scanner-'.uniqid();
+    $tenantId = 'equip-notif-scanner-' . uniqid();
 
     /** @var TestCase&object{tenant: Tenant, admin: User} $this */
     $this->tenant = Tenant::create([
         'id' => $tenantId,
         'slug' => $tenantId,
-        'name' => 'Equipcontrol Scanner Notifications',
+        'name' => 'Equipamento Scanner Notifications',
     ]);
 
     $this->tenant->run(function (): void {
@@ -56,7 +56,7 @@ function hasNotification(User $user, string $eventSlug): bool
 {
     return $user->notifications()
         ->get()
-        ->contains(fn ($notification) => ($notification->data['event_slug'] ?? null) === $eventSlug);
+        ->contains(fn($notification) => ($notification->data['event_slug'] ?? null) === $eventSlug);
 }
 
 it('scanner dispara loan.overdue para emprestimo vencido', function (): void {
@@ -73,7 +73,7 @@ it('scanner dispara loan.overdue para emprestimo vencido', function (): void {
             'data_devolucao' => null,
         ]);
 
-        app(EquipcontrolAlertScanner::class)->scan();
+        app(EquipamentoAlertScanner::class)->scan();
 
         expect(hasNotification($this->admin, 'loan.overdue'))->toBeTrue();
     });
@@ -93,7 +93,7 @@ it('scanner dispara loan.due_soon para emprestimo proximo do vencimento', functi
             'data_devolucao' => null,
         ]);
 
-        app(EquipcontrolAlertScanner::class)->scan();
+        app(EquipamentoAlertScanner::class)->scan();
 
         expect(hasNotification($this->admin, 'loan.due_soon'))->toBeTrue();
     });
@@ -111,7 +111,7 @@ it('scanner dispara maintenance.overdue para manutencao atrasada', function (): 
             'responsavel_user_id' => $this->admin->id,
         ]);
 
-        app(EquipcontrolAlertScanner::class)->scan();
+        app(EquipamentoAlertScanner::class)->scan();
 
         expect(hasNotification($this->admin, 'maintenance.overdue'))->toBeTrue();
     });
@@ -125,7 +125,7 @@ it('scanner dispara equipment.idle para equipamento parado', function (): void {
             'data_entrada' => now()->subDays(45)->toDateString(),
         ]);
 
-        app(EquipcontrolAlertScanner::class)->scan();
+        app(EquipamentoAlertScanner::class)->scan();
 
         expect(hasNotification($this->admin, 'equipment.idle'))->toBeTrue();
     });
@@ -135,7 +135,7 @@ it('scanner dispara digest.daily', function (): void {
     $this->tenant->run(function (): void {
         enableScannerPreferences($this->admin, ['digest.daily']);
 
-        app(EquipcontrolAlertScanner::class)->scan();
+        app(EquipamentoAlertScanner::class)->scan();
 
         expect(hasNotification($this->admin, 'digest.daily'))->toBeTrue();
     });
@@ -147,7 +147,7 @@ it('scanner dispara digest.weekly nas segundas-feiras', function (): void {
     $this->tenant->run(function (): void {
         enableScannerPreferences($this->admin, ['digest.weekly']);
 
-        app(EquipcontrolAlertScanner::class)->scan();
+        app(EquipamentoAlertScanner::class)->scan();
 
         expect(hasNotification($this->admin, 'digest.weekly'))->toBeTrue();
     });
@@ -162,7 +162,7 @@ it('scanner dispara equipment.below_minimum_stock', function (): void {
         $tipo = \App\Models\TipoEquipamento::factory()->create();
         Equipamento::factory()->create(['tipo_id' => $tipo->id]);
 
-        app(EquipcontrolAlertScanner::class)->scan();
+        app(EquipamentoAlertScanner::class)->scan();
 
         expect(hasNotification($this->admin, 'equipment.below_minimum_stock'))->toBeTrue();
     });
@@ -180,7 +180,7 @@ it('scanner dispara site.idle_equipment', function (): void {
             ]);
         }
 
-        app(EquipcontrolAlertScanner::class)->scan();
+        app(EquipamentoAlertScanner::class)->scan();
 
         expect(hasNotification($this->admin, 'site.idle_equipment'))->toBeTrue();
     });
@@ -202,7 +202,7 @@ it('scanner dispara site.overdue_equipment', function (): void {
             ]);
         }
 
-        app(EquipcontrolAlertScanner::class)->scan();
+        app(EquipamentoAlertScanner::class)->scan();
 
         expect(hasNotification($this->admin, 'site.overdue_equipment'))->toBeTrue();
     });
@@ -251,7 +251,7 @@ it('scanner dispara eventos criticos e de colaborador', function (): void {
             ]);
         }
 
-        app(EquipcontrolAlertScanner::class)->scan();
+        app(EquipamentoAlertScanner::class)->scan();
 
         expect(hasNotification($this->admin, 'critical.idle'))->toBeTrue()
             ->and(hasNotification($this->admin, 'critical.overdue'))->toBeTrue()
@@ -317,19 +317,21 @@ it('scanner dispara insights e manutencoes recorrentes', function (): void {
             ]);
         }
 
-        app(EquipcontrolAlertScanner::class)->scan();
+        app(EquipamentoAlertScanner::class)->scan();
 
-        foreach ([
-            'equipment.unused_since_registration',
-            'maintenance.frequency_high',
-            'maintenance.cost_high',
-            'insight.return',
-            'insight.reallocation',
-            'insight.replacement',
-            'insight.cost_reduction',
-            'insight.anomaly',
-            'site.high_cost',
-        ] as $event) {
+        foreach (
+            [
+                'equipamento.unused_since_registration',
+                'maintenance.frequency_high',
+                'maintenance.cost_high',
+                'insight.return',
+                'insight.reallocation',
+                'insight.replacement',
+                'insight.cost_reduction',
+                'insight.anomaly',
+                'site.high_cost',
+            ] as $event
+        ) {
             expect(hasNotification($this->admin, $event))
                 ->toBeTrue("Evento {$event} não foi disparado pelo scanner");
         }

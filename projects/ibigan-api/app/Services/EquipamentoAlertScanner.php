@@ -9,11 +9,12 @@ use App\Models\Equipamento;
 use App\Models\Manutencao;
 use Illuminate\Support\Carbon;
 
-final class EquipcontrolAlertScanner
+final class EquipamentoAlertScanner
 {
     public function __construct(
         private readonly NotificationDispatchService $dispatchService,
-        private readonly EquipcontrolNotificationService $equipcontrolNotifications,
+        private readonly EquipamentoNotificationService $equipamentoNotifications,
+        private readonly EquipamentoAlertSettingsService $settings,
     ) {}
 
     public function scan(): int
@@ -50,7 +51,7 @@ final class EquipcontrolAlertScanner
             ->get();
 
         foreach ($ativos as $emprestimo) {
-            $context = $this->equipcontrolNotifications->emprestimoContext($emprestimo);
+            $context = $this->equipamentoNotifications->emprestimoContext($emprestimo);
 
             if ($emprestimo->is_vencido) {
                 $context['dedupe_key'] = "loan.overdue:{$emprestimo->id}";
@@ -72,9 +73,9 @@ final class EquipcontrolAlertScanner
     private function scanEquipment(): int
     {
         $dispatched = 0;
-        $idleDays = (int) config('equipcontrol.alerts.equipment_idle_days', 30);
-        $unusedDays = (int) config('equipcontrol.alerts.equipment_unused_since_registration_days', 20);
-        $minimumStock = (int) config('equipcontrol.alerts.equipment_minimum_stock', 2);
+        $idleDays = (int) $this->settings->get('equipment_idle_days', config('equipamento.alerts.equipment_idle_days', 30));
+        $unusedDays = (int) $this->settings->get('equipment_unused_since_registration_days', config('equipamento.alerts.equipment_unused_since_registration_days', 20));
+        $minimumStock = (int) $this->settings->get('equipment_minimum_stock', config('equipamento.alerts.equipment_minimum_stock', 2));
 
         $parados = Equipamento::query()
             ->with(['tipo', 'obra'])
@@ -83,7 +84,7 @@ final class EquipcontrolAlertScanner
             ->filter(fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= $idleDays);
 
         foreach ($parados as $equipamento) {
-            $context = $this->equipcontrolNotifications->equipamentoContext($equipamento);
+            $context = $this->equipamentoNotifications->equipamentoContext($equipamento);
             $context['dedupe_key'] = "equipment.idle:{$equipamento->id}";
             $this->dispatchService->dispatch('equipment.idle', $context);
             $dispatched++;
@@ -101,7 +102,7 @@ final class EquipcontrolAlertScanner
             });
 
         foreach ($semMovimentacao as $equipamento) {
-            $context = $this->equipcontrolNotifications->equipamentoContext($equipamento);
+            $context = $this->equipamentoNotifications->equipamentoContext($equipamento);
             $context['dias_cadastrado'] = (int) $equipamento->data_entrada->diffInDays(now()->startOfDay());
             $context['dedupe_key'] = "equipment.unused_since_registration:{$equipamento->id}";
             $this->dispatchService->dispatch('equipment.unused_since_registration', $context);
@@ -137,10 +138,10 @@ final class EquipcontrolAlertScanner
     private function scanMaintenance(): int
     {
         $dispatched = 0;
-        $overdueDays = (int) config('equipcontrol.alerts.maintenance_overdue_days', 15);
-        $frequencyThreshold = (int) config('equipcontrol.alerts.maintenance_frequency_threshold', 6);
-        $frequencyMonths = (int) config('equipcontrol.alerts.maintenance_frequency_months', 12);
-        $costThreshold = (float) config('equipcontrol.alerts.maintenance_cost_threshold', 3000);
+        $overdueDays = (int) $this->settings->get('maintenance_overdue_days', config('equipamento.alerts.maintenance_overdue_days', 15));
+        $frequencyThreshold = (int) $this->settings->get('maintenance_frequency_threshold', config('equipamento.alerts.maintenance_frequency_threshold', 6));
+        $frequencyMonths = (int) $this->settings->get('maintenance_frequency_months', config('equipamento.alerts.maintenance_frequency_months', 12));
+        $costThreshold = (float) $this->settings->get('maintenance_cost_threshold', config('equipamento.alerts.maintenance_cost_threshold', 3000));
 
         $atrasadas = Manutencao::query()
             ->with(['equipamento.tipo'])
@@ -173,7 +174,7 @@ final class EquipcontrolAlertScanner
             ->get();
 
         foreach ($equipamentos as $equipamento) {
-            $context = $this->equipcontrolNotifications->equipamentoContext($equipamento);
+            $context = $this->equipamentoNotifications->equipamentoContext($equipamento);
             $context['total_manutencoes'] = (int) $equipamento->manutencoes_periodo;
             $context['dedupe_key'] = "maintenance.frequency_high:{$equipamento->id}";
             $this->dispatchService->dispatch('maintenance.frequency_high', $context);
@@ -196,7 +197,7 @@ final class EquipcontrolAlertScanner
                 continue;
             }
 
-            $context = $this->equipcontrolNotifications->equipamentoContext($equipamento);
+            $context = $this->equipamentoNotifications->equipamentoContext($equipamento);
             $context['custo_total'] = number_format($custo, 2, ',', '.');
             $context['dedupe_key'] = "maintenance.cost_high:{$equipamento->id}";
             $this->dispatchService->dispatch('maintenance.cost_high', $context);
@@ -209,7 +210,7 @@ final class EquipcontrolAlertScanner
     private function scanCritical(): int
     {
         $dispatched = 0;
-        $idleDays = (int) config('equipcontrol.alerts.equipment_idle_days', 30);
+        $idleDays = (int) $this->settings->get('equipment_idle_days', config('equipamento.alerts.equipment_idle_days', 30));
 
         $criticosParados = Equipamento::query()
             ->with('tipo')
@@ -219,7 +220,7 @@ final class EquipcontrolAlertScanner
             ->filter(fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= $idleDays);
 
         foreach ($criticosParados as $equipamento) {
-            $context = $this->equipcontrolNotifications->equipamentoContext($equipamento);
+            $context = $this->equipamentoNotifications->equipamentoContext($equipamento);
             $context['dedupe_key'] = "critical.idle:{$equipamento->id}";
             $this->dispatchService->dispatch('critical.idle', $context);
             $dispatched++;
@@ -233,7 +234,7 @@ final class EquipcontrolAlertScanner
             ->filter(fn(Emprestimo $emprestimo) => $emprestimo->is_vencido);
 
         foreach ($criticosVencidos as $emprestimo) {
-            $context = $this->equipcontrolNotifications->emprestimoContext($emprestimo);
+            $context = $this->equipamentoNotifications->emprestimoContext($emprestimo);
             $context['dedupe_key'] = "critical.overdue:{$emprestimo->id}";
             $this->dispatchService->dispatch('critical.overdue', $context);
             $dispatched++;
@@ -246,7 +247,7 @@ final class EquipcontrolAlertScanner
             ->get();
 
         foreach ($criticosManutencao as $equipamento) {
-            $context = $this->equipcontrolNotifications->equipamentoContext($equipamento);
+            $context = $this->equipamentoNotifications->equipamentoContext($equipamento);
             $context['dedupe_key'] = "critical.in_maintenance:{$equipamento->id}";
             $this->dispatchService->dispatch('critical.in_maintenance', $context);
             $dispatched++;
@@ -258,10 +259,10 @@ final class EquipcontrolAlertScanner
     private function scanSites(): int
     {
         $dispatched = 0;
-        $idleThreshold = (int) config('equipcontrol.alerts.site_idle_equipment_threshold', 2);
-        $overdueThreshold = (int) config('equipcontrol.alerts.site_overdue_equipment_threshold', 3);
-        $costThreshold = (float) config('equipcontrol.alerts.site_high_cost_threshold', 30000);
-        $idleDays = (int) config('equipcontrol.alerts.equipment_idle_days', 30);
+        $idleThreshold = (int) $this->settings->get('site_idle_equipment_threshold', config('equipamento.alerts.site_idle_equipment_threshold', 2));
+        +$overdueThreshold = (int) $this->settings->get('site_overdue_equipment_threshold', config('equipamento.alerts.site_overdue_equipment_threshold', 3));
+        +$costThreshold = (float) $this->settings->get('site_high_cost_threshold', config('equipamento.alerts.site_high_cost_threshold', 30000));
+        +$idleDays = (int) $this->settings->get('equipment_idle_days', config('equipamento.alerts.equipment_idle_days', 30));
 
         $parados = Equipamento::query()
             ->with('obra')
@@ -335,8 +336,8 @@ final class EquipcontrolAlertScanner
     private function scanEmployees(): int
     {
         $dispatched = 0;
-        $multiplier = (float) config('equipcontrol.alerts.employee_overload_multiplier', 1.5);
-        $longPossessionDays = (int) config('equipcontrol.alerts.employee_long_possession_days', 90);
+        $multiplier = (float) $this->settings->get('employee_overload_multiplier', config('equipamento.alerts.employee_overload_multiplier', 1.5));
+        +$longPossessionDays = (int) $this->settings->get('employee_long_possession_days', config('equipamento.alerts.employee_long_possession_days', 90));
 
         $ativos = Emprestimo::query()
             ->with('renovacoes')
@@ -391,7 +392,7 @@ final class EquipcontrolAlertScanner
     private function scanInsights(): int
     {
         $dispatched = 0;
-        $idleDays = (int) config('equipcontrol.alerts.equipment_idle_days', 30);
+        $idleDays = (int) $this->settings->get('equipment_idle_days', config('equipamento.alerts.equipment_idle_days', 30));
 
         $ociosos = Equipamento::query()
             ->with(['tipo', 'obra'])
@@ -411,7 +412,7 @@ final class EquipcontrolAlertScanner
 
             $primeiro = $ociosos->first();
             if ($primeiro !== null) {
-                $context = $this->equipcontrolNotifications->equipamentoContext($primeiro);
+                $context = $this->equipamentoNotifications->equipamentoContext($primeiro);
                 $context['economia_mensal'] = number_format((float) $primeiro->valor_mensal, 2, ',', '.');
                 $context['dedupe_key'] = "insight.return:{$primeiro->id}";
                 $this->dispatchService->dispatch('insight.return', $context);
@@ -425,7 +426,7 @@ final class EquipcontrolAlertScanner
             $destinoObraId = $porObra->keys()->first(fn($obraId) => $obraId !== $origem?->obra_id);
 
             if ($origem !== null && $destinoObraId !== null) {
-                $context = $this->equipcontrolNotifications->equipamentoContext($origem);
+                $context = $this->equipamentoNotifications->equipamentoContext($origem);
                 $context['obra_origem'] = $origem->obra?->codigo;
                 $context['obra_destino'] = Equipamento::query()->with('obra')->where('obra_id', $destinoObraId)->first()?->obra?->codigo;
                 $context['dedupe_key'] = "insight.reallocation:{$origem->id}";
@@ -442,7 +443,7 @@ final class EquipcontrolAlertScanner
             ->first();
 
         if ($problematico !== null && $problematico->manutencoes_count >= 3) {
-            $context = $this->equipcontrolNotifications->equipamentoContext($problematico);
+            $context = $this->equipamentoNotifications->equipamentoContext($problematico);
             $context['total_manutencoes'] = $problematico->manutencoes_count;
             $context['dedupe_key'] = "insight.replacement:{$problematico->id}";
             $this->dispatchService->dispatch('insight.replacement', $context);
@@ -469,12 +470,22 @@ final class EquipcontrolAlertScanner
         $proximos = Emprestimo::query()->whereNull('data_devolucao')->get()->filter(fn(Emprestimo $e) => $e->is_proximo_vencimento)->count();
         $manutencoes = Manutencao::query()->whereNull('data_saida')->count();
         $parados = Equipamento::query()->emEstoque()->get()->filter(
-            fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= (int) config('equipcontrol.alerts.equipment_idle_days', 30)
+            //fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= (int) config('equipamento.alerts.equipment_idle_days', 30)
+            fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= (int) $this->settings->get('equipment_idle_days', config('equipamento.alerts.equipment_idle_days', 30))
         )->count();
         $concluidas = Manutencao::query()->whereDate('data_saida', Carbon::today())->count();
-        $economia = Equipamento::query()->emEstoque()->get()->filter(
-            fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= (int) config('equipcontrol.alerts.equipment_idle_days', 30)
-        )->sum('valor_mensal');
+
+        $economia = Equipamento::query()
+            ->emEstoque()
+            ->get()
+            ->filter(
+                fn(Equipamento $equipamento) =>
+                $equipamento->tempo_em_estoque >= (int) $this->settings->get(
+                    'equipment_idle_days',
+                    config('equipcontrol.alerts.equipment_idle_days', 30),
+                )
+            )
+            ->sum('valor_mensal');
 
         $this->dispatchService->dispatch('digest.daily', [
             'dedupe_key' => "digest.daily:{$today}",

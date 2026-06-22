@@ -9,20 +9,20 @@ use App\Models\Equipamento;
 use App\Models\Manutencao;
 use App\Models\Obra;
 use App\Models\User;
-use App\Services\EquipcontrolAlertScanner;
+use App\Services\EquipamentoAlertScanner;
 use App\Services\NotificationPreferenceService;
 use Illuminate\Console\Command;
 
-final class SeedEquipcontrolNotificationFixturesCommand extends Command
+final class SeedEquipamentoNotificationFixturesCommand extends Command
 {
-    protected $signature = 'equipcontrol:seed-notification-fixtures
+    protected $signature = 'equipamento:seed-notification-fixtures
                             {--scan : Dispara o scanner após criar os dados}
                             {--user= : ID do usuário para habilitar preferências (padrão: primeiro admin ativo)}';
 
-    protected $description = 'Cria dados de teste para validar notificações do EquipControl sem colidir códigos de obra';
+    protected $description = 'Cria dados de teste para validar notificações do Equipamento sem colidir códigos de obra';
 
     public function handle(
-        EquipcontrolAlertScanner $scanner,
+        EquipamentoAlertScanner $scanner,
         NotificationPreferenceService $preferences,
     ): int {
         if (! tenancy()->initialized) {
@@ -58,7 +58,7 @@ final class SeedEquipcontrolNotificationFixturesCommand extends Command
             $dispatched = $scanner->scan();
             $this->info("Scanner executado. Alertas processados: {$dispatched}");
         } else {
-            $this->line('Rode com --scan ou execute: php artisan equipcontrol:scan-alerts');
+            $this->line('Rode com --scan ou execute: php artisan equipamento:scan-alerts');
         }
 
         return self::SUCCESS;

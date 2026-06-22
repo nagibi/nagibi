@@ -25,7 +25,7 @@ beforeEach(function (): void {
     $this->tenant = Tenant::create([
         'id' => $tenantId,
         'slug' => $tenantId,
-        'name' => 'Equipcontrol Test',
+        'name' => 'Equipamento Test',
         'timezone' => config('app.default_timezone'),
         'is_active' => true,
     ]);

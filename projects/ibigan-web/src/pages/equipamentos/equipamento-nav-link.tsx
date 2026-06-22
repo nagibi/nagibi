@@ -1,20 +1,24 @@
+import {
+  EQUIPAMENTO_DESKTOP_NAV_ITEMS,
+  EQUIPAMENTO_NAV_ITEMS,
+  isEquipamentoNavActive,
+  type EquipamentoNavItem,
+} from '@/pages/equipamentos/equipamento-nav';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import {
-  EQUIPCONTROL_DESKTOP_NAV_ITEMS,
-  EQUIPCONTROL_NAV_ITEMS,
-  isEquipcontrolNavActive,
-  type EquipcontrolNavItem,
-} from '@/pages/equipamentos/equipcontrol-nav';
 
-type EquipcontrolNavLinkProps = {
-  item: EquipcontrolNavItem;
+type EquipamentoNavLinkProps = {
+  item: EquipamentoNavItem;
   pathname: string;
   variant: 'bottom' | 'desktop';
 };
 
-export function EquipcontrolNavLink({ item, pathname, variant }: EquipcontrolNavLinkProps) {
-  const active = isEquipcontrolNavActive(pathname, item.to);
+export function EquipamentoNavLink({
+  item,
+  pathname,
+  variant,
+}: EquipamentoNavLinkProps) {
+  const active = isEquipamentoNavActive(pathname, item.to);
   const Icon = item.icon;
 
   if (variant === 'bottom') {
@@ -24,7 +28,9 @@ export function EquipcontrolNavLink({ item, pathname, variant }: EquipcontrolNav
         aria-current={active ? 'page' : undefined}
         className={cn(
           'flex min-w-0 flex-1 flex-col items-center gap-0.5 px-0.5 py-2 text-[9px] font-medium transition-colors sm:text-[10px]',
-          active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+          active
+            ? 'text-primary'
+            : 'text-muted-foreground hover:text-foreground',
         )}
       >
         <Icon className="size-5 shrink-0" />
@@ -50,19 +56,27 @@ export function EquipcontrolNavLink({ item, pathname, variant }: EquipcontrolNav
   );
 }
 
-export function EquipcontrolNavItems({
+export function EquipamentoNavItems({
   pathname,
   variant,
 }: {
   pathname: string;
   variant: 'bottom' | 'desktop';
 }) {
-  const items = variant === 'desktop' ? EQUIPCONTROL_DESKTOP_NAV_ITEMS : EQUIPCONTROL_NAV_ITEMS;
+  const items =
+    variant === 'desktop'
+      ? EQUIPAMENTO_DESKTOP_NAV_ITEMS
+      : EQUIPAMENTO_NAV_ITEMS;
 
   return (
     <>
       {items.map((item) => (
-        <EquipcontrolNavLink key={item.to} item={item} pathname={pathname} variant={variant} />
+        <EquipamentoNavLink
+          key={item.to}
+          item={item}
+          pathname={pathname}
+          variant={variant}
+        />
       ))}
     </>
   );

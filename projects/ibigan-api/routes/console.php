@@ -12,6 +12,6 @@ Schedule::command('campaigns:dispatch-scheduled')
     ->everyMinute()
     ->withoutOverlapping();
 
-Schedule::command('tenants:run equipcontrol:scan-alerts')
+Schedule::command('tenants:run equipamento:scan-alerts')
     ->dailyAt('07:00')
     ->withoutOverlapping();

@@ -14,7 +14,7 @@ use Tests\TestCase;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    $tenantId = 'notif-prefs-api-'.uniqid();
+    $tenantId = 'notif-prefs-api-' . uniqid();
 
     /** @var TestCase&object{tenant: Tenant, admin: User} $this */
     $this->tenant = Tenant::create([
@@ -118,7 +118,7 @@ it('atualiza preferência de e-mail via PATCH', function (): void {
         ->and($result['campaign.sent']['app'])->toBeTrue();
 });
 
-it('atualiza preferência de evento equipcontrol via PATCH', function (): void {
+it('atualiza preferência de evento equipamento via PATCH', function (): void {
     Sanctum::actingAs($this->admin, ['*'], 'sanctum');
 
     $response = $this->patchJson(
@@ -219,7 +219,7 @@ it('retorna preferências atualizadas após múltiplas alterações', function (
         });
 });
 
-it('expõe eventos de plataforma e equipcontrol no serviço', function (): void {
+it('expõe eventos de plataforma e equipamento no serviço', function (): void {
     $events = array_keys(NotificationPreferenceService::EVENTS);
 
     expect($events)->toContain(

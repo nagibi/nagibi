@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { CadastroEquipamentoModal } from '@/pages/equipamentos/components/equipamento-modals';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -11,9 +11,9 @@ import {
   Wrench,
   X,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { CadastroEquipamentoModal } from '@/pages/equipamentos/components/equipamento-modals';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const SPEED_DIAL_ACTIONS = [
   {
@@ -54,13 +54,14 @@ const MAIS_SECTION_PATHS = [
   '/equipamentos/obras',
 ] as const;
 
-export function EquipcontrolBottomNav() {
+export function EquipamentoBottomNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [cadastroOpen, setCadastroOpen] = useState(false);
   const [speedDialOpen, setSpeedDialOpen] = useState(false);
 
-  const isActive = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
+  const isActive = (to: string) =>
+    pathname === to || pathname.startsWith(`${to}/`);
   const isMaisSectionActive = MAIS_SECTION_PATHS.some((path) => isActive(path));
 
   const itemClass = (active: boolean) =>
@@ -114,7 +115,9 @@ export function EquipcontrolBottomNav() {
                 style={{ animationDelay: `${index * 40}ms` }}
                 onClick={() => handleAction(action)}
               >
-                <span className="text-sm font-medium text-foreground">{action.label}</span>
+                <span className="text-sm font-medium text-foreground">
+                  {action.label}
+                </span>
                 <span
                   className={cn(
                     'flex size-9 shrink-0 items-center justify-center rounded-full text-white shadow-md',
@@ -165,11 +168,16 @@ export function EquipcontrolBottomNav() {
           <button
             type="button"
             aria-expanded={speedDialOpen}
-            aria-label={speedDialOpen ? 'Fechar menu de criação' : 'Criar novo registro'}
+            aria-label={
+              speedDialOpen ? 'Fechar menu de criação' : 'Criar novo registro'
+            }
             className="relative z-10 flex min-w-0 flex-1 items-center justify-center overflow-visible px-0.5 py-1"
             onClick={() => setSpeedDialOpen((current) => !current)}
           >
-            <span className="invisible flex flex-col items-center leading-none" aria-hidden>
+            <span
+              className="invisible flex flex-col items-center leading-none"
+              aria-hidden
+            >
               <Package className="size-5 shrink-0" />
               <span className="mt-0.5 text-[10px]">+</span>
             </span>
@@ -211,7 +219,10 @@ export function EquipcontrolBottomNav() {
         </div>
       </nav>
 
-      <CadastroEquipamentoModal open={cadastroOpen} onOpenChange={setCadastroOpen} />
+      <CadastroEquipamentoModal
+        open={cadastroOpen}
+        onOpenChange={setCadastroOpen}
+      />
     </>
   );
 }

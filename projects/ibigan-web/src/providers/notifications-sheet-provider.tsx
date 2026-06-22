@@ -6,9 +6,9 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { NotificationPreferencesSheet } from '@/components/notifications/notification-preferences-sheet';
 import { NotificationsSheetPanel } from '@/partials/topbar/notifications-sheet-panel';
 import { useNotificationPreferencesSheet } from '@/providers/notification-preferences-sheet-provider';
+import { NotificationPreferencesSheet } from '@/components/notifications/notification-preferences-sheet';
 
 interface NotificationsSheetContextValue {
   isOpen: boolean;
@@ -16,7 +16,8 @@ interface NotificationsSheetContextValue {
   close: () => void;
 }
 
-const NotificationsSheetContext = createContext<NotificationsSheetContextValue | null>(null);
+const NotificationsSheetContext =
+  createContext<NotificationsSheetContextValue | null>(null);
 
 function NotificationSheetsHost({
   notificationsOpen,
@@ -25,8 +26,11 @@ function NotificationSheetsHost({
   notificationsOpen: boolean;
   onNotificationsOpenChange: (open: boolean) => void;
 }) {
-  const { isOpen: preferencesOpen, moduleFilter, setOpen: setPreferencesOpen } =
-    useNotificationPreferencesSheet();
+  const {
+    isOpen: preferencesOpen,
+    moduleFilter,
+    setOpen: setPreferencesOpen,
+  } = useNotificationPreferencesSheet();
 
   return (
     <>
@@ -43,7 +47,11 @@ function NotificationSheetsHost({
   );
 }
 
-export function NotificationsSheetProvider({ children }: { children: ReactNode }) {
+export function NotificationsSheetProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [open, setOpen] = useState(false);
 
   const openSheet = useCallback(() => setOpen(true), []);

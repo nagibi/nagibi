@@ -1,15 +1,17 @@
 import { lazy, Suspense, useState } from 'react';
 import { QrCode } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const EquipamentoQrScannerModal = lazy(() =>
-  import('@/pages/equipamentos/components/equipamento-qr-scanner-modal').then((module) => ({
-    default: module.EquipamentoQrScannerModal,
-  })),
+  import('@/pages/equipamentos/components/equipamento-qr-scanner-modal').then(
+    (module) => ({
+      default: module.EquipamentoQrScannerModal,
+    }),
+  ),
 );
 
-export function EquipcontrolQrButton({ className }: { className?: string }) {
+export function EquipamentoQrButton({ className }: { className?: string }) {
   const [scannerOpen, setScannerOpen] = useState(false);
 
   return (
@@ -27,7 +29,10 @@ export function EquipcontrolQrButton({ className }: { className?: string }) {
 
       {scannerOpen ? (
         <Suspense fallback={null}>
-          <EquipamentoQrScannerModal open={scannerOpen} onOpenChange={setScannerOpen} />
+          <EquipamentoQrScannerModal
+            open={scannerOpen}
+            onOpenChange={setScannerOpen}
+          />
         </Suspense>
       ) : null}
     </>

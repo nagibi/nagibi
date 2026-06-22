@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { resolveEquipcontrolNotificationActions } from '@/lib/notification-events/equipcontrol-actions';
+import { resolveEquipamentoNotificationActions } from '@/lib/notification-events/equipamento-actions';
 
-describe('resolveEquipcontrolNotificationActions', () => {
+describe('resolveEquipamentoNotificationActions', () => {
   it('gera navegação para empréstimo vencido com patrimônio', () => {
-    const actions = resolveEquipcontrolNotificationActions('loan.overdue', {
+    const actions = resolveEquipamentoNotificationActions('loan.overdue', {
       patrimonio: 'EQ-001',
     });
 
@@ -20,7 +20,7 @@ describe('resolveEquipcontrolNotificationActions', () => {
   });
 
   it('gera navegação direta por equipamento quando emprestimo_id está presente', () => {
-    const actions = resolveEquipcontrolNotificationActions('loan.due_soon', {
+    const actions = resolveEquipamentoNotificationActions('loan.due_soon', {
       emprestimo_id: '42',
       equipamento_id: '7',
       patrimonio: 'EQ-001',
@@ -30,7 +30,7 @@ describe('resolveEquipcontrolNotificationActions', () => {
   });
 
   it('gera navegação para manutenção atrasada com patrimônio', () => {
-    const actions = resolveEquipcontrolNotificationActions('maintenance.overdue', {
+    const actions = resolveEquipamentoNotificationActions('maintenance.overdue', {
       patrimonio: 'GER-10',
     });
 
@@ -41,7 +41,7 @@ describe('resolveEquipcontrolNotificationActions', () => {
   });
 
   it('prioriza equipamento_id para manutenção enviada', () => {
-    const actions = resolveEquipcontrolNotificationActions('maintenance.sent', {
+    const actions = resolveEquipamentoNotificationActions('maintenance.sent', {
       equipamento_id: 1002,
       patrimonio: 'EQ-1002',
     });
@@ -53,7 +53,7 @@ describe('resolveEquipcontrolNotificationActions', () => {
   });
 
   it('direciona manutenção concluída para o estoque', () => {
-    const actions = resolveEquipcontrolNotificationActions('maintenance.completed', {
+    const actions = resolveEquipamentoNotificationActions('maintenance.completed', {
       equipamento_id: 3,
       patrimonio: 'EQ-1002',
     });
@@ -66,7 +66,7 @@ describe('resolveEquipcontrolNotificationActions', () => {
   });
 
   it('direciona devolução registrada para o estoque', () => {
-    const actions = resolveEquipcontrolNotificationActions('loan.returned', {
+    const actions = resolveEquipamentoNotificationActions('loan.returned', {
       equipamento_id: 12,
       emprestimo_id: 45,
       patrimonio: 'EQ-2001',
@@ -80,7 +80,7 @@ describe('resolveEquipcontrolNotificationActions', () => {
   });
 
   it('prioriza equipamento_id em empréstimo vencido', () => {
-    const actions = resolveEquipcontrolNotificationActions('loan.overdue', {
+    const actions = resolveEquipamentoNotificationActions('loan.overdue', {
       equipamento_id: '55',
       patrimonio: 'EQ-001',
     });
@@ -89,7 +89,7 @@ describe('resolveEquipcontrolNotificationActions', () => {
   });
 
   it('gera navegação de renovação com equipamento_id', () => {
-    const actions = resolveEquipcontrolNotificationActions('loan.renewed', {
+    const actions = resolveEquipamentoNotificationActions('loan.renewed', {
       emprestimo_id: 15,
       equipamento_id: 3,
       renovacao_id: 8,
@@ -103,7 +103,7 @@ describe('resolveEquipcontrolNotificationActions', () => {
   });
 
   it('cai no dashboard quando não há contexto suficiente', () => {
-    const actions = resolveEquipcontrolNotificationActions('digest.daily', {});
+    const actions = resolveEquipamentoNotificationActions('digest.daily', {});
 
     expect(actions[0]).toMatchObject({
       id: 'view-dashboard',

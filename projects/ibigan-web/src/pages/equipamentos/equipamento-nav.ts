@@ -10,13 +10,13 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-export type EquipcontrolNavItem = {
+export type EquipamentoNavItem = {
   to: string;
   label: string;
   icon: LucideIcon;
 };
 
-export const EQUIPCONTROL_DESKTOP_NAV_ITEMS: EquipcontrolNavItem[] = [
+export const EQUIPAMENTO_DESKTOP_NAV_ITEMS: EquipamentoNavItem[] = [
   { to: '/equipamentos/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/equipamentos/estoque', label: 'Estoque', icon: Package },
   { to: '/equipamentos/movimentacoes', label: 'Movimentações', icon: Repeat2 },
@@ -25,13 +25,13 @@ export const EQUIPCONTROL_DESKTOP_NAV_ITEMS: EquipcontrolNavItem[] = [
 ];
 
 /** Cadastros (Tipos, Fornecedores, Obras) ficam no hub Mais no mobile. */
-export const EQUIPCONTROL_NAV_ITEMS: EquipcontrolNavItem[] = [
-  ...EQUIPCONTROL_DESKTOP_NAV_ITEMS,
+export const EQUIPAMENTO_NAV_ITEMS: EquipamentoNavItem[] = [
+  ...EQUIPAMENTO_DESKTOP_NAV_ITEMS,
   { to: '/equipamentos/tipos', label: 'Tipos', icon: Shapes },
   { to: '/equipamentos/fornecedores', label: 'Fornecedores', icon: Truck },
   { to: '/equipamentos/obras', label: 'Obras', icon: Building2 },
 ];
 
-export function isEquipcontrolNavActive(pathname: string, to: string): boolean {
+export function isEquipamentoNavActive(pathname: string, to: string): boolean {
   return pathname === to || pathname.startsWith(`${to}/`);
 }

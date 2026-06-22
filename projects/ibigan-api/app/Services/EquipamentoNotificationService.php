@@ -9,7 +9,7 @@ use App\Models\EmprestimoRenovacao;
 use App\Models\Equipamento;
 use App\Models\Manutencao;
 
-final class EquipcontrolNotificationService
+final class EquipamentoNotificationService
 {
     public function __construct(
         private readonly NotificationDispatchService $dispatchService,
@@ -37,7 +37,7 @@ final class EquipcontrolNotificationService
 
         $this->dispatchService->dispatch('loan.renewed', $context);
 
-        $limite = (int) config('equipcontrol.alerts.max_renovacoes_recomendadas', 4);
+        $limite = (int) config('equipamento.alerts.max_renovacoes_recomendadas', 4);
         if ($context['total_renovacoes'] > $limite) {
             $context['dedupe_key'] = "loan.renewal_limit_exceeded:{$emprestimo->id}";
             $this->dispatchService->dispatch('loan.renewal_limit_exceeded', $context);

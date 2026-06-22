@@ -4,7 +4,7 @@ import type {
   NotificationSeverity,
 } from '@/types/notification-events';
 import { getNotificationEvent } from '@/lib/notification-events';
-import { resolveEquipcontrolNotificationActions } from '@/lib/notification-events/equipcontrol-actions';
+import { resolveEquipamentoNotificationActions } from '@/lib/notification-events/equipamento-actions';
 
 export function getNotificationType(notification: AppNotification): string {
   return notification.type.split('\\').pop() ?? notification.type;
@@ -94,7 +94,7 @@ function parseNumericId(value: unknown): number | null {
   return null;
 }
 
-function getEquipcontrolBusinessRecordId(
+function getEquipamentoBusinessRecordId(
   slug: string,
   data: Record<string, unknown>,
 ): number | null {
@@ -124,8 +124,8 @@ export function getNotificationRecordId(notification: AppNotification): number |
 
   if (slug) {
     const event = getNotificationEvent(slug);
-    if (event?.module === 'equipcontrol') {
-      const businessId = getEquipcontrolBusinessRecordId(slug, data);
+    if (event?.module === 'equipamento') {
+      const businessId = getEquipamentoBusinessRecordId(slug, data);
       if (businessId != null) {
         return businessId;
       }
@@ -202,8 +202,8 @@ export function getNotificationActions(notification: AppNotification): Notificat
   if (!slug) return [];
 
   const event = getNotificationEvent(slug);
-  if (event?.module === 'equipcontrol') {
-    return resolveEquipcontrolNotificationActions(slug, notification.data);
+  if (event?.module === 'equipamento') {
+    return resolveEquipamentoNotificationActions(slug, notification.data);
   }
 
   return [];

@@ -113,10 +113,10 @@ function isNonEquipmentEvent(eventSlug: string): boolean {
 }
 
 /**
- * Ações de navegação padrão para eventos EquipControl quando o backend
+ * Ações de navegação padrão para eventos Equipamento quando o backend
  * ainda não envia `data.actions` no payload da notificação.
  */
-export function resolveEquipcontrolNotificationActions(
+export function resolveEquipamentoNotificationActions(
   eventSlug: string,
   data: Record<string, unknown>,
 ): NotificationAction[] {
@@ -259,5 +259,5 @@ export function resolveEquipcontrolNotificationActions(
     ];
   }
 
-  return [buildNavigate('view-dashboard', 'Abrir EquipControl', '/equipamentos/dashboard')];
+  return [buildNavigate('view-dashboard', 'Abrir Equipamento', '/equipamentos/dashboard')];
 }

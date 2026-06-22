@@ -17,7 +17,7 @@ function indexEvent(event: NotificationEventDefinition) {
   slugIndex.set(event.slug, event);
 }
 
-/** Registra eventos de um módulo (platform, equipcontrol, hr, …). */
+/** Registra eventos de um módulo (platform, equipamento, hr, …). */
 export function registerNotificationEvents(events: NotificationEventDefinition[]) {
   for (const event of events) {
     indexEvent(event);

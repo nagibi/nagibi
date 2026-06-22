@@ -1,6 +1,6 @@
 export type NotificationModule =
   | 'platform'
-  | 'equipcontrol'
+  | 'equipamento'
   | 'hr'
   | 'tickets'
   | 'contracts'
