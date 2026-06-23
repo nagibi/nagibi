@@ -1,33 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2, History } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { FieldMessage } from '@/components/ui/field-message';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { SearchableSelect } from '@/components/ui/searchable-select';
-import { Textarea } from '@/components/ui/textarea';
-import { mapApiErrorsToRecord } from '@/lib/apply-api-form-errors';
-import { getApiErrorMessage } from '@/lib/get-api-error-message';
-import { HISTORICO_EVENTO_LABELS } from '@/lib/equipamento-labels';
-import { numberToCurrencyDigits } from '@/lib/brazilian-masks';
-import {
-  buildEquipamentoFormValues,
-  equipamentoFormSchema,
-  type EquipamentoFormValues,
-} from '@/lib/equipamento-form-schema';
-import { todayIsoDate } from '@/lib/equipamento-utils';
-import { mapZodFieldErrors } from '@/lib/zod-validators';
-import { MaskedInput } from '@/components/ui/masked-input';
-import { showAppToast } from '@/lib/show-app-toast';
-import { equipamentosService } from '@/services/equipamentos.service';
-import type { Equipamento, EquipamentoHistoricoItem } from '@/types/equipamento';
-import { EquipamentoThumbnail } from '@/pages/equipamentos/components/equipamento-thumbnail';
+import { EquipamentoDialogShell } from '@/pages/equipamentos/components/equipamento-dialog-shell';
 import {
   buildEquipamentoStoreFormData,
   buildEquipamentoUpdateFormData,
@@ -38,13 +10,41 @@ import {
   resolvePrincipalPayload,
   type EquipamentoFotoPrincipal,
 } from '@/pages/equipamentos/components/equipamento-foto-field';
-import { orderFotosWithPrincipalFirst } from '@/lib/equipamento-utils';
+import { EquipamentoThumbnail } from '@/pages/equipamentos/components/equipamento-thumbnail';
 import {
   EquipamentoUserSelect,
   getUserMatricula,
 } from '@/pages/equipamentos/components/equipamento-user-select';
-import { EquipamentoDialogShell } from '@/pages/equipamentos/components/equipamento-dialog-shell';
-import { SheetPanelTitle } from '@/components/common/panel-title';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { History, Loader2 } from 'lucide-react';
+import type {
+  Equipamento,
+  EquipamentoHistoricoItem,
+} from '@/types/equipamento';
+import { mapApiErrorsToRecord } from '@/lib/apply-api-form-errors';
+import { numberToCurrencyDigits } from '@/lib/brazilian-masks';
+import {
+  buildEquipamentoFormValues,
+  equipamentoFormSchema,
+  type EquipamentoFormValues,
+} from '@/lib/equipamento-form-schema';
+import { HISTORICO_EVENTO_LABELS } from '@/lib/equipamento-labels';
+import {
+  orderFotosWithPrincipalFirst,
+  todayIsoDate,
+} from '@/lib/equipamento-utils';
+import { getApiErrorMessage } from '@/lib/get-api-error-message';
+import { showAppToast } from '@/lib/show-app-toast';
+import { cn } from '@/lib/utils';
+import { mapZodFieldErrors } from '@/lib/zod-validators';
+import { equipamentosService } from '@/services/equipamentos.service';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogTitle } from '@/components/ui/dialog';
+import { FieldMessage } from '@/components/ui/field-message';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { MaskedInput } from '@/components/ui/masked-input';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   SidePanelSheet,
   SidePanelSheetActions,
@@ -53,7 +53,9 @@ import {
   SidePanelSheetFooter,
   SidePanelSheetHeader,
 } from '@/components/ui/side-panel-sheet';
-import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { SheetPanelTitle } from '@/components/common/panel-title';
 
 type ModalBaseProps = {
   equipamento: Equipamento | null;
@@ -97,7 +99,11 @@ function useInvalidateEquipamentos() {
   };
 }
 
-export function EmprestarModal({ equipamento, open, onOpenChange }: ModalBaseProps) {
+export function EmprestarModal({
+  equipamento,
+  open,
+  onOpenChange,
+}: ModalBaseProps) {
   const invalidate = useInvalidateEquipamentos();
   const [obraId, setObraId] = useState('');
   const [colaboradorUserId, setColaboradorUserId] = useState('');
@@ -171,7 +177,11 @@ export function EmprestarModal({ equipamento, open, onOpenChange }: ModalBasePro
               }
               onClick={() => mutation.mutate()}
             >
-              {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : 'Confirmar'}
+              {mutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                'Confirmar'
+              )}
             </Button>
           </>
         }
@@ -202,7 +212,9 @@ export function EmprestarModal({ equipamento, open, onOpenChange }: ModalBasePro
               }}
             />
             {colaboradorMatricula ? (
-              <p className="text-xs text-muted-foreground">Matrícula: {colaboradorMatricula}</p>
+              <p className="text-xs text-muted-foreground">
+                Matrícula: {colaboradorMatricula}
+              </p>
             ) : null}
           </div>
           <div className="grid gap-2">
@@ -232,9 +244,15 @@ export function EmprestarModal({ equipamento, open, onOpenChange }: ModalBasePro
   );
 }
 
-export function ManutencaoModal({ equipamento, open, onOpenChange }: ModalBaseProps) {
+export function ManutencaoModal({
+  equipamento,
+  open,
+  onOpenChange,
+}: ModalBaseProps) {
   const invalidate = useInvalidateEquipamentos();
-  const [responsabilidade, setResponsabilidade] = useState<'fortes' | 'equipamento'>('equipamento');
+  const [responsabilidade, setResponsabilidade] = useState<
+    'fortes' | 'equipamento'
+  >('equipamento');
   const [motivo, setMotivo] = useState('');
   const [responsavelUserId, setResponsavelUserId] = useState('');
 
@@ -269,17 +287,25 @@ export function ManutencaoModal({ equipamento, open, onOpenChange }: ModalBasePr
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <EquipamentoDialogShell
-        header={<DialogTitle>Manutenção — {equipamento?.patrimonio}</DialogTitle>}
+        header={
+          <DialogTitle>Manutenção — {equipamento?.patrimonio}</DialogTitle>
+        }
         footer={
           <>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
             <Button
-              disabled={mutation.isPending || !motivo.trim() || !responsavelUserId}
+              disabled={
+                mutation.isPending || !motivo.trim() || !responsavelUserId
+              }
               onClick={() => mutation.mutate()}
             >
-              {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : 'Enviar'}
+              {mutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                'Enviar'
+              )}
             </Button>
           </>
         }
@@ -289,7 +315,9 @@ export function ManutencaoModal({ equipamento, open, onOpenChange }: ModalBasePr
             <Label>Responsabilidade</Label>
             <SearchableSelect
               value={responsabilidade}
-              onValueChange={(value) => setResponsabilidade(value as 'fortes' | 'equipamento')}
+              onValueChange={(value) =>
+                setResponsabilidade(value as 'fortes' | 'equipamento')
+              }
               options={[
                 { value: 'equipamento', label: 'Equipamento (fornecedor)' },
                 { value: 'fortes', label: 'Fortes' },
@@ -300,7 +328,11 @@ export function ManutencaoModal({ equipamento, open, onOpenChange }: ModalBasePr
           </div>
           <div className="grid gap-2">
             <Label>Motivo</Label>
-            <Textarea value={motivo} onChange={(e) => setMotivo(e.target.value)} rows={3} />
+            <Textarea
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+              rows={3}
+            />
           </div>
           <div className="grid gap-2">
             <Label>Responsável pela manutenção</Label>
@@ -316,7 +348,11 @@ export function ManutencaoModal({ equipamento, open, onOpenChange }: ModalBasePr
   );
 }
 
-export function BaixaModal({ equipamento, open, onOpenChange }: ModalBaseProps) {
+export function BaixaModal({
+  equipamento,
+  open,
+  onOpenChange,
+}: ModalBaseProps) {
   const invalidate = useInvalidateEquipamentos();
   const [tipo, setTipo] = useState<'devolucao' | 'perda'>('devolucao');
   const [motivo, setMotivo] = useState('');
@@ -362,11 +398,16 @@ export function BaixaModal({ equipamento, open, onOpenChange }: ModalBaseProps) 
             </Button>
             <Button
               disabled={
-                mutation.isPending || (tipo === 'perda' && (!motivo.trim() || !responsavel.trim()))
+                mutation.isPending ||
+                (tipo === 'perda' && (!motivo.trim() || !responsavel.trim()))
               }
               onClick={() => mutation.mutate()}
             >
-              {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : 'Confirmar baixa'}
+              {mutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                'Confirmar baixa'
+              )}
             </Button>
           </>
         }
@@ -389,17 +430,28 @@ export function BaixaModal({ equipamento, open, onOpenChange }: ModalBaseProps) 
             <>
               <div className="grid gap-2">
                 <Label>Motivo</Label>
-                <Textarea value={motivo} onChange={(e) => setMotivo(e.target.value)} rows={3} />
+                <Textarea
+                  value={motivo}
+                  onChange={(e) => setMotivo(e.target.value)}
+                  rows={3}
+                />
               </div>
               <div className="grid gap-2">
                 <Label>Responsável pela perda</Label>
-                <Input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} />
+                <Input
+                  value={responsavel}
+                  onChange={(e) => setResponsavel(e.target.value)}
+                />
               </div>
             </>
           ) : (
             <div className="grid gap-2">
               <Label>Observações (opcional)</Label>
-              <Textarea value={motivo} onChange={(e) => setMotivo(e.target.value)} rows={3} />
+              <Textarea
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                rows={3}
+              />
             </div>
           )}
         </div>
@@ -408,14 +460,24 @@ export function BaixaModal({ equipamento, open, onOpenChange }: ModalBaseProps) 
   );
 }
 
-export function DevolverModal({ equipamento, open, onOpenChange }: ModalBaseProps) {
+export function DevolverModal({
+  equipamento,
+  open,
+  onOpenChange,
+}: ModalBaseProps) {
   const invalidate = useInvalidateEquipamentos();
   const emprestimoId = equipamento?.emprestimo_ativo?.id;
+  const [dataDevolucao, setDataDevolucao] = useState(todayIsoDate());
+
+  useEffect(() => {
+    if (!open) return;
+    setDataDevolucao(todayIsoDate());
+  }, [open, equipamento?.id]);
 
   const mutation = useMutation({
     mutationFn: () =>
       equipamentosService.devolverEmprestimo(emprestimoId!, {
-        data_devolucao: todayIsoDate(),
+        data_devolucao: dataDevolucao,
       }),
     onSuccess: () => {
       invalidate();
@@ -439,22 +501,42 @@ export function DevolverModal({ equipamento, open, onOpenChange }: ModalBaseProp
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button disabled={mutation.isPending || !emprestimoId} onClick={() => mutation.mutate()}>
-              {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : 'Confirmar devolução'}
+            <Button
+              disabled={mutation.isPending || !emprestimoId || !dataDevolucao}
+              onClick={() => mutation.mutate()}
+            >
+              {mutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                'Confirmar devolução'
+              )}
             </Button>
           </>
         }
       >
-        <p className="text-sm text-muted-foreground">
-          Confirma a devolução do equipamento em{' '}
-          {todayIsoDate().split('-').reverse().join('/')}?
-        </p>
+        <div className="grid gap-2">
+          <Label htmlFor="data-devolucao">Data de devolução</Label>
+          <Input
+            id="data-devolucao"
+            type="date"
+            value={dataDevolucao}
+            onChange={(event) => setDataDevolucao(event.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            A data atual é carregada por padrão, mas pode ser ajustada antes de
+            confirmar.
+          </p>
+        </div>
       </EquipamentoDialogShell>
     </Dialog>
   );
 }
 
-export function RenovarModal({ equipamento, open, onOpenChange }: ModalBaseProps) {
+export function RenovarModal({
+  equipamento,
+  open,
+  onOpenChange,
+}: ModalBaseProps) {
   const invalidate = useInvalidateEquipamentos();
   const emprestimoId = equipamento?.emprestimo_ativo?.id;
   const [prazoAdicional, setPrazoAdicional] = useState('7');
@@ -489,17 +571,29 @@ export function RenovarModal({ equipamento, open, onOpenChange }: ModalBaseProps
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <EquipamentoDialogShell
-        header={<DialogTitle>Renovar empréstimo — {equipamento?.patrimonio}</DialogTitle>}
+        header={
+          <DialogTitle>
+            Renovar empréstimo — {equipamento?.patrimonio}
+          </DialogTitle>
+        }
         footer={
           <>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
             <Button
-              disabled={mutation.isPending || !emprestimoId || Number(prazoAdicional) < 1}
+              disabled={
+                mutation.isPending ||
+                !emprestimoId ||
+                Number(prazoAdicional) < 1
+              }
               onClick={() => mutation.mutate()}
             >
-              {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : 'Renovar'}
+              {mutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                'Renovar'
+              )}
             </Button>
           </>
         }
@@ -516,7 +610,11 @@ export function RenovarModal({ equipamento, open, onOpenChange }: ModalBaseProps
           </div>
           <div className="grid gap-2">
             <Label>Observação (opcional)</Label>
-            <Textarea value={observacao} onChange={(e) => setObservacao(e.target.value)} rows={2} />
+            <Textarea
+              value={observacao}
+              onChange={(e) => setObservacao(e.target.value)}
+              rows={2}
+            />
           </div>
         </div>
       </EquipamentoDialogShell>
@@ -524,7 +622,11 @@ export function RenovarModal({ equipamento, open, onOpenChange }: ModalBaseProps
   );
 }
 
-export function FinalizarManutencaoModal({ equipamento, open, onOpenChange }: ModalBaseProps) {
+export function FinalizarManutencaoModal({
+  equipamento,
+  open,
+  onOpenChange,
+}: ModalBaseProps) {
   const invalidate = useInvalidateEquipamentos();
   const manutencaoId = equipamento?.manutencao_ativa?.id;
 
@@ -549,14 +651,23 @@ export function FinalizarManutencaoModal({ equipamento, open, onOpenChange }: Mo
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <EquipamentoDialogShell
-        header={<DialogTitle>Finalizar — {equipamento?.patrimonio}</DialogTitle>}
+        header={
+          <DialogTitle>Finalizar — {equipamento?.patrimonio}</DialogTitle>
+        }
         footer={
           <>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button disabled={mutation.isPending || !manutencaoId} onClick={() => mutation.mutate()}>
-              {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : 'Finalizar'}
+            <Button
+              disabled={mutation.isPending || !manutencaoId}
+              onClick={() => mutation.mutate()}
+            >
+              {mutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                'Finalizar'
+              )}
             </Button>
           </>
         }
@@ -576,7 +687,8 @@ export function HistoricoModal({
 }: ModalBaseProps) {
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['equipamentos-historico', equipamento?.id],
-    queryFn: () => equipamentosService.historico(equipamento!.id, { per_page: 50 }),
+    queryFn: () =>
+      equipamentosService.historico(equipamento!.id, { per_page: 50 }),
     enabled: open && Boolean(equipamento?.id),
   });
 
@@ -588,7 +700,11 @@ export function HistoricoModal({
         <SidePanelSheetHeader className="border-b px-5 py-4">
           <div className="flex items-center gap-3 pe-8">
             {equipamento ? (
-              <EquipamentoThumbnail equipamento={equipamento} size="sm" previewEnabled />
+              <EquipamentoThumbnail
+                equipamento={equipamento}
+                size="sm"
+                previewEnabled
+              />
             ) : null}
             <SheetPanelTitle icon={History}>
               Histórico — {equipamento?.patrimonio ?? 'Equipamento'}
@@ -621,7 +737,11 @@ export function HistoricoModal({
 
         <SidePanelSheetFooter>
           <SidePanelSheetActions>
-            <Button variant="outline" onClick={() => void refetch()} disabled={isFetching}>
+            <Button
+              variant="outline"
+              onClick={() => void refetch()}
+              disabled={isFetching}
+            >
               {isFetching ? 'Atualizando...' : 'Atualizar'}
             </Button>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -652,17 +772,28 @@ function HistoricoTimelineItem({
   item: EquipamentoHistoricoItem;
   isLast: boolean;
 }) {
-  const label = HISTORICO_EVENTO_LABELS[item.evento] ?? item.evento.replace(/_/g, ' ');
+  const label =
+    HISTORICO_EVENTO_LABELS[item.evento] ?? item.evento.replace(/_/g, ' ');
   const date = item.created_at ? new Date(item.created_at) : null;
-  const dotColor = HISTORICO_EVENTO_COLORS[item.evento] ?? 'bg-muted-foreground';
-
+  const dotColor =
+    HISTORICO_EVENTO_COLORS[item.evento] ?? 'bg-muted-foreground';
+  const dataDevolucao =
+    typeof item.dados?.data_devolucao === 'string'
+      ? new Date(`${item.dados.data_devolucao}T00:00:00`)
+      : null;
   return (
     <li className="relative flex gap-3 pb-5">
       {!isLast ? (
-        <span className="absolute start-[0.4rem] top-3 bottom-0 w-px bg-border" aria-hidden />
+        <span
+          className="absolute start-[0.4rem] top-3 bottom-0 w-px bg-border"
+          aria-hidden
+        />
       ) : null}
       <span
-        className={cn('relative z-10 mt-1 size-3 shrink-0 rounded-full ring-4 ring-background', dotColor)}
+        className={cn(
+          'relative z-10 mt-1 size-3 shrink-0 rounded-full ring-4 ring-background',
+          dotColor,
+        )}
         aria-hidden
       />
       <div className="min-w-0 flex-1 rounded-lg border border-border bg-muted/20 px-3 py-2.5">
@@ -670,15 +801,27 @@ function HistoricoTimelineItem({
           <p className="text-sm font-semibold text-foreground">{label}</p>
           <time className="shrink-0 text-xs font-medium text-muted-foreground">
             {date
-              ? date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+              ? date.toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: '2-digit',
+                })
               : ''}
           </time>
         </div>
         {item.registrado_por?.name ? (
-          <p className="mt-1 text-xs text-muted-foreground">Por {item.registrado_por.name}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Por {item.registrado_por.name}
+          </p>
+        ) : null}
+        {item.evento === 'devolvido' && dataDevolucao ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Data da devolução: {dataDevolucao.toLocaleDateString('pt-BR')}
+          </p>
         ) : null}
         {item.observacao ? (
-          <p className="mt-1 text-xs text-muted-foreground">{item.observacao}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {item.observacao}
+          </p>
         ) : null}
       </div>
     </li>
@@ -700,8 +843,11 @@ export function CadastroEquipamentoModal({
   const [valorMensal, setValorMensal] = useState('');
   const [isCritico, setIsCritico] = useState(false);
   const [newFotos, setNewFotos] = useState<File[]>([]);
-  const [principal, setPrincipal] = useState<EquipamentoFotoPrincipal | null>(null);
-  const { fieldErrors, clear, clearField, applyApi, setFieldErrors } = useEquipamentoFieldErrors();
+  const [principal, setPrincipal] = useState<EquipamentoFotoPrincipal | null>(
+    null,
+  );
+  const { fieldErrors, clear, clearField, applyApi, setFieldErrors } =
+    useEquipamentoFieldErrors();
 
   const { data: tipos = [] } = useQuery({
     queryKey: ['equipamentos-lookups', 'tipos'],
@@ -816,7 +962,11 @@ export function CadastroEquipamentoModal({
               Cancelar
             </Button>
             <Button disabled={mutation.isPending} onClick={handleSubmit}>
-              {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : 'Cadastrar'}
+              {mutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                'Cadastrar'
+              )}
             </Button>
           </>
         }
@@ -834,7 +984,9 @@ export function CadastroEquipamentoModal({
             }}
             onRemoveNew={(index) => {
               clearField('foto');
-              setNewFotos((current) => current.filter((_, itemIndex) => itemIndex !== index));
+              setNewFotos((current) =>
+                current.filter((_, itemIndex) => itemIndex !== index),
+              );
             }}
           />
           <FieldMessage message={fieldErrors.foto} />
@@ -910,7 +1062,10 @@ export function CadastroEquipamentoModal({
             <FieldMessage message={fieldErrors.valor_mensal} />
           </div>
           <div className="flex items-center justify-between gap-4">
-            <Label htmlFor="cadastro-equipamento-critico" className="font-normal">
+            <Label
+              htmlFor="cadastro-equipamento-critico"
+              className="font-normal"
+            >
               Equipamento crítico
             </Label>
             <Switch
@@ -925,8 +1080,11 @@ export function CadastroEquipamentoModal({
   );
 }
 
-
-export function EditarEquipamentoModal({ equipamento, open, onOpenChange }: ModalBaseProps) {
+export function EditarEquipamentoModal({
+  equipamento,
+  open,
+  onOpenChange,
+}: ModalBaseProps) {
   const invalidate = useInvalidateEquipamentos();
   const [patrimonio, setPatrimonio] = useState('');
   const [tipoId, setTipoId] = useState('');
@@ -936,9 +1094,13 @@ export function EditarEquipamentoModal({ equipamento, open, onOpenChange }: Moda
   const [isCritico, setIsCritico] = useState(false);
   const [newFotos, setNewFotos] = useState<File[]>([]);
   const [removedFotoIds, setRemovedFotoIds] = useState<number[]>([]);
-  const [principal, setPrincipal] = useState<EquipamentoFotoPrincipal | null>(null);
-  const [initialPrincipal, setInitialPrincipal] = useState<EquipamentoFotoPrincipal | null>(null);
-  const { fieldErrors, clear, clearField, applyApi, setFieldErrors } = useEquipamentoFieldErrors();
+  const [principal, setPrincipal] = useState<EquipamentoFotoPrincipal | null>(
+    null,
+  );
+  const [initialPrincipal, setInitialPrincipal] =
+    useState<EquipamentoFotoPrincipal | null>(null);
+  const { fieldErrors, clear, clearField, applyApi, setFieldErrors } =
+    useEquipamentoFieldErrors();
 
   const { data: tipos = [] } = useQuery({
     queryKey: ['equipamentos-lookups', 'tipos'],
@@ -981,7 +1143,9 @@ export function EditarEquipamentoModal({ equipamento, open, onOpenChange }: Moda
     setIsCritico(equipamento.is_critico);
     setNewFotos([]);
     setRemovedFotoIds([]);
-    const defaultPrincipal = getDefaultEquipamentoPrincipal(getEquipamentoExistingFotos(equipamento));
+    const defaultPrincipal = getDefaultEquipamentoPrincipal(
+      getEquipamentoExistingFotos(equipamento),
+    );
     setPrincipal(defaultPrincipal);
     setInitialPrincipal(defaultPrincipal);
     clear();
@@ -1010,9 +1174,9 @@ export function EditarEquipamentoModal({ equipamento, open, onOpenChange }: Moda
       };
       const principalChanged = hasPrincipalChanged(principal, initialPrincipal);
       const needsMultipart =
-        orderedFotos.length > 0
-        || removedFotoIds.length > 0
-        || principalForSubmit?.type === 'new';
+        orderedFotos.length > 0 ||
+        removedFotoIds.length > 0 ||
+        principalForSubmit?.type === 'new';
 
       if (needsMultipart) {
         return equipamentosService.update(
@@ -1077,8 +1241,15 @@ export function EditarEquipamentoModal({ equipamento, open, onOpenChange }: Moda
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button disabled={mutation.isPending || !equipamento} onClick={handleSubmit}>
-              {mutation.isPending ? <Loader2 className="size-4 animate-spin" /> : 'Salvar'}
+            <Button
+              disabled={mutation.isPending || !equipamento}
+              onClick={handleSubmit}
+            >
+              {mutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                'Salvar'
+              )}
             </Button>
           </>
         }
@@ -1108,7 +1279,9 @@ export function EditarEquipamentoModal({ equipamento, open, onOpenChange }: Moda
               }}
               onRemoveNew={(index) => {
                 clearField('foto');
-                setNewFotos((current) => current.filter((_, itemIndex) => itemIndex !== index));
+                setNewFotos((current) =>
+                  current.filter((_, itemIndex) => itemIndex !== index),
+                );
               }}
             />
           ) : null}

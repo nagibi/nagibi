@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Icon } from 'lucide-react';
+import { Icon, Save } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useApiToolbarAlert } from '@/hooks/use-api-toolbar-alert';
@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MaskedInput } from '@/components/ui/masked-input';
-import { PageBody } from '@/components/common/page-body';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const schema = z.object({
   equipment_idle_days: z.coerce.number().int().min(0),
@@ -248,26 +248,24 @@ export default function EquipamentosAlertSettingsPage() {
     actions: (
       <Button
         type="submit"
+        variant="primary"
+        mode="default"
         form="equipamento-alert-settings-form"
+        className="gap-1.5 px-2"
         disabled={saveMutation.isPending}
       >
+        <Save className="size-3.5 shrink-0" />
         {saveMutation.isPending ? 'Salvando…' : 'Salvar'}
       </Button>
     ),
   });
 
   if (isLoading) {
-    return (
-      <PageBody>
-        <div className="p-6 text-sm text-muted-foreground">
-          Carregando configurações…
-        </div>
-      </PageBody>
-    );
+    return <AlertSettingsSkeleton />;
   }
 
   return (
-    <PageBody>
+    <div className="pt-0">
       <form
         id="equipamento-alert-settings-form"
         onSubmit={onSubmit}
@@ -344,6 +342,32 @@ export default function EquipamentosAlertSettingsPage() {
           </section>
         ))}
       </form>
-    </PageBody>
+    </div>
+  );
+}
+
+function AlertSettingsSkeleton() {
+  return (
+    <div className="space-y-3 pt-0">
+      {GROUPS.map((group) => (
+        <section key={group.title} className="space-y-2">
+          <Skeleton className="h-4 w-28" />
+          <div className="space-y-3 rounded-lg border p-3">
+            {group.fields.map((field) => (
+              <div
+                key={field.key}
+                className="flex items-start justify-between gap-4"
+              >
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-64 max-w-full" />
+                </div>
+                <Skeleton className="h-9 w-28 shrink-0" />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
   );
 }

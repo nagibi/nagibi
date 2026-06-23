@@ -70,7 +70,10 @@ final class EquipamentoStatusService
                 $emprestimo->equipamento,
                 'devolvido',
                 'em_estoque',
-                ['dias_em_uso' => $emprestimo->dias_em_uso]
+                [
+                    'dias_em_uso' => $emprestimo->dias_em_uso,
+                    'data_devolucao' => $emprestimo->data_devolucao?->toDateString(),
+                ]
             );
 
             return $emprestimo->fresh(['equipamento.tipo', 'obra']);
