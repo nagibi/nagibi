@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\Equipamento;
+use App\Models\Fornecedor;
 use App\Models\Menu;
+use App\Models\Obra;
+use App\Models\TipoEquipamento;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
@@ -17,6 +21,10 @@ final class SearchReindexCommand extends Command
 
     /** @var list<class-string> */
     private array $models = [
+        Equipamento::class,
+        TipoEquipamento::class,
+        Fornecedor::class,
+        Obra::class,
         Menu::class,
         User::class,
         // TODO(docs): YAGNI — descomentar quando houver conteúdo real de documentação

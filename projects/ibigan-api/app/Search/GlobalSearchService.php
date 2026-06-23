@@ -4,14 +4,23 @@ declare(strict_types=1);
 
 namespace App\Search;
 
+use App\Models\Equipamento;
+use App\Models\Fornecedor;
 use App\Models\Menu;
+use App\Models\Obra;
+use App\Models\TipoEquipamento;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Meilisearch\Exceptions\ApiException;
 
 final class GlobalSearchService
 {
     /** @var array<class-string<Model>, string> */
     private const SOURCES = [
+        Equipamento::class => 'equipamentos',
+        TipoEquipamento::class => 'tipos',
+        Fornecedor::class => 'fornecedores',
+        Obra::class => 'obras',
         Menu::class => 'settings',
         User::class => 'users',
         // TODO(docs): YAGNI — descomentar quando houver conteúdo real de documentação
@@ -31,7 +40,15 @@ final class GlobalSearchService
         $groups = [];
 
         foreach (self::SOURCES as $model => $category) {
-            $hits = $model::search($term)->take($perGroup * 3)->get();
+            try {
+                $hits = $model::search($term)->take($perGroup * 3)->get();
+            } catch (ApiException $exception) {
+                if ($this->isMissingSearchIndex($exception)) {
+                    continue;
+                }
+
+                throw $exception;
+            }
 
             $visible = $hits
                 ->filter(fn (Model $item) => $this->canView($actor, $item))
@@ -46,6 +63,12 @@ final class GlobalSearchService
         }
 
         return $groups;
+    }
+
+    private function isMissingSearchIndex(ApiException $exception): bool
+    {
+        return $exception->errorCode === 'index_not_found'
+            || str_contains($exception->getMessage(), 'not found');
     }
 
     private function canView(?User $actor, Model $item): bool
@@ -84,7 +107,7 @@ final class GlobalSearchService
             'id' => $data['id'],
             'type' => $data['type'],
             'title' => $data['title'],
-            'subtitle' => $data['email'] ?? $data['excerpt'] ?? $data['path'] ?? null,
+            'subtitle' => $data['subtitle'] ?? $data['email'] ?? $data['excerpt'] ?? $data['path'] ?? null,
             'path' => $data['path'] ?? null,
             'avatar_url' => $data['avatar_url'] ?? null,
         ];

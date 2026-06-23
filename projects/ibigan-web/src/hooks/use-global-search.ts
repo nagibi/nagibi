@@ -18,7 +18,14 @@ export type SearchGroup = Record<string, SearchHit[]>;
 
 export interface SearchHit {
   id: string;
-  type: 'menu' | 'user' | 'doc' | 'equipamento';
+  type:
+    | 'menu'
+    | 'user'
+    | 'doc'
+    | 'equipamento'
+    | 'tipo_equipamento'
+    | 'fornecedor'
+    | 'obra';
   title: string;
   subtitle: string | null;
   path: string | null;

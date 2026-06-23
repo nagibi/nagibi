@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Search\TenantSearchable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +18,7 @@ class Equipamento extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use TenantSearchable;
 
     protected $fillable = [
         'patrimonio',
@@ -266,6 +268,77 @@ class Equipamento extends Model
             'tempo_em_estoque' => $query->orderByRaw(self::diasEmEstoqueSqlExpression().' '.$direction),
             default => $query->orderByDesc('created_at'),
         };
+    }
+
+    protected function defaultSearchableAs(): string
+    {
+        return 'equipamentos';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        $status = $this->searchStatus();
+
+        return [
+            'id' => (string) $this->id,
+            'type' => 'equipamento',
+            'title' => $this->tipo?->nome ?? $this->patrimonio,
+            'patrimonio' => $this->patrimonio,
+            'subtitle' => $this->patrimonio.' · '.$this->searchStatusLabel($status),
+            'path' => $this->searchPath($status),
+            'avatar_url' => null,
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return (bool) $this->is_active;
+    }
+
+    private function searchStatus(): string
+    {
+        $baixaTipo = $this->baixa()->value('tipo');
+
+        if ($baixaTipo !== null) {
+            return $baixaTipo === 'perda' ? 'perdido' : 'baixado';
+        }
+
+        if ($this->manutencaoAtiva()->exists()) {
+            return 'em_manutencao';
+        }
+
+        if ($this->emprestimoAtivo()->exists()) {
+            return 'em_utilizacao';
+        }
+
+        return 'em_estoque';
+    }
+
+    private function searchStatusLabel(string $status): string
+    {
+        return match ($status) {
+            'em_estoque' => 'Em Estoque',
+            'em_utilizacao' => 'Em Utilização',
+            'em_manutencao' => 'Em Manutenção',
+            'baixado' => 'Baixado',
+            'perdido' => 'Perdido',
+            default => 'Desconhecido',
+        };
+    }
+
+    private function searchPath(string $status): string
+    {
+        $basePath = match ($status) {
+            'em_utilizacao' => '/equipamentos/movimentacoes',
+            'em_manutencao' => '/equipamentos/manutencao',
+            'baixado', 'perdido' => '/equipamentos/baixados',
+            default => '/equipamentos/estoque',
+        };
+
+        return $basePath.'?q='.urlencode($this->patrimonio);
     }
 
     private static function diasEmEstoqueSqlExpression(): string

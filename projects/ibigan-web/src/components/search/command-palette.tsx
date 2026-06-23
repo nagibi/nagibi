@@ -1,7 +1,16 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { FileText, HardHat, Loader2, Settings2, UserRound } from 'lucide-react';
+import {
+  Building2,
+  FileText,
+  HardHat,
+  Loader2,
+  Settings2,
+  Shapes,
+  Truck,
+  UserRound,
+} from 'lucide-react';
 import {
   CommandDialog,
   CommandEmpty,
@@ -13,20 +22,33 @@ import {
 } from '@/components/ui/command';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useCommandPaletteShortcut } from '@/hooks/use-command-palette-shortcut';
-import { useEquipamentoPaletteSearch } from '@/hooks/use-equipamento-palette-search';
 import { type SearchHit, useGlobalSearch } from '@/hooks/use-global-search';
 
 const CATEGORY_LABELS: Record<string, string> = {
   equipamentos: 'Equipamentos',
+  tipos: 'Tipos',
+  fornecedores: 'Fornecedores',
+  obras: 'Obras',
   settings: 'Configurações',
   users: 'Usuários',
   docs: 'Documentação',
 };
 
-const CATEGORY_ORDER = ['equipamentos', 'settings', 'users', 'docs'] as const;
+const CATEGORY_ORDER = [
+  'equipamentos',
+  'tipos',
+  'fornecedores',
+  'obras',
+  'settings',
+  'users',
+  'docs',
+] as const;
 
 function hitIcon(hit: SearchHit) {
   if (hit.type === 'equipamento') return HardHat;
+  if (hit.type === 'tipo_equipamento') return Shapes;
+  if (hit.type === 'fornecedor') return Truck;
+  if (hit.type === 'obra') return Building2;
   if (hit.type === 'user') return UserRound;
   if (hit.type === 'doc') return FileText;
   return Settings2;
@@ -42,11 +64,6 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const queryClient = useQueryClient();
   const [term, setTerm] = useState('');
   const { data, isFetching, isLoading } = useGlobalSearch(term, open);
-  const {
-    data: equipamentoHits = [],
-    isFetching: isFetchingEquipamentos,
-    isLoading: isLoadingEquipamentos,
-  } = useEquipamentoPaletteSearch(term, open);
 
   const handleOpenChange = useCallback((nextOpen: boolean) => {
     onOpenChange(nextOpen);
@@ -68,21 +85,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   };
 
   const hasQuery = open && term.trim().length >= 2;
-  const groups = useMemo(() => {
-    if (!hasQuery) {
-      return {};
-    }
-
-    const merged: Record<string, SearchHit[]> = { ...(data ?? {}) };
-
-    if (equipamentoHits.length > 0) {
-      merged.equipamentos = equipamentoHits;
-    }
-
-    return merged;
-  }, [data, equipamentoHits, hasQuery]);
+  const groups = useMemo(() => (hasQuery ? (data ?? {}) : {}), [data, hasQuery]);
   const orderedCategories = CATEGORY_ORDER.filter((category) => (groups[category]?.length ?? 0) > 0);
-  const isSearching = isLoading || isFetching || isLoadingEquipamentos || isFetchingEquipamentos;
+  const isSearching = isLoading || isFetching;
 
   return (
     <CommandDialog open={open} onOpenChange={handleOpenChange}>

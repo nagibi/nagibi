@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Search\TenantSearchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +14,7 @@ class Fornecedor extends Model
 {
     use HasFactory;
     use SoftDeletes;
+    use TenantSearchable;
 
     protected $table = 'fornecedores';
 
@@ -35,5 +37,30 @@ class Fornecedor extends Model
     public function equipamentos(): HasMany
     {
         return $this->hasMany(Equipamento::class);
+    }
+
+    protected function defaultSearchableAs(): string
+    {
+        return 'fornecedores';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => (string) $this->id,
+            'type' => 'fornecedor',
+            'title' => $this->nome,
+            'subtitle' => $this->cnpj,
+            'path' => "/equipamentos/fornecedores/{$this->id}",
+            'avatar_url' => null,
+        ];
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return (bool) $this->is_ativo;
     }
 }

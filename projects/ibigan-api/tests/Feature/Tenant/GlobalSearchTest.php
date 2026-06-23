@@ -2,8 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Models\Equipamento;
+use App\Models\Fornecedor;
+use App\Models\GrupoEquipamento;
 use App\Models\Menu;
+use App\Models\Obra;
 use App\Models\Tenant;
+use App\Models\TipoEquipamento;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -105,6 +110,69 @@ it('cada item traz o shape esperado pelo palette', function (): void {
                 ],
             ],
         ]);
+});
+
+it('retorna equipamentos no resultado global', function (): void {
+    Sanctum::actingAs($this->a['user'], ['*'], 'sanctum');
+
+    $this->a['tenant']->run(function (): void {
+        Equipamento::factory()->create([
+            'patrimonio' => 'MARTELETE-001',
+        ]);
+    });
+
+    $response = $this->getJson('/api/v1/search?q=MARTELETE', [
+        'X-Tenant-ID' => $this->a['tenant']->id,
+    ])->assertOk();
+
+    $equipamentos = collect($response->json('result.equipamentos') ?? []);
+
+    expect($equipamentos->pluck('subtitle')->all())->toContain('MARTELETE-001 · Em Estoque')
+        ->and($equipamentos->first()['path'] ?? null)->toBe('/equipamentos/estoque?q=MARTELETE-001');
+});
+
+it('retorna tipos fornecedores e obras no resultado global', function (): void {
+    Sanctum::actingAs($this->a['user'], ['*'], 'sanctum');
+
+    $this->a['tenant']->run(function (): void {
+        $grupo = GrupoEquipamento::factory()->create(['nome' => 'Ferramentas']);
+
+        TipoEquipamento::factory()->create([
+            'grupo_id' => $grupo->id,
+            'nome' => 'Compactador de solo',
+        ]);
+
+        Fornecedor::factory()->create([
+            'nome' => 'Locadora Atlas',
+            'cnpj' => '12.345.678/0001-90',
+        ]);
+
+        Obra::factory()->create([
+            'codigo' => 'OBRA-650',
+            'nome' => 'Residencial Central',
+        ]);
+    });
+
+    $tipos = $this->getJson('/api/v1/search?q=Compactador', [
+        'X-Tenant-ID' => $this->a['tenant']->id,
+    ])->assertOk();
+
+    expect($tipos->json('result.tipos.0.title'))->toBe('Compactador de solo')
+        ->and($tipos->json('result.tipos.0.subtitle'))->toBe('Ferramentas');
+
+    $fornecedores = $this->getJson('/api/v1/search?q=Atlas', [
+        'X-Tenant-ID' => $this->a['tenant']->id,
+    ])->assertOk();
+
+    expect($fornecedores->json('result.fornecedores.0.title'))->toBe('Locadora Atlas')
+        ->and($fornecedores->json('result.fornecedores.0.path'))->toStartWith('/equipamentos/fornecedores/');
+
+    $obras = $this->getJson('/api/v1/search?q=OBRA-650', [
+        'X-Tenant-ID' => $this->a['tenant']->id,
+    ])->assertOk();
+
+    expect($obras->json('result.obras.0.title'))->toBe('OBRA-650')
+        ->and($obras->json('result.obras.0.subtitle'))->toBe('Residencial Central');
 });
 
 // ─── Isolamento entre tenants (a garantia central) ───────────────
