@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { EquipamentoDialogShell } from '@/pages/equipamentos/components/equipamento-dialog-shell';
 import {
   buildEquipamentoStoreFormData,
@@ -10,13 +10,14 @@ import {
   resolvePrincipalPayload,
   type EquipamentoFotoPrincipal,
 } from '@/pages/equipamentos/components/equipamento-foto-field';
+import { EquipamentoFotoViewerDialog } from '@/pages/equipamentos/components/equipamento-foto-viewer-dialog';
 import { EquipamentoThumbnail } from '@/pages/equipamentos/components/equipamento-thumbnail';
 import {
   EquipamentoUserSelect,
   getUserMatricula,
 } from '@/pages/equipamentos/components/equipamento-user-select';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { History, Loader2 } from 'lucide-react';
+import { Camera, History, Loader2 } from 'lucide-react';
 import type {
   Equipamento,
   EquipamentoHistoricoItem,
@@ -38,6 +39,7 @@ import { showAppToast } from '@/lib/show-app-toast';
 import { cn } from '@/lib/utils';
 import { mapZodFieldErrors } from '@/lib/zod-validators';
 import { equipamentosService } from '@/services/equipamentos.service';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { FieldMessage } from '@/components/ui/field-message';
@@ -466,19 +468,40 @@ export function DevolverModal({
   onOpenChange,
 }: ModalBaseProps) {
   const invalidate = useInvalidateEquipamentos();
+  const isMobile = useIsMobile();
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const emprestimoId = equipamento?.emprestimo_ativo?.id;
   const [dataDevolucao, setDataDevolucao] = useState(todayIsoDate());
+  const [observacao, setObservacao] = useState('');
+  const [fotosDevolucao, setFotosDevolucao] = useState<File[]>([]);
 
   useEffect(() => {
     if (!open) return;
     setDataDevolucao(todayIsoDate());
+    setObservacao('');
+    setFotosDevolucao([]);
   }, [open, equipamento?.id]);
 
+  const appendFotosDevolucao = (files: FileList | null) => {
+    if (!files?.length) return;
+    setFotosDevolucao((current) => [...current, ...Array.from(files)]);
+  };
+
   const mutation = useMutation({
-    mutationFn: () =>
-      equipamentosService.devolverEmprestimo(emprestimoId!, {
-        data_devolucao: dataDevolucao,
-      }),
+    mutationFn: () => {
+      const formData = new FormData();
+      formData.append('data_devolucao', dataDevolucao);
+
+      if (observacao.trim()) {
+        formData.append('observacao', observacao.trim());
+      }
+
+      fotosDevolucao.forEach((file, index) => {
+        formData.append(`fotos_equipamento_devolucao[${index}]`, file);
+      });
+
+      return equipamentosService.devolverEmprestimo(emprestimoId!, formData);
+    },
     onSuccess: () => {
       invalidate();
       showAppToast({ title: 'Devolução registrada com sucesso.' });
@@ -520,12 +543,75 @@ export function DevolverModal({
             id="data-devolucao"
             type="date"
             value={dataDevolucao}
+            max={todayIsoDate()}
+            className="w-full max-w-44"
             onChange={(event) => setDataDevolucao(event.target.value)}
           />
           <p className="text-xs text-muted-foreground">
             A data atual é carregada por padrão, mas pode ser ajustada antes de
             confirmar.
           </p>
+          <div className="grid gap-2 pt-2">
+            <Label htmlFor="observacao-devolucao">Observação</Label>
+            <Textarea
+              id="observacao-devolucao"
+              value={observacao}
+              onChange={(event) => setObservacao(event.target.value)}
+              rows={3}
+              placeholder="Descreva o estado do equipamento ou alguma ocorrência na devolução."
+            />
+          </div>
+          <div className="grid gap-2 pt-2">
+            <Label htmlFor="fotos-devolucao">Imagens da devolução</Label>
+            <Input
+              id="fotos-devolucao"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={(event) => {
+                appendFotosDevolucao(event.target.files);
+                event.target.value = '';
+              }}
+            />
+            {isMobile ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-fit"
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  <Camera className="size-4" />
+                  Tirar foto
+                </Button>
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(event) => {
+                    appendFotosDevolucao(event.target.files);
+                    event.target.value = '';
+                  }}
+                />
+              </>
+            ) : null}
+            {fotosDevolucao.length > 0 ? (
+              <ul className="space-y-1 text-xs text-muted-foreground">
+                {fotosDevolucao.map((file, index) => (
+                  <li key={`${file.name}-${index}`} className="truncate">
+                    {file.name}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Você pode selecionar uma ou mais imagens do equipamento no momento da devolução.
+              </p>
+            )}
+          </div>
         </div>
       </EquipamentoDialogShell>
     </Dialog>
@@ -772,6 +858,8 @@ function HistoricoTimelineItem({
   item: EquipamentoHistoricoItem;
   isLast: boolean;
 }) {
+  const [fotoViewerOpen, setFotoViewerOpen] = useState(false);
+  const [fotoViewerIndex, setFotoViewerIndex] = useState(0);
   const label =
     HISTORICO_EVENTO_LABELS[item.evento] ?? item.evento.replace(/_/g, ' ');
   const date = item.created_at ? new Date(item.created_at) : null;
@@ -781,6 +869,16 @@ function HistoricoTimelineItem({
     typeof item.dados?.data_devolucao === 'string'
       ? new Date(`${item.dados.data_devolucao}T00:00:00`)
       : null;
+  const observacaoDevolucao =
+    typeof item.dados?.observacao === 'string' ? item.dados.observacao : null;
+  const fotosDevolucaoUrls = Array.isArray(
+    item.dados?.fotos_equipamento_devolucao_urls,
+  )
+    ? item.dados.fotos_equipamento_devolucao_urls.filter(
+        (url): url is string => typeof url === 'string' && url.length > 0,
+      )
+    : [];
+
   return (
     <li className="relative flex gap-3 pb-5">
       {!isLast ? (
@@ -818,12 +916,52 @@ function HistoricoTimelineItem({
             Data da devolução: {dataDevolucao.toLocaleDateString('pt-BR')}
           </p>
         ) : null}
+        {item.evento === 'devolvido' && observacaoDevolucao ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Observação: {observacaoDevolucao}
+          </p>
+        ) : null}
+        {item.evento === 'devolvido' && fotosDevolucaoUrls.length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {fotosDevolucaoUrls.map((url, index) => (
+              <button
+                key={`${url}-${index}`}
+                type="button"
+                onClick={() => {
+                  setFotoViewerIndex(index);
+                  setFotoViewerOpen(true);
+                }}
+                className="block overflow-hidden rounded-md border border-border transition-colors hover:border-primary/40 hover:ring-2 hover:ring-primary/20"
+                aria-label={`Ver imagem da devolução ${index + 1}`}
+              >
+                <img
+                  src={url}
+                  alt={`Imagem da devolução ${index + 1}`}
+                  className="size-14 object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        ) : null}
         {item.observacao ? (
           <p className="mt-1 text-xs text-muted-foreground">
             {item.observacao}
           </p>
         ) : null}
       </div>
+
+      <EquipamentoFotoViewerDialog
+        open={fotoViewerOpen}
+        onOpenChange={setFotoViewerOpen}
+        images={fotosDevolucaoUrls.map((url) => ({ url }))}
+        initialIndex={fotoViewerIndex}
+        title="Fotos da devolução"
+        subtitle={
+          dataDevolucao
+            ? `Devolvido em ${dataDevolucao.toLocaleDateString('pt-BR')}`
+            : null
+        }
+      />
     </li>
   );
 }

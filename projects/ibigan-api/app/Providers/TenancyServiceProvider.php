@@ -9,6 +9,7 @@ use App\Models\Menu;
 use App\Models\MessageTemplate;
 use App\Models\User;
 use App\Models\Webhook;
+use App\Support\TenantStoragePermissions;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Event;
@@ -119,6 +120,7 @@ class TenancyServiceProvider extends ServiceProvider
             app(PermissionRegistrar::class)->forgetCachedPermissions();
             app()->forgetInstance('auth.password');
             $this->configureTenantPublicDiskUrl($event->tenancy->tenant);
+            TenantStoragePermissions::ensureReadable(storage_path());
 
             $this->reregisterActivityLogObservers();
         });

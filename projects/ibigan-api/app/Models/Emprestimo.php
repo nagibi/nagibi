@@ -27,11 +27,13 @@ class Emprestimo extends Model
         'encarregado_nome',
         'data_retirada',
         'data_devolucao',
+        'observacao_devolucao',
         'prazo_dias',
         'foto_cracha_path',
         'foto_equipamento_retirada_path',
         'foto_assinatura_path',
         'foto_equipamento_devolucao_path',
+        'fotos_equipamento_devolucao_paths',
         'autorizado_por',
         'observacoes',
     ];
@@ -41,6 +43,7 @@ class Emprestimo extends Model
         return [
             'data_retirada' => 'date',
             'data_devolucao' => 'date',
+            'fotos_equipamento_devolucao_paths' => 'array',
             'prazo_dias' => 'integer',
         ];
     }

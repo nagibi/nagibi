@@ -15,6 +15,8 @@ use App\Models\TipoEquipamento;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
@@ -434,6 +436,49 @@ it('devolve emprestimo ativo', function (): void {
         ->assertJsonPath('data.is_ativo', false);
 
     $this->tenant->run(fn() => expect($emprestimo->fresh()->data_devolucao)->not->toBeNull());
+});
+
+it('devolve emprestimo com observacao e multiplas imagens', function (): void {
+    Storage::fake('public');
+
+    $emprestimo = $this->tenant->run(function (): Emprestimo {
+        $equipamento = Equipamento::factory()->create();
+
+        return Emprestimo::factory()->create([
+            'equipamento_id' => $equipamento->id,
+            'obra_id' => $equipamento->obra_id,
+            'data_devolucao' => null,
+        ]);
+    });
+
+    $this->post("/api/v1/emprestimos/{$emprestimo->id}/devolver", [
+        'data_devolucao' => now()->toDateString(),
+        'observacao' => 'Equipamento devolvido com ponteira avariada.',
+        'fotos_equipamento_devolucao' => [
+            UploadedFile::fake()->image('devolucao-1.jpg'),
+            UploadedFile::fake()->image('devolucao-2.jpg'),
+        ],
+    ], equipHeaders($this->tenant->id))
+        ->assertOk()
+        ->assertJsonPath('data.observacao_devolucao', 'Equipamento devolvido com ponteira avariada.')
+        ->assertJsonCount(2, 'data.fotos_equipamento_devolucao_paths')
+        ->assertJsonCount(2, 'data.fotos_equipamento_devolucao_urls');
+
+    $this->tenant->run(function () use ($emprestimo): void {
+        $fresh = $emprestimo->fresh();
+
+        expect($fresh->observacao_devolucao)->toBe('Equipamento devolvido com ponteira avariada.')
+            ->and($fresh->fotos_equipamento_devolucao_paths)->toHaveCount(2);
+
+        $historico = HistoricoEquipamento::query()
+            ->where('equipamento_id', $fresh->equipamento_id)
+            ->where('evento', 'devolvido')
+            ->latest()
+            ->first();
+
+        expect($historico?->dados['observacao'] ?? null)->toBe('Equipamento devolvido com ponteira avariada.')
+            ->and($historico?->dados['fotos_equipamento_devolucao_paths'] ?? [])->toHaveCount(2);
+    });
 });
 
 it('renova emprestimo ativo', function (): void {

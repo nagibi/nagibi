@@ -407,6 +407,8 @@ echo "==> Permissões Laravel"
 chown -R 1000:1000 "$ROOT_DIR/projects/ibigan-api"
 chmod -R 775 "$ROOT_DIR/projects/ibigan-api/bootstrap/cache"
 chmod -R 775 "$ROOT_DIR/projects/ibigan-api/storage"
+find "$ROOT_DIR/projects/ibigan-api/storage" -maxdepth 1 -type d -name 'tenant*' -exec chmod a+rX {} \;
+find "$ROOT_DIR/projects/ibigan-api/storage" -type d \( -path '*/app' -o -path '*/app/public' \) -exec chmod a+rX {} \;
 
 echo "==> Composer (produção)"
 "${DC[@]}" run --rm app composer install --no-dev --optimize-autoloader --no-interaction

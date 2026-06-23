@@ -63,7 +63,9 @@ final class EquipamentoStatusService
         $emprestimo = DB::transaction(function () use ($emprestimo, $dados) {
             $emprestimo->update([
                 'data_devolucao' => $dados['data_devolucao'] ?? now()->toDateString(),
+                'observacao_devolucao' => $dados['observacao'] ?? null,
                 'foto_equipamento_devolucao_path' => $dados['foto_equipamento_devolucao_path'] ?? null,
+                'fotos_equipamento_devolucao_paths' => $dados['fotos_equipamento_devolucao_paths'] ?? null,
             ]);
 
             $this->registrarHistorico(
@@ -73,6 +75,8 @@ final class EquipamentoStatusService
                 [
                     'dias_em_uso' => $emprestimo->dias_em_uso,
                     'data_devolucao' => $emprestimo->data_devolucao?->toDateString(),
+                    'observacao' => $emprestimo->observacao_devolucao,
+                    'fotos_equipamento_devolucao_paths' => $emprestimo->fotos_equipamento_devolucao_paths ?? [],
                 ]
             );
 

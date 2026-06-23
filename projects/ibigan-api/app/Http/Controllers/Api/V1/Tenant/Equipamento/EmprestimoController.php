@@ -101,15 +101,30 @@ final class EmprestimoController extends Controller
 
         $data = $request->validate([
             'data_devolucao' => ['nullable', 'date', 'before_or_equal:today'],
+            'observacao' => ['nullable', 'string', 'max:2000'],
             'foto_equipamento_devolucao' => ['nullable', 'image', 'max:5120'],
+            'fotos_equipamento_devolucao' => ['nullable', 'array', 'max:10'],
+            'fotos_equipamento_devolucao.*' => ['image', 'max:5120'],
         ]);
 
+        $devolucaoFotosPaths = [];
+
         if ($request->hasFile('foto_equipamento_devolucao')) {
-            $data['foto_equipamento_devolucao_path'] = $request->file('foto_equipamento_devolucao')
+            $devolucaoFotosPaths[] = $request->file('foto_equipamento_devolucao')
                 ->store('devolucoes', 'public');
         }
 
+        foreach ($request->file('fotos_equipamento_devolucao', []) as $foto) {
+            $devolucaoFotosPaths[] = $foto->store('devolucoes', 'public');
+        }
+
         unset($data['foto_equipamento_devolucao']);
+        unset($data['fotos_equipamento_devolucao']);
+
+        if ($devolucaoFotosPaths !== []) {
+            $data['foto_equipamento_devolucao_path'] = $devolucaoFotosPaths[0];
+            $data['fotos_equipamento_devolucao_paths'] = $devolucaoFotosPaths;
+        }
 
         $emprestimo = $this->service->devolver($emprestimo, $data);
 

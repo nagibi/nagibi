@@ -212,8 +212,14 @@ export const equipamentosService = {
     return unwrapPaginated(response);
   },
 
-  devolverEmprestimo: async (id: number, payload?: Record<string, unknown>) => {
-    const response = await api.post<{ data: Emprestimo }>(`/v1/emprestimos/${id}/devolver`, payload ?? {});
+  devolverEmprestimo: async (id: number, payload?: FormData | Record<string, unknown>) => {
+    const response = await api.post<{ data: Emprestimo }>(
+      `/v1/emprestimos/${id}/devolver`,
+      payload ?? {},
+      {
+        headers: payload instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+      },
+    );
     return response.data.data;
   },
 

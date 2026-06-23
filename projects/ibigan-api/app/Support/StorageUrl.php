@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use Illuminate\Filesystem\FilesystemAdapter;
-use Illuminate\Support\Facades\Storage;
-
 final class StorageUrl
 {
     public static function equipamentoFoto(?string $path, string $patrimonio): string
@@ -34,10 +31,7 @@ final class StorageUrl
             return self::normalizeTenancyAssetUrl($path);
         }
 
-        /** @var FilesystemAdapter $disk */
-        $disk = Storage::disk('public');
-
-        return $disk->url($path);
+        return self::localPublicUrl($path);
     }
 
     private static function normalizeTenancyAssetUrl(string $url): string
@@ -52,7 +46,22 @@ final class StorageUrl
 
         $tenantKey = tenant()->getTenantKey();
 
-        return rtrim((string) config('app.url'), '/')
-            .'/storage/tenant'.$tenantKey.'/app/public/'.$matches[1];
+        return self::tenantPublicUrl($tenantKey, $matches[1]);
+    }
+
+    private static function localPublicUrl(string $path): string
+    {
+        $path = ltrim($path, '/');
+
+        if (tenancy()->initialized) {
+            return self::tenantPublicUrl((string) tenant()->getTenantKey(), $path);
+        }
+
+        return '/storage/'.$path;
+    }
+
+    private static function tenantPublicUrl(string $tenantKey, string $path): string
+    {
+        return '/storage/tenant'.$tenantKey.'/app/public/'.ltrim($path, '/');
     }
 }

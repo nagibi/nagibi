@@ -59,6 +59,7 @@ final class EmprestimoResource extends JsonResource
             'encarregado_nome' => $this->encarregado_nome,
             'data_retirada' => $this->data_retirada->toDateString(),
             'data_devolucao' => $this->data_devolucao?->toDateString(),
+            'observacao_devolucao' => $this->observacao_devolucao,
             'prazo_dias' => $this->prazo_dias,
             'prazo_total_dias' => $prazoTotal,
             'data_vencimento' => $vencimento->toDateString(),
@@ -74,6 +75,12 @@ final class EmprestimoResource extends JsonResource
             'foto_assinatura_url' => StorageUrl::public($this->foto_assinatura_path),
             'foto_equipamento_devolucao_path' => $this->foto_equipamento_devolucao_path,
             'foto_equipamento_devolucao_url' => StorageUrl::public($this->foto_equipamento_devolucao_path),
+            'fotos_equipamento_devolucao_paths' => $this->fotos_equipamento_devolucao_paths ?? [],
+            'fotos_equipamento_devolucao_urls' => collect($this->fotos_equipamento_devolucao_paths ?? [])
+                ->map(fn (string $path) => StorageUrl::public($path))
+                ->filter()
+                ->values()
+                ->all(),
             'autorizado_por' => $this->whenLoaded('autorizadoPor', fn () => $this->autorizadoPor ? [
                 'id' => $this->autorizadoPor->id,
                 'name' => $this->autorizadoPor->name,
