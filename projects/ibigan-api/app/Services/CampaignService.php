@@ -124,6 +124,17 @@ final class CampaignService
             return;
         }
 
+        if ($delivery->channel === DeliveryChannel::Email && ! $user->isActiveAccount()) {
+            $delivery->update([
+                'status' => DeliveryStatus::Failed,
+                'error_message' => 'Usuário inativo.',
+            ]);
+
+            $this->updateCampaignProgress($campaign);
+
+            return;
+        }
+
         try {
             $content = $this->resolveContent($campaign, $user);
 

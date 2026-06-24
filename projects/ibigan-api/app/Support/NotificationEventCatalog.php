@@ -399,22 +399,66 @@ final class NotificationEventCatalog
     /** @param array<string, mixed> $context */
     private static function digestDaily(array $context): array
     {
-        return self::build('Resumo diário Equipamento', 'info', 'Resumo diário disponível', [
+        $lines = [
             'Vencidos: ' . (string) ($context['vencidos'] ?? '0'),
             'Próximos do vencimento: ' . (string) ($context['proximos'] ?? '0'),
             'Em manutenção: ' . (string) ($context['manutencoes'] ?? '0'),
             'Parados: ' . (string) ($context['parados'] ?? '0'),
-        ]);
+        ];
+
+        self::appendDigestList($lines, 'Empréstimos vencidos', $context['lista_vencidos'] ?? null);
+        self::appendDigestList($lines, 'Empréstimos próximos do vencimento', $context['lista_proximos'] ?? null);
+        self::appendDigestList($lines, 'Equipamentos em manutenção', $context['lista_manutencoes'] ?? null);
+        self::appendDigestList($lines, 'Equipamentos parados', $context['lista_parados'] ?? null);
+
+        $summary = sprintf(
+            'Vencidos: %d, Próximos: %d, Em manutenção: %d, Parados: %d',
+            (int) ($context['vencidos'] ?? 0),
+            (int) ($context['proximos'] ?? 0),
+            (int) ($context['manutencoes'] ?? 0),
+            (int) ($context['parados'] ?? 0),
+        );
+
+        return self::build('Resumo diário Equipamento', 'info', $summary, $lines);
     }
 
     /** @param array<string, mixed> $context */
     private static function digestWeekly(array $context): array
     {
-        return self::build('Resumo semanal Equipamento', 'info', 'Resumo semanal disponível', [
+        $lines = [
             'Vencidos: ' . (string) ($context['vencidos'] ?? '0'),
             'Manutenções concluídas: ' . (string) ($context['manutencoes_concluidas'] ?? '0'),
             'Economia potencial: R$ ' . (string) ($context['economia_mensal'] ?? '0') . '/mês',
-        ]);
+        ];
+
+        self::appendDigestList($lines, 'Empréstimos vencidos', $context['lista_vencidos'] ?? null);
+        self::appendDigestList($lines, 'Equipamentos parados', $context['lista_parados'] ?? null);
+
+        $summary = sprintf(
+            'Vencidos: %d, Manutenções concluídas: %d',
+            (int) ($context['vencidos'] ?? 0),
+            (int) ($context['manutencoes_concluidas'] ?? 0),
+        );
+
+        return self::build('Resumo semanal Equipamento', 'info', $summary, $lines);
+    }
+
+    /**
+     * @param  list<string>  $lines
+     * @param  list<string>|null  $items
+     */
+    private static function appendDigestList(array &$lines, string $title, ?array $items): void
+    {
+        if ($items === null || $items === []) {
+            return;
+        }
+
+        $lines[] = '';
+        $lines[] = '<strong>' . $title . ':</strong>';
+
+        foreach ($items as $item) {
+            $lines[] = '– ' . $item;
+        }
     }
 
     /**

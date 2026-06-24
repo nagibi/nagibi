@@ -135,6 +135,16 @@ it('scanner dispara digest.daily', function (): void {
     $this->tenant->run(function (): void {
         enableScannerPreferences($this->admin, ['digest.daily']);
 
+        $equipamento = Equipamento::factory()->create([
+            'data_entrada' => now()->subDays(45)->toDateString(),
+        ]);
+        Emprestimo::factory()->create([
+            'equipamento_id' => $equipamento->id,
+            'data_retirada' => now()->subDays(30)->toDateString(),
+            'prazo_dias' => 10,
+            'data_devolucao' => null,
+        ]);
+
         app(EquipamentoAlertScanner::class)->scan();
 
         expect(hasNotification($this->admin, 'digest.daily'))->toBeTrue();
@@ -146,6 +156,16 @@ it('scanner dispara digest.weekly nas segundas-feiras', function (): void {
 
     $this->tenant->run(function (): void {
         enableScannerPreferences($this->admin, ['digest.weekly']);
+
+        $equipamento = Equipamento::factory()->create([
+            'data_entrada' => now()->subDays(45)->toDateString(),
+        ]);
+        Emprestimo::factory()->create([
+            'equipamento_id' => $equipamento->id,
+            'data_retirada' => now()->subDays(30)->toDateString(),
+            'prazo_dias' => 10,
+            'data_devolucao' => null,
+        ]);
 
         app(EquipamentoAlertScanner::class)->scan();
 

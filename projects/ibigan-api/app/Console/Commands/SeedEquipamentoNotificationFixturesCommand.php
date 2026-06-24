@@ -69,13 +69,13 @@ final class SeedEquipamentoNotificationFixturesCommand extends Command
         $userId = $this->option('user');
 
         if (is_string($userId) && $userId !== '') {
-            $user = User::query()->where('id', $userId)->where('status', 'active')->first();
+            $user = User::query()->where('id', $userId)->active()->first();
 
             return $user !== null && $user->can('notificacao-visualizar') ? $user : null;
         }
 
         return User::query()
-            ->where('status', 'active')
+            ->active()
             ->get()
             ->first(fn(User $user) => $user->can('notificacao-visualizar'));
     }

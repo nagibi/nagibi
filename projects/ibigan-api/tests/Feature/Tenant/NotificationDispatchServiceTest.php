@@ -133,8 +133,6 @@ it('envia no maximo um email consolidado do scanner por dia', function (): void 
         ]);
         $dispatch->flushDeferredEmails();
 
-        Cache::forget(sprintf('notification_dedupe:%s:loan.overdue:loan.overdue:2', $this->admin->id));
-
         $dispatch->dispatch('loan.overdue', [
             'dedupe_key' => 'loan.overdue:2',
             'patrimonio' => 'EQ-2',
@@ -145,6 +143,73 @@ it('envia no maximo um email consolidado do scanner por dia', function (): void 
         $dispatch->flushDeferredEmails();
 
         Notification::assertSentToTimes($this->admin, CatalogEventNotification::class, 1);
+    });
+});
+
+it('nao envia email para usuario inativo', function (): void {
+    Notification::fake();
+
+    $this->tenant->run(function (): void {
+        $inactive = User::factory()->create([
+            'status' => 'inactive',
+            'is_active' => false,
+        ]);
+        $inactive->assignRole('admin');
+
+        $pref = app(NotificationPreferenceService::class);
+        $pref->update($inactive, 'digest.daily', 'app', false);
+        $pref->update($inactive, 'digest.daily', 'email', true);
+
+        $dispatch = app(NotificationDispatchService::class);
+        $dispatch->deferEmails(true);
+        $dispatch->dispatch('digest.daily', [
+            'dedupe_key' => 'digest.daily:2026-06-23',
+            'vencidos' => 1,
+            'proximos' => 0,
+            'manutencoes' => 0,
+            'parados' => 0,
+            'lista_vencidos' => ['Gerador — EQ-001'],
+        ]);
+        $dispatch->flushDeferredEmails();
+
+        Notification::assertNothingSentTo($inactive);
+    });
+});
+
+it('inclui contagens e equipamentos no email consolidado do resumo diario', function (): void {
+    Notification::fake();
+
+    $this->tenant->run(function (): void {
+        $pref = app(NotificationPreferenceService::class);
+        $pref->update($this->admin, 'digest.daily', 'app', false);
+        $pref->update($this->admin, 'digest.daily', 'email', true);
+
+        $dispatch = app(NotificationDispatchService::class);
+        $dispatch->deferEmails(true);
+        $dispatch->dispatch('digest.daily', [
+            'dedupe_key' => 'digest.daily:2026-06-23',
+            'vencidos' => 1,
+            'proximos' => 0,
+            'manutencoes' => 0,
+            'parados' => 1,
+            'lista_vencidos' => ['Gerador — EQ-001 — João Silva'],
+            'lista_parados' => ['Betoneira — EQ-002'],
+        ]);
+        $dispatch->flushDeferredEmails();
+
+        Notification::assertSentTo(
+            $this->admin,
+            CatalogEventNotification::class,
+            function (CatalogEventNotification $notification): bool {
+                $mail = $notification->toMail($this->admin);
+                $html = (string) $mail->render();
+
+                return str_contains($html, 'Vencidos: 1')
+                    && str_contains($html, 'Parados: 1')
+                    && str_contains($html, 'Gerador — EQ-001 — João Silva')
+                    && str_contains($html, 'Betoneira — EQ-002');
+            },
+        );
     });
 });
 

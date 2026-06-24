@@ -108,7 +108,7 @@ final class ProcessReportJob implements ShouldQueue
             }
         }
 
-        if ($prefService->isEnabled($user, 'report.completed', 'email')) {
+        if ($prefService->isEnabled($user, 'report.completed', 'email') && $user->isActiveAccount()) {
             if (! is_string($user->email) || trim($user->email) === '') {
                 Log::warning('Relatório concluído sem e-mail: usuário sem endereço cadastrado.', [
                     'execution_id' => $execution->id,

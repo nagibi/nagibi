@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\TwoFactorMethod;
 use App\Notifications\ResetPasswordNotification;
 use App\Search\TenantSearchable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -140,6 +141,31 @@ class User extends Authenticatable implements HasMedia
     public function shouldBeSearchable(): bool
     {
         return ! $this->is_platform_user;
+    }
+
+    public function isActiveAccount(): bool
+    {
+        return (bool) $this->is_active && $this->status === 'active';
+    }
+
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true)->where('status', 'active');
+    }
+
+    public function routeNotificationForMail(): ?string
+    {
+        if (! $this->isActiveAccount()) {
+            return null;
+        }
+
+        $email = $this->email;
+
+        return is_string($email) && trim($email) !== '' ? $email : null;
     }
 
     public function sendPasswordResetNotification($token): void

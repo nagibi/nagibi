@@ -29,7 +29,7 @@ final class SendTemplateNotificationJob implements ShouldQueue
 
         $user = User::query()->where('email', $this->toEmail)->first();
 
-        if (! $user) {
+        if ($user === null || ! $user->isActiveAccount()) {
             return;
         }
 

@@ -36,24 +36,29 @@ final class NotificationDispatchService
         foreach ($this->deferredEmails as $userId => $byEvent) {
             $user = User::query()->find($userId);
 
-            if ($user === null || $byEvent === []) {
+            if ($user === null || $byEvent === [] || ! $user->isActiveAccount()) {
                 continue;
             }
 
-            if ($this->alreadySentScannerEmailToday($user)) {
+            $cacheKey = $this->scannerEmailCacheKey($user);
+
+            if (! Cache::add($cacheKey, true, now()->endOfDay())) {
                 continue;
             }
 
             $content = $this->mergeAllScannerEmailContent($byEvent);
 
             if ($content === null) {
+                Cache::forget($cacheKey);
+
                 continue;
             }
 
             try {
                 $this->sendEmailToUser($user, 'scanner.batch', $content);
-                $this->markScannerEmailSent($user);
             } catch (\Throwable $e) {
+                Cache::forget($cacheKey);
+
                 Log::warning('Falha ao enviar e-mail consolidado de alertas.', [
                     'user_id' => $user->id,
                     'error' => $e->getMessage(),
@@ -82,7 +87,7 @@ final class NotificationDispatchService
         $dedupeKey = isset($context['dedupe_key']) ? (string) $context['dedupe_key'] : null;
 
         $users = User::query()
-            ->where('status', 'active')
+            ->active()
             ->get()
             ->filter(fn(User $user) => $user->can('notificacao-visualizar'));
 
@@ -123,6 +128,7 @@ final class NotificationDispatchService
 
         if (
             $this->preferenceService->isEnabled($user, $eventSlug, 'email')
+            && $user->isActiveAccount()
             && is_string($user->email)
             && trim($user->email) !== ''
         ) {
@@ -153,6 +159,10 @@ final class NotificationDispatchService
      */
     private function sendEmailToUser(User $user, string $eventSlug, array $content): void
     {
+        if (! $user->isActiveAccount()) {
+            return;
+        }
+
         $user->notify(new CatalogEventNotification($eventSlug, 'email', $content, []));
     }
 
@@ -170,14 +180,30 @@ final class NotificationDispatchService
         $totalAlerts = 0;
         $highestSeverity = 'info';
 
-        foreach ($byEvent as $items) {
+        foreach ($byEvent as $eventSlug => $items) {
             $count = count($items);
             $totalAlerts += $count;
             $first = $items[0];
             $highestSeverity = $this->higherSeverity($highestSeverity, $first['severity']);
 
             if ($count === 1) {
+                if (str_starts_with((string) $eventSlug, 'digest.')) {
+                    $lines[] = '• <strong>' . $first['subject'] . '</strong>';
+                    if (! empty($first['body_text'])) {
+                        foreach (explode("\n", trim($first['body_text'])) as $detailLine) {
+                            if ($detailLine === '') {
+                                continue;
+                            }
+
+                            $lines[] = '&nbsp;&nbsp;' . $detailLine;
+                        }
+                    }
+
+                    continue;
+                }
+
                 $lines[] = '• ' . $first['subject'] . ': ' . ($first['summary'] ?? $first['subject']);
+
                 continue;
             }
 
@@ -239,16 +265,6 @@ final class NotificationDispatchService
     private function scannerEmailCacheKey(User $user): string
     {
         return sprintf('notification_scanner_email:%s:%s', $user->id, now()->toDateString());
-    }
-
-    private function alreadySentScannerEmailToday(User $user): bool
-    {
-        return Cache::has($this->scannerEmailCacheKey($user));
-    }
-
-    private function markScannerEmailSent(User $user): void
-    {
-        Cache::put($this->scannerEmailCacheKey($user), true, now()->endOfDay());
     }
 
     private function higherSeverity(string $current, string $next): string

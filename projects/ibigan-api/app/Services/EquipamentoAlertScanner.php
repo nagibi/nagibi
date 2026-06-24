@@ -260,9 +260,9 @@ final class EquipamentoAlertScanner
     {
         $dispatched = 0;
         $idleThreshold = (int) $this->settings->get('site_idle_equipment_threshold', config('equipamento.alerts.site_idle_equipment_threshold', 2));
-        +$overdueThreshold = (int) $this->settings->get('site_overdue_equipment_threshold', config('equipamento.alerts.site_overdue_equipment_threshold', 3));
-        +$costThreshold = (float) $this->settings->get('site_high_cost_threshold', config('equipamento.alerts.site_high_cost_threshold', 30000));
-        +$idleDays = (int) $this->settings->get('equipment_idle_days', config('equipamento.alerts.equipment_idle_days', 30));
+        $overdueThreshold = (int) $this->settings->get('site_overdue_equipment_threshold', config('equipamento.alerts.site_overdue_equipment_threshold', 3));
+        $costThreshold = (float) $this->settings->get('site_high_cost_threshold', config('equipamento.alerts.site_high_cost_threshold', 30000));
+        $idleDays = (int) $this->settings->get('equipment_idle_days', config('equipamento.alerts.equipment_idle_days', 30));
 
         $parados = Equipamento::query()
             ->with('obra')
@@ -337,7 +337,7 @@ final class EquipamentoAlertScanner
     {
         $dispatched = 0;
         $multiplier = (float) $this->settings->get('employee_overload_multiplier', config('equipamento.alerts.employee_overload_multiplier', 1.5));
-        +$longPossessionDays = (int) $this->settings->get('employee_long_possession_days', config('equipamento.alerts.employee_long_possession_days', 90));
+        $longPossessionDays = (int) $this->settings->get('employee_long_possession_days', config('equipamento.alerts.employee_long_possession_days', 90));
 
         $ativos = Emprestimo::query()
             ->with('renovacoes')
@@ -465,27 +465,38 @@ final class EquipamentoAlertScanner
     {
         $dispatched = 0;
         $today = now()->toDateString();
+        $idleDays = (int) $this->settings->get('equipment_idle_days', config('equipamento.alerts.equipment_idle_days', 30));
 
-        $vencidos = Emprestimo::query()->whereNull('data_devolucao')->get()->filter(fn(Emprestimo $e) => $e->is_vencido)->count();
-        $proximos = Emprestimo::query()->whereNull('data_devolucao')->get()->filter(fn(Emprestimo $e) => $e->is_proximo_vencimento)->count();
-        $manutencoes = Manutencao::query()->whereNull('data_saida')->count();
-        $parados = Equipamento::query()->emEstoque()->get()->filter(
-            //fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= (int) config('equipamento.alerts.equipment_idle_days', 30)
-            fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= (int) $this->settings->get('equipment_idle_days', config('equipamento.alerts.equipment_idle_days', 30))
-        )->count();
-        $concluidas = Manutencao::query()->whereDate('data_saida', Carbon::today())->count();
+        $emprestimosAtivos = Emprestimo::query()
+            ->with(['equipamento.tipo'])
+            ->whereNull('data_devolucao')
+            ->get();
 
-        $economia = Equipamento::query()
+        $vencidosLista = $emprestimosAtivos->filter(fn(Emprestimo $emprestimo) => $emprestimo->is_vencido);
+        $proximosLista = $emprestimosAtivos->filter(fn(Emprestimo $emprestimo) => $emprestimo->is_proximo_vencimento);
+
+        $paradosLista = Equipamento::query()
+            ->with('tipo')
             ->emEstoque()
             ->get()
-            ->filter(
-                fn(Equipamento $equipamento) =>
-                $equipamento->tempo_em_estoque >= (int) $this->settings->get(
-                    'equipment_idle_days',
-                    config('equipcontrol.alerts.equipment_idle_days', 30),
-                )
-            )
-            ->sum('valor_mensal');
+            ->filter(fn(Equipamento $equipamento) => $equipamento->tempo_em_estoque >= $idleDays);
+
+        $manutencoesLista = Manutencao::query()
+            ->with(['equipamento.tipo'])
+            ->whereNull('data_saida')
+            ->get();
+
+        $vencidos = $vencidosLista->count();
+        $proximos = $proximosLista->count();
+        $manutencoes = $manutencoesLista->count();
+        $parados = $paradosLista->count();
+        $concluidas = Manutencao::query()->whereDate('data_saida', Carbon::today())->count();
+
+        if ($vencidos + $proximos + $manutencoes + $parados === 0) {
+            return 0;
+        }
+
+        $economia = $paradosLista->sum(fn(Equipamento $equipamento) => (float) $equipamento->valor_mensal);
 
         $this->dispatchService->dispatch('digest.daily', [
             'dedupe_key' => "digest.daily:{$today}",
@@ -493,6 +504,10 @@ final class EquipamentoAlertScanner
             'proximos' => $proximos,
             'manutencoes' => $manutencoes,
             'parados' => $parados,
+            'lista_vencidos' => $this->formatEmprestimoList($vencidosLista),
+            'lista_proximos' => $this->formatEmprestimoList($proximosLista),
+            'lista_manutencoes' => $this->formatManutencaoList($manutencoesLista),
+            'lista_parados' => $this->formatEquipamentoList($paradosLista),
         ]);
         $dispatched++;
 
@@ -502,10 +517,82 @@ final class EquipamentoAlertScanner
                 'vencidos' => $vencidos,
                 'manutencoes_concluidas' => $concluidas,
                 'economia_mensal' => number_format((float) $economia, 2, ',', '.'),
+                'lista_vencidos' => $this->formatEmprestimoList($vencidosLista),
+                'lista_parados' => $this->formatEquipamentoList($paradosLista),
             ]);
             $dispatched++;
         }
 
         return $dispatched;
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, Emprestimo>  $emprestimos
+     * @return list<string>
+     */
+    private function formatEmprestimoList($emprestimos): array
+    {
+        return $emprestimos
+            ->take(10)
+            ->map(function (Emprestimo $emprestimo): string {
+                $label = $this->formatEquipamentoLabel(
+                    $emprestimo->equipamento?->tipo?->nome,
+                    $emprestimo->equipamento?->patrimonio,
+                );
+
+                return $emprestimo->colaborador_nome
+                    ? "{$label} — {$emprestimo->colaborador_nome}"
+                    : $label;
+            })
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, Equipamento>  $equipamentos
+     * @return list<string>
+     */
+    private function formatEquipamentoList($equipamentos): array
+    {
+        return $equipamentos
+            ->take(10)
+            ->map(fn(Equipamento $equipamento) => $this->formatEquipamentoLabel(
+                $equipamento->tipo?->nome,
+                $equipamento->patrimonio,
+            ))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, Manutencao>  $manutencoes
+     * @return list<string>
+     */
+    private function formatManutencaoList($manutencoes): array
+    {
+        return $manutencoes
+            ->take(10)
+            ->map(fn(Manutencao $manutencao) => $this->formatEquipamentoLabel(
+                $manutencao->equipamento?->tipo?->nome,
+                $manutencao->equipamento?->patrimonio,
+            ))
+            ->values()
+            ->all();
+    }
+
+    private function formatEquipamentoLabel(?string $nome, ?string $patrimonio): string
+    {
+        $nome = trim((string) $nome);
+        $patrimonio = trim((string) $patrimonio);
+
+        if ($nome !== '' && $patrimonio !== '') {
+            return "{$nome} — {$patrimonio}";
+        }
+
+        if ($patrimonio !== '') {
+            return $patrimonio;
+        }
+
+        return $nome !== '' ? $nome : 'Equipamento';
     }
 }
