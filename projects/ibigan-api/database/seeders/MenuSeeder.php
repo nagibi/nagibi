@@ -549,6 +549,18 @@ class MenuSeeder extends Seeder
             'roles' => ['admin', 'super-admin'],
         ]);
 
+        Menu::create([
+            'title' => 'Configurações de Alertas',
+            'slug' => 'equipamento-configuracoes-alertas',
+            'icon' => 'BellRing',
+            'path' => '/equipamentos/configuracoes-alertas',
+            'parent_id' => $configuracoes->id,
+            'order' => 0,
+            'is_active' => true,
+            'requires_auth' => true,
+            'roles' => ['admin', 'super-admin'],
+        ]);
+
         $translationKeys = [
             'dashboard' => 'menu.dashboard',
             'equipamento' => 'menu.equipamento',
@@ -593,6 +605,7 @@ class MenuSeeder extends Seeder
             'sentry' => 'menu.sentry',
             'meilisearch' => 'menu.meilisearch',
             'configuracoes' => 'menu.settings',
+            'equipamento-configuracoes-alertas' => 'menu.equipamento.alert_settings',
         ];
 
         if (! Schema::hasColumn('menus', 'translation_key')) {

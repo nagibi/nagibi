@@ -289,6 +289,7 @@
   "menu.dashboard": "Dashboard",
   "menu.equipamento": "Equipamentos",
   "menu.equipamento.groups": "Grupos",
+  "menu.equipamento.alert_settings": "Configurações de Alertas",
   "menu.equipamento.decommissioned": "Baixados",
   "menu.equipamento.equipment_history": "Histórico",
   "menu.management": "Gestão",
