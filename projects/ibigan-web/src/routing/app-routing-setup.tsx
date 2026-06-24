@@ -21,6 +21,8 @@ import { DashboardPage } from '@/pages/dashboard/dashboard-page';
 import { SystemDocsPage } from '@/pages/docs/system-docs-page';
 import { FornecedorFormPage } from '@/pages/equipamentos/catalog/fornecedor-form-page';
 import { FornecedoresPage } from '@/pages/equipamentos/catalog/fornecedores-page';
+import { GrupoFormPage } from '@/pages/equipamentos/catalog/grupo-form-page';
+import { GruposPage } from '@/pages/equipamentos/catalog/grupos-page';
 import { ObraFormPage } from '@/pages/equipamentos/catalog/obra-form-page';
 import { ObrasPage } from '@/pages/equipamentos/catalog/obras-page';
 import { TipoFormPage } from '@/pages/equipamentos/catalog/tipo-form-page';
@@ -418,6 +420,9 @@ export function AppRoutingSetup() {
             element={<Navigate to="/equipamentos/estoque" replace />}
           />
           <Route path="baixados" element={<EquipamentosBaixadosPage />} />
+          <Route path="grupos" element={<GruposPage />} />
+          <Route path="grupos/new" element={<GrupoFormPage key="grupo-new" />} />
+          <Route path="grupos/:id" element={<GrupoFormPage key="grupo-edit" />} />
           <Route path="obras" element={<ObrasPage />} />
           <Route path="obras/new" element={<ObraFormPage key="obra-new" />} />
           <Route path="obras/:id" element={<ObraFormPage key="obra-edit" />} />

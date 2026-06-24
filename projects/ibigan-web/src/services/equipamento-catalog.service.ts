@@ -3,6 +3,7 @@ import type {
   CatalogListParams,
   CatalogPaginationMeta,
   Fornecedor,
+  GrupoEquipamento,
   Obra,
   TipoEquipamentoCatalog,
 } from '@/types/equipamento-catalog';
@@ -37,6 +38,23 @@ function buildListParams(page: number, perPage: number, search?: string, extra?:
 
   return params;
 }
+
+export const gruposCatalogService = {
+  list: (page = 1, perPage = 15, search?: string, extra?: Omit<CatalogListParams, 'page' | 'per_page' | 'search'>) =>
+    api.get<ApiResult<PaginatedResult<GrupoEquipamento>>>('/v1/grupos', {
+      params: buildListParams(page, perPage, search, extra),
+    }),
+
+  show: (id: number) => api.get<ApiResult<GrupoEquipamento>>(`/v1/grupos/${id}`),
+
+  store: (payload: Pick<GrupoEquipamento, 'nome'>) =>
+    api.post<ApiResult<GrupoEquipamento>>('/v1/grupos', payload),
+
+  update: (id: number, payload: Partial<Pick<GrupoEquipamento, 'nome'>>) =>
+    api.put<ApiResult<GrupoEquipamento>>(`/v1/grupos/${id}`, payload),
+
+  destroy: (id: number) => api.delete(`/v1/grupos/${id}`),
+};
 
 export const obrasCatalogService = {
   list: (page = 1, perPage = 15, search?: string, extra?: Omit<CatalogListParams, 'page' | 'per_page' | 'search'>) =>

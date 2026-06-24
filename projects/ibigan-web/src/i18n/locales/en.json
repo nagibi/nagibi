@@ -288,6 +288,7 @@
   "settings.translations.form.validation.value_required": "Enter the custom value.",
   "menu.dashboard": "Dashboard",
   "menu.equipamento": "Equipment",
+  "menu.equipamento.groups": "Groups",
   "menu.equipamento.decommissioned": "Decommissioned",
   "menu.equipamento.equipment_history": "History",
   "menu.management": "Management",

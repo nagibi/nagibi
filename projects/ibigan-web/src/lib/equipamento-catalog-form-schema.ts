@@ -1,6 +1,16 @@
 import { z } from 'zod';
-import type { Fornecedor, Obra, TipoEquipamentoCatalog } from '@/types/equipamento-catalog';
+import type { Fornecedor, GrupoEquipamento, Obra, TipoEquipamentoCatalog } from '@/types/equipamento-catalog';
 import { zOptionalEmail, zRequiredSelectId, zRequiredString } from '@/lib/zod-validators';
+
+export const grupoCatalogFormSchema = z.object({
+  nome: zRequiredString('Nome', 255),
+});
+
+export function mapGrupoToFormValues(grupo: GrupoEquipamento) {
+  return {
+    nome: grupo.nome,
+  };
+}
 
 export const obraCatalogFormSchema = z.object({
   codigo: zRequiredString('Código', 50),

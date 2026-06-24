@@ -1,6 +1,7 @@
 import {
   Archive,
   Building2,
+  Layers,
   LayoutDashboard,
   Package,
   Repeat2,
@@ -24,9 +25,10 @@ export const EQUIPAMENTO_DESKTOP_NAV_ITEMS: EquipamentoNavItem[] = [
   { to: '/equipamentos/baixados', label: 'Baixados', icon: Archive },
 ];
 
-/** Cadastros (Tipos, Fornecedores, Obras) ficam no hub Mais no mobile. */
+/** Cadastros (Grupos, Tipos, Fornecedores, Obras) ficam no hub Mais no mobile. */
 export const EQUIPAMENTO_NAV_ITEMS: EquipamentoNavItem[] = [
   ...EQUIPAMENTO_DESKTOP_NAV_ITEMS,
+  { to: '/equipamentos/grupos', label: 'Grupos', icon: Layers },
   { to: '/equipamentos/tipos', label: 'Tipos', icon: Shapes },
   { to: '/equipamentos/fornecedores', label: 'Fornecedores', icon: Truck },
   { to: '/equipamentos/obras', label: 'Obras', icon: Building2 },

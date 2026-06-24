@@ -4,7 +4,7 @@ import { GridCardActions } from '@/components/grid/grid-card-actions';
 import { GridStatusSwitch } from '@/components/grid/grid-status-switch';
 import type { GridRowAction } from '@/components/grid/grid-row-actions';
 import { formatGridMaskedCell } from '@/lib/grid-masked-field';
-import type { Fornecedor, Obra, TipoEquipamentoCatalog } from '@/types/equipamento-catalog';
+import type { Fornecedor, GrupoEquipamento, Obra, TipoEquipamentoCatalog } from '@/types/equipamento-catalog';
 
 function formatCatalogCardDate(value?: string | null) {
   if (!value) {
@@ -52,6 +52,31 @@ function CatalogCardShell({
           <p className="truncate">{meta}</p>
         </div>
       ) : null}
+
+      <GridCardActions actions={actions} />
+    </div>
+  );
+}
+
+export function GrupoCatalogCard({
+  item,
+  actions,
+}: {
+  item: GrupoEquipamento;
+  actions: GridRowAction[];
+}) {
+  return (
+    <div className="flex h-full min-w-0 w-full max-w-full flex-col gap-3 p-4 font-normal [&_*]:font-normal">
+      <div className="min-w-0">
+        <p className="truncate">{item.nome}</p>
+        <p className="truncate text-sm text-muted-foreground">
+          {(item.tipos_count ?? 0) === 1 ? '1 tipo' : `${item.tipos_count ?? 0} tipos`}
+        </p>
+      </div>
+
+      <div className="text-sm text-muted-foreground">
+        {formatCatalogCardDate(item.updated_at ?? item.created_at)}
+      </div>
 
       <GridCardActions actions={actions} />
     </div>

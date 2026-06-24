@@ -4,6 +4,7 @@ import {
   Bell,
   Building2,
   ChevronRight,
+  Layers,
   LayoutDashboard,
   Shapes,
   Truck,
@@ -31,6 +32,12 @@ const MENU_ITEMS = [
     label: 'Baixados',
     description: 'Equipamentos devolvidos ou perdidos',
     icon: Archive,
+  },
+  {
+    to: '/equipamentos/grupos',
+    label: 'Grupos',
+    description: 'Categorias de equipamento',
+    icon: Layers,
   },
   {
     to: '/equipamentos/tipos',

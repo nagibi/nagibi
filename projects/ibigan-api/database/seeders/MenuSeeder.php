@@ -130,12 +130,24 @@ class MenuSeeder extends Seeder
         ]);
 
         Menu::create([
+            'title' => 'Grupos',
+            'slug' => 'equipamento-grupos',
+            'icon' => 'Layers',
+            'path' => '/equipamentos/grupos',
+            'parent_id' => $equipamentoCadastros->id,
+            'order' => 0,
+            'is_active' => true,
+            'requires_auth' => true,
+            'roles' => ['admin', 'manager', 'super-admin'],
+        ]);
+
+        Menu::create([
             'title' => 'Tipos',
             'slug' => 'equipamento-tipos',
             'icon' => 'Shapes',
             'path' => '/equipamentos/tipos',
             'parent_id' => $equipamentoCadastros->id,
-            'order' => 0,
+            'order' => 1,
             'is_active' => true,
             'requires_auth' => true,
             'roles' => ['admin', 'manager', 'super-admin'],
@@ -147,7 +159,7 @@ class MenuSeeder extends Seeder
             'icon' => 'Truck',
             'path' => '/equipamentos/fornecedores',
             'parent_id' => $equipamentoCadastros->id,
-            'order' => 1,
+            'order' => 2,
             'is_active' => true,
             'requires_auth' => true,
             'roles' => ['admin', 'manager', 'super-admin'],
@@ -159,7 +171,7 @@ class MenuSeeder extends Seeder
             'icon' => 'Building2',
             'path' => '/equipamentos/obras',
             'parent_id' => $equipamentoCadastros->id,
-            'order' => 2,
+            'order' => 3,
             'is_active' => true,
             'requires_auth' => true,
             'roles' => ['admin', 'manager', 'super-admin'],
@@ -547,6 +559,7 @@ class MenuSeeder extends Seeder
             'equipamento-movimentacoes' => 'menu.equipamento.movements',
             'equipamento-baixados' => 'menu.equipamento.decommissioned',
             'equipamento-cadastros' => 'menu.equipamento.catalogs',
+            'equipamento-grupos' => 'menu.equipamento.groups',
             'equipamento-tipos' => 'menu.equipamento.types',
             'equipamento-fornecedores' => 'menu.equipamento.suppliers',
             'equipamento-obras' => 'menu.equipamento.projects',

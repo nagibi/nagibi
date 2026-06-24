@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Tenant\Equipamento;
 
+use App\Http\Controllers\Api\V1\Tenant\Equipamento\Concerns\AppliesEquipamentoCatalogGrid;
 use App\Http\Controllers\Api\V1\Tenant\Equipamento\Concerns\RespondsWithPagination;
 use App\Http\Controllers\Controller;
 use App\Models\GrupoEquipamento;
 use App\Support\ApiResponse;
+use App\Support\GridFilter;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,6 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class GrupoEquipamentoController extends Controller
 {
+    use AppliesEquipamentoCatalogGrid;
     use RespondsWithPagination;
 
     public function lookup(Request $request): JsonResponse
@@ -30,11 +34,35 @@ final class GrupoEquipamentoController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $grupos = GrupoEquipamento::query()
+        $query = GrupoEquipamento::query()
             ->withCount('tipos')
-            ->when($request->filled('search'), fn ($query) => $query->where('nome', 'like', '%'.$request->string('search').'%'))
-            ->orderBy('nome')
-            ->paginate($request->integer('per_page', 15));
+            ->when($request->filled('search'), fn (Builder $q) => $q->where('nome', 'like', '%'.$request->string('search').'%'))
+            ->when(
+                $request->filled('filter_id'),
+                fn (Builder $q) => GridFilter::applyIdFromCsv($q, $request->string('filter_id')->toString()),
+            )
+            ->when(
+                $request->filled('filter_nome'),
+                fn (Builder $q) => $q->where('nome', 'like', '%'.$request->string('filter_nome')->toString().'%'),
+            );
+
+        $query = $this->applyCatalogAuditDateFilters($query, $request);
+
+        $query = $this->applyCatalogSort(
+            $query,
+            $request,
+            ['id', 'nome', 'tipos_count', 'created_at', 'updated_at'],
+            'nome',
+            function (Builder $query, string $sort, string $direction): ?Builder {
+                if ($sort === 'tipos_count') {
+                    return $query->orderBy('tipos_count', $direction);
+                }
+
+                return null;
+            },
+        );
+
+        $grupos = $query->paginate($request->integer('per_page', 15));
 
         return $this->paginated($grupos, fn (GrupoEquipamento $grupo) => $this->serialize($grupo));
     }
@@ -70,6 +98,13 @@ final class GrupoEquipamentoController extends Controller
 
     public function destroy(GrupoEquipamento $grupo): JsonResponse
     {
+        if ($grupo->tipos()->exists()) {
+            return ApiResponse::error(
+                'Não é possível remover um grupo com tipos vinculados.',
+                httpStatus: Response::HTTP_UNPROCESSABLE_ENTITY,
+            );
+        }
+
         $grupo->delete();
 
         return ApiResponse::success(null, 'MSG000426');

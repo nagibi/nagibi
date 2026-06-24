@@ -5,6 +5,15 @@ export interface CatalogPaginationMeta {
   total: number;
 }
 
+export interface GrupoEquipamento {
+  id: number;
+  nome: string;
+  tipos_count?: number;
+  tipos?: Array<{ id: number; nome: string }>;
+  created_at?: string;
+  updated_at?: string | null;
+}
+
 export interface Obra {
   id: number;
   codigo: string;

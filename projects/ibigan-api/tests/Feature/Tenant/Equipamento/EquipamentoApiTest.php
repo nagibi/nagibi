@@ -134,6 +134,9 @@ it('gerencia grupos e tipos de equipamento', function (): void {
     $this->getJson('/api/v1/lookups/tipos?grupo_id=' . $grupo['id'], equipHeaders($this->tenant->id))
         ->assertOk()
         ->assertJsonPath('result.0.nome', 'BOMBA MANGOTE 3"');
+
+    $this->deleteJson('/api/v1/grupos/' . $grupo['id'], [], equipHeaders($this->tenant->id))
+        ->assertUnprocessable();
 });
 
 // ─── Equipamentos ─────────────────────────────────────────────────────────────
