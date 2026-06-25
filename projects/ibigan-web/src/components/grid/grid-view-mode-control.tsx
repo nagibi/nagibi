@@ -13,7 +13,6 @@ const VIEW_OPTIONS: Array<{
   icon: typeof Table2;
   labelKey: string;
   tooltipKey: string;
-  hideOnMobile?: boolean;
 }> = [
   {
     mode: 'list',
@@ -32,7 +31,6 @@ const VIEW_OPTIONS: Array<{
     icon: Table2,
     labelKey: 'grid.view.table',
     tooltipKey: 'grid.view.table_tooltip',
-    hideOnMobile: true,
   },
 ];
 
@@ -46,11 +44,9 @@ export function GridViewModeControl({
   const { t } = useTranslation();
   const isMobile = useIsMobile();
 
-  const options = VIEW_OPTIONS.filter((option) => !(isMobile && option.hideOnMobile));
-
   return (
     <GridToolbarGroup>
-      {options.map(({ mode, icon: Icon, labelKey, tooltipKey }) => (
+      {VIEW_OPTIONS.map(({ mode, icon: Icon, labelKey, tooltipKey }) => (
         <ToolbarTooltip key={mode} content={t(tooltipKey)}>
           <Button
             type="button"

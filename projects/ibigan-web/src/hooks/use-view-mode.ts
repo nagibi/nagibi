@@ -102,7 +102,7 @@ export function useViewMode(
   }, []);
 
   return {
-    viewMode: isMobile && viewMode === 'table' ? 'cards' : viewMode,
+    viewMode,
     setViewMode,
     isReady,
     isMobile,
