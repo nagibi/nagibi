@@ -42,6 +42,15 @@ final class HistoricoController extends Controller
                 ->all();
         }
 
+        if (isset($dados['fotos_paths']) && is_array($dados['fotos_paths'])) {
+            $dados['fotos_manutencao_urls'] = collect($dados['fotos_paths'])
+                ->filter(fn (mixed $path): bool => is_string($path) && $path !== '')
+                ->map(fn (string $path): ?string => StorageUrl::public($path))
+                ->filter()
+                ->values()
+                ->all();
+        }
+
         return [
             'id' => $item->id,
             'evento' => $item->evento,

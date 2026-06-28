@@ -46,6 +46,8 @@ export interface EquipamentoManutencaoAtiva {
   dias_em_manutencao?: number;
   desconto_medicao?: boolean;
   valor_mensal_snapshot?: number;
+  fotos_paths?: string[];
+  fotos_urls?: string[];
 }
 
 export interface EquipamentoAuditUser {

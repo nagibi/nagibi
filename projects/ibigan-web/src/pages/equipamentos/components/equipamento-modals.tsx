@@ -267,27 +267,41 @@ export function ManutencaoModal({
   onOpenChange,
 }: ModalBaseProps) {
   const invalidate = useInvalidateEquipamentos();
+  const isMobile = useIsMobile();
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [responsabilidade, setResponsabilidade] = useState<
     'fortes' | 'equipamento'
   >('equipamento');
   const [motivo, setMotivo] = useState('');
   const [responsavelUserId, setResponsavelUserId] = useState('');
+  const [fotosManutencao, setFotosManutencao] = useState<File[]>([]);
 
   useEffect(() => {
     if (!open) return;
     setResponsabilidade('equipamento');
     setMotivo('');
     setResponsavelUserId('');
+    setFotosManutencao([]);
   }, [open, equipamento?.id]);
 
+  const appendFotosManutencao = (files: FileList | null) => {
+    if (!files?.length) return;
+    setFotosManutencao((current) => [...current, ...Array.from(files)]);
+  };
+
   const mutation = useMutation({
-    mutationFn: () =>
-      equipamentosService.enviarManutencao(equipamento!.id, {
-        responsabilidade,
-        motivo,
-        responsavel_user_id: Number(responsavelUserId),
-        data_entrada: todayIsoDate(),
-      }),
+    mutationFn: () => {
+      const formData = new FormData();
+      formData.append('responsabilidade', responsabilidade);
+      formData.append('motivo', motivo.trim());
+      formData.append('responsavel_user_id', responsavelUserId);
+      formData.append('data_entrada', todayIsoDate());
+      fotosManutencao.forEach((file, index) => {
+        formData.append(`fotos[${index}]`, file);
+      });
+
+      return equipamentosService.enviarManutencao(equipamento!.id, formData);
+    },
     onSuccess: () => {
       invalidate();
       showAppToast({ title: 'Equipamento enviado para manutenção.' });
@@ -358,6 +372,58 @@ export function ManutencaoModal({
               placeholder="Selecione o usuário"
               onSelect={(user) => setResponsavelUserId(String(user.id))}
             />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="fotos-manutencao">Imagens da manutenção</Label>
+            <Input
+              id="fotos-manutencao"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={(event) => {
+                appendFotosManutencao(event.target.files);
+                event.target.value = '';
+              }}
+            />
+            {isMobile ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-fit"
+                  onClick={() => cameraInputRef.current?.click()}
+                >
+                  <Camera className="size-4" />
+                  Tirar foto
+                </Button>
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(event) => {
+                    appendFotosManutencao(event.target.files);
+                    event.target.value = '';
+                  }}
+                />
+              </>
+            ) : null}
+            {fotosManutencao.length > 0 ? (
+              <ul className="space-y-1 text-xs text-muted-foreground">
+                {fotosManutencao.map((file, index) => (
+                  <li key={`${file.name}-${index}`} className="truncate">
+                    {file.name}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Você pode anexar uma ou mais imagens do equipamento ou do
+                defeito.
+              </p>
+            )}
           </div>
         </div>
       </EquipamentoDialogShell>
@@ -895,6 +961,19 @@ function HistoricoTimelineItem({
         (url): url is string => typeof url === 'string' && url.length > 0,
       )
     : [];
+  const fotosManutencaoUrls = Array.isArray(item.dados?.fotos_manutencao_urls)
+    ? item.dados.fotos_manutencao_urls.filter(
+        (url): url is string => typeof url === 'string' && url.length > 0,
+      )
+    : [];
+  const fotosHistoricoUrls =
+    item.evento === 'manutencao_aberta'
+      ? fotosManutencaoUrls
+      : fotosDevolucaoUrls;
+  const fotosHistoricoTitulo =
+    item.evento === 'manutencao_aberta'
+      ? 'Fotos da manutenção'
+      : 'Fotos da devolução';
   const colaboradorEmprestimo =
     typeof item.dados?.colaborador === 'string'
       ? item.dados.colaborador.trim()
@@ -1032,6 +1111,29 @@ function HistoricoTimelineItem({
             ))}
           </div>
         ) : null}
+        {item.evento === 'manutencao_aberta' &&
+        fotosManutencaoUrls.length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {fotosManutencaoUrls.map((url, index) => (
+              <button
+                key={`${url}-${index}`}
+                type="button"
+                onClick={() => {
+                  setFotoViewerIndex(index);
+                  setFotoViewerOpen(true);
+                }}
+                className="block overflow-hidden rounded-md border border-border transition-colors hover:border-primary/40 hover:ring-2 hover:ring-primary/20"
+                aria-label={`Ver imagem da manutenção ${index + 1}`}
+              >
+                <img
+                  src={url}
+                  alt={`Imagem da manutenção ${index + 1}`}
+                  className="size-14 object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        ) : null}
         {item.observacao ? (
           <p className="mt-1 text-xs text-muted-foreground">
             {item.observacao}
@@ -1042,13 +1144,15 @@ function HistoricoTimelineItem({
       <EquipamentoFotoViewerDialog
         open={fotoViewerOpen}
         onOpenChange={setFotoViewerOpen}
-        images={fotosDevolucaoUrls.map((url) => ({ url }))}
+        images={fotosHistoricoUrls.map((url) => ({ url }))}
         initialIndex={fotoViewerIndex}
-        title="Fotos da devolução"
+        title={fotosHistoricoTitulo}
         subtitle={
-          dataDevolucao
+          item.evento === 'devolvido' && dataDevolucao
             ? `Devolvido em ${dataDevolucao.toLocaleDateString('pt-BR')}`
-            : null
+            : item.evento === 'manutencao_aberta' && date
+              ? `Enviado em ${date.toLocaleDateString('pt-BR')}`
+              : null
         }
       />
     </li>

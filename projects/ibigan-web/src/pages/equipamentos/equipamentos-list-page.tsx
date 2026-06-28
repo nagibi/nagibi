@@ -93,6 +93,9 @@ export function EquipamentosListPage({ mode, title, description }: EquipamentosL
       search: qParam || undefined,
       page,
       per_page: 20,
+      ...(mode === 'manutencao'
+        ? { sort: 'data_entrada_manutencao', direction: 'desc' as const }
+        : {}),
     };
 
     const withContext = applyContextFilterToParams(mode, filtro, params);

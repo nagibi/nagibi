@@ -266,6 +266,16 @@ class Equipamento extends Model
                 $direction,
             ),
             'tempo_em_estoque' => $query->orderByRaw(self::diasEmEstoqueSqlExpression().' '.$direction),
+            'data_entrada_manutencao' => $query->orderBy(
+                Manutencao::query()
+                    ->select('data_entrada')
+                    ->whereColumn('manutencoes.equipamento_id', 'equipamentos.id')
+                    ->whereNull('data_saida')
+                    ->orderByDesc('data_entrada')
+                    ->orderByDesc('id')
+                    ->limit(1),
+                $direction,
+            ),
             default => $query->orderByDesc('created_at'),
         };
     }

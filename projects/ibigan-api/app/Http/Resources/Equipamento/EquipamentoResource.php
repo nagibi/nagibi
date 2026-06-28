@@ -117,6 +117,13 @@ final class EquipamentoResource extends JsonResource
                         ]
                         : null,
                     'data_entrada' => $this->manutencaoAtiva->data_entrada->toDateString(),
+                    'fotos_paths' => $this->manutencaoAtiva->fotos_paths ?? [],
+                    'fotos_urls' => collect($this->manutencaoAtiva->fotos_paths ?? [])
+                        ->filter(fn (mixed $path): bool => is_string($path) && $path !== '')
+                        ->map(fn (string $path): ?string => StorageUrl::public($path))
+                        ->filter()
+                        ->values()
+                        ->all(),
                 ];
             }),
             'baixa' => $this->whenLoaded('baixa', function () {

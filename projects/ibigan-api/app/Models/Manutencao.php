@@ -27,6 +27,7 @@ class Manutencao extends Model
         'responsavel_manutencao',
         'observacoes_tecnicas',
         'foto_path',
+        'fotos_paths',
         'valor_mensal_snapshot',
         'desconto_medicao',
         'data_entrada',
@@ -39,6 +40,7 @@ class Manutencao extends Model
         return [
             'valor_mensal_snapshot' => 'decimal:2',
             'desconto_medicao' => 'boolean',
+            'fotos_paths' => 'array',
             'data_entrada' => 'date',
             'data_saida' => 'date',
         ];

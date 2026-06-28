@@ -54,6 +54,8 @@ export interface Manutencao {
   data_saida?: string | null;
   ativa?: boolean;
   dias_em_manutencao?: number;
+  fotos_paths?: string[];
+  fotos_urls?: string[];
 }
 
 export interface Baixa {
@@ -188,10 +190,13 @@ export const equipamentosService = {
     return response.data.data;
   },
 
-  enviarManutencao: async (id: number, payload: Record<string, unknown>) => {
+  enviarManutencao: async (id: number, payload: FormData | Record<string, unknown>) => {
     const response = await api.post<ApiResult<Manutencao>>(
       `/v1/equipamentos/${id}/manutencao`,
       payload,
+      {
+        headers: payload instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+      },
     );
     return response.data.result;
   },

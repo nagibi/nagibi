@@ -46,6 +46,8 @@ export type EquipamentoGridModeConfig = {
   status?: 'em_estoque' | 'em_utilizacao' | 'em_manutencao';
   columnsKey: string;
   viewPreferenceKey: ViewPreferenceKey;
+  defaultSort?: string;
+  defaultSortDir?: 'asc' | 'desc';
   showCrudToolbar: boolean;
   showStatsOnMobile: boolean;
   showPotencialDevolucao: boolean;
@@ -81,6 +83,8 @@ export const MODE_GRID_CONFIG: Record<EquipamentoGridMode, EquipamentoGridModeCo
     status: 'em_manutencao',
     columnsKey: 'grid-columns:equipamentos-manutencao-v1',
     viewPreferenceKey: VIEW_PREFERENCE_KEYS.equipamentosManutencao,
+    defaultSort: 'data_entrada_manutencao',
+    defaultSortDir: 'desc',
     showCrudToolbar: false,
     showStatsOnMobile: true,
     showPotencialDevolucao: false,

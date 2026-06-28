@@ -199,6 +199,35 @@ it('ordena equipamentos por patrimonio', function (): void {
         ->toBe(['EQ-100', 'EQ-200', 'EQ-300']);
 });
 
+it('ordena equipamentos em manutencao por data de entrada mais recente', function (): void {
+    $this->tenant->run(function (): void {
+        $maisAntigo = Equipamento::factory()->create(['patrimonio' => 'EQ-ANTIGO']);
+        $maisRecente = Equipamento::factory()->create(['patrimonio' => 'EQ-RECENTE']);
+        $intermediario = Equipamento::factory()->create(['patrimonio' => 'EQ-MEDIO']);
+
+        Manutencao::factory()->create([
+            'equipamento_id' => $maisAntigo->id,
+            'data_entrada' => now()->subDays(10)->toDateString(),
+        ]);
+        Manutencao::factory()->create([
+            'equipamento_id' => $intermediario->id,
+            'data_entrada' => now()->subDays(5)->toDateString(),
+        ]);
+        Manutencao::factory()->create([
+            'equipamento_id' => $maisRecente->id,
+            'data_entrada' => now()->subDay()->toDateString(),
+        ]);
+    });
+
+    $response = $this->getJson(
+        '/api/v1/equipamentos?status=em_manutencao&sort=data_entrada_manutencao&direction=desc',
+        equipHeaders($this->tenant->id),
+    )->assertOk();
+
+    expect(collect($response->json('data'))->pluck('patrimonio')->all())
+        ->toBe(['EQ-RECENTE', 'EQ-MEDIO', 'EQ-ANTIGO']);
+});
+
 it('lista equipamentos filtrando por faixa de valor mensal', function (): void {
     $this->tenant->run(function (): void {
         Equipamento::factory()->create(['valor_mensal' => 500]);
@@ -552,6 +581,39 @@ it('envia equipamento para manutencao e finaliza', function (): void {
     ], equipHeaders($this->tenant->id))
         ->assertOk()
         ->assertJsonPath('result.ativa', false);
+});
+
+it('envia equipamento para manutencao com multiplas imagens', function (): void {
+    Storage::fake('public');
+
+    $equipamento = $this->tenant->run(fn () => Equipamento::factory()->create());
+
+    $this->post("/api/v1/equipamentos/{$equipamento->id}/manutencao", [
+        'responsabilidade' => 'equipamento',
+        'motivo' => 'Motor com ruído',
+        'responsavel_user_id' => $this->user->id,
+        'data_entrada' => now()->toDateString(),
+        'fotos' => [
+            UploadedFile::fake()->image('manutencao-1.jpg'),
+            UploadedFile::fake()->image('manutencao-2.jpg'),
+        ],
+    ], equipHeaders($this->tenant->id))
+        ->assertCreated()
+        ->assertJsonCount(2, 'result.fotos_paths')
+        ->assertJsonCount(2, 'result.fotos_urls');
+
+    $this->tenant->run(function () use ($equipamento): void {
+        $manutencao = Manutencao::query()->where('equipamento_id', $equipamento->id)->first();
+        expect($manutencao)->not->toBeNull()
+            ->and($manutencao->fotos_paths)->toHaveCount(2);
+
+        $historico = HistoricoEquipamento::query()
+            ->where('equipamento_id', $equipamento->id)
+            ->where('evento', 'manutencao_aberta')
+            ->first();
+
+        expect($historico?->dados['fotos_paths'] ?? [])->toHaveCount(2);
+    });
 });
 
 it('baixa equipamento em estoque', function (): void {

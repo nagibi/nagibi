@@ -25,7 +25,8 @@ final class StoreManutencaoRequest extends FormRequest
             'responsavel_user_id' => ['required', 'integer', Rule::exists('users', 'id')],
             'observacoes_tecnicas' => ['nullable', 'string', 'max:1000'],
             'data_entrada' => ['required', 'date', 'before_or_equal:today'],
-            'foto' => ['nullable', 'image', 'max:5120'],
+            'fotos' => ['nullable', 'array', 'max:10'],
+            'fotos.*' => ['image', 'max:5120'],
         ];
     }
 

@@ -166,6 +166,7 @@ final class EquipamentoStatusService
                 'responsavel_manutencao' => $dados['responsavel_manutencao'] ?? null,
                 'observacoes_tecnicas' => $dados['observacoes_tecnicas'] ?? null,
                 'foto_path' => $dados['foto_path'] ?? null,
+                'fotos_paths' => $dados['fotos_paths'] ?? null,
                 'valor_mensal_snapshot' => $equipamento->valor_mensal,
                 'data_entrada' => $dados['data_entrada'],
                 'registrado_por' => $this->actorId(),
@@ -177,6 +178,7 @@ final class EquipamentoStatusService
                 'responsavel_user_id' => $dados['responsavel_user_id'],
                 'responsavel' => $dados['responsavel_manutencao'] ?? null,
                 'enviado_por' => Auth::user()?->name,
+                'fotos_paths' => $manutencao->fotos_paths ?? [],
             ]);
 
             return $manutencao;

@@ -11,6 +11,7 @@ use App\Models\Equipamento;
 use App\Models\Manutencao;
 use App\Services\EquipamentoStatusService;
 use App\Support\ApiResponse;
+use App\Support\StorageUrl;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -45,7 +46,20 @@ final class ManutencaoController extends Controller
 
     public function store(StoreManutencaoRequest $request, Equipamento $equipamento): JsonResponse
     {
-        $manutencao = $this->statusService->enviarParaManutencao($equipamento, $request->validated());
+        $data = $request->validated();
+        unset($data['fotos']);
+
+        $fotosPaths = [];
+        foreach ($request->file('fotos', []) as $foto) {
+            $fotosPaths[] = $foto->store('manutencoes', 'public');
+        }
+
+        if ($fotosPaths !== []) {
+            $data['fotos_paths'] = $fotosPaths;
+            $data['foto_path'] = $fotosPaths[0];
+        }
+
+        $manutencao = $this->statusService->enviarParaManutencao($equipamento, $data);
         $manutencao->load(['equipamento', 'emprestimo', 'responsavelUser:id,name,email']);
 
         return ApiResponse::success($this->serialize($manutencao), 'MSG000424', httpStatus: Response::HTTP_CREATED);
@@ -94,6 +108,8 @@ final class ManutencaoController extends Controller
             'data_saida' => $manutencao->data_saida?->toDateString(),
             'ativa' => $manutencao->data_saida === null,
             'dias_em_manutencao' => $manutencao->dias_em_manutencao,
+            'fotos_paths' => $manutencao->fotos_paths ?? [],
+            'fotos_urls' => $this->fotoUrls($manutencao->fotos_paths ?? []),
             'created_at' => $manutencao->created_at?->toIso8601String(),
         ];
 
@@ -107,5 +123,19 @@ final class ManutencaoController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * @param  array<int, string>|null  $paths
+     * @return array<int, string>
+     */
+    private function fotoUrls(?array $paths): array
+    {
+        return collect($paths ?? [])
+            ->filter(fn (mixed $path): bool => is_string($path) && $path !== '')
+            ->map(fn (string $path): ?string => StorageUrl::public($path))
+            ->filter()
+            ->values()
+            ->all();
     }
 }

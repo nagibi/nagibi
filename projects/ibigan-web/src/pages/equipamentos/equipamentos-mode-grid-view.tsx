@@ -132,8 +132,10 @@ export function EquipamentosModeGridView({ mode }: EquipamentosModeGridViewProps
     defaultPage: initialUrlState.page,
     defaultPerPage: initialUrlState.perPage,
     defaultSearch: initialUrlState.search,
-    defaultSort: initialUrlState.sort,
-    defaultSortDir: initialUrlState.sortDir,
+    defaultSort: initialUrlState.sort ?? config.defaultSort ?? null,
+    defaultSortDir: initialUrlState.sort
+      ? initialUrlState.sortDir
+      : (config.defaultSortDir ?? 'asc'),
     ...(config.showCrudToolbar
       ? {
           onActivate: async (ids: number[]) => {
