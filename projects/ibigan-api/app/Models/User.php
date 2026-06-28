@@ -133,7 +133,9 @@ class User extends Authenticatable implements HasMedia
             'type' => 'user',
             'title' => $this->name,
             'email' => $this->email,
+            'cpf' => $this->cpf,
             'avatar_url' => $this->avatarUrl(),
+            'path' => "/users/{$this->id}",
             'searchable_by' => 'usuario-visualizar',
         ];
     }
@@ -155,6 +157,29 @@ class User extends Authenticatable implements HasMedia
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_active', true)->where('status', 'active');
+    }
+
+    /**
+     * Usuários elegíveis para colaborador de empréstimo ou responsável de manutenção.
+     *
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeEligibleForEquipamentoPicker(Builder $query): Builder
+    {
+        return $query->where(function (Builder $eligible): void {
+            $eligible
+                ->where('is_platform_user', false)
+                ->orWhere('is_super_admin', true)
+                ->orWhere(function (Builder $platformSuperAdmin): void {
+                    $platformSuperAdmin
+                        ->where('is_platform_user', true)
+                        ->whereHas(
+                            'roles',
+                            fn (Builder $roleQuery) => $roleQuery->where('name', 'super-admin'),
+                        );
+                });
+        });
     }
 
     public function routeNotificationForMail(): ?string

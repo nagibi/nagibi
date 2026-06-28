@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Tenant\Equipamento\AlertSettingsController;
 use App\Http\Controllers\Api\V1\Tenant\Equipamento\BaixaController;
 use App\Http\Controllers\Api\V1\Tenant\Equipamento\EmprestimoController;
 use App\Http\Controllers\Api\V1\Tenant\Equipamento\EquipamentoController;
+use App\Http\Controllers\Api\V1\Tenant\Equipamento\EquipamentoUserController;
 use App\Http\Controllers\Api\V1\Tenant\Equipamento\EquipamentoDashboardController;
 use App\Http\Controllers\Api\V1\Tenant\Equipamento\FornecedorController;
 use App\Http\Controllers\Api\V1\Tenant\Equipamento\GrupoEquipamentoController;
@@ -21,6 +22,7 @@ Route::prefix('lookups')->group(function (): void {
     Route::get('fornecedores', [FornecedorController::class, 'lookup']);
     Route::get('grupos', [GrupoEquipamentoController::class, 'lookup']);
     Route::get('tipos', [TipoEquipamentoController::class, 'lookup']);
+    Route::get('usuarios', [EquipamentoUserController::class, 'lookup']);
 });
 
 Route::apiResource('obras', ObraController::class);

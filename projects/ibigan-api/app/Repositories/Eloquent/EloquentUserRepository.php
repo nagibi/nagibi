@@ -65,8 +65,15 @@ final class EloquentUserRepository extends BaseRepository implements UserReposit
             ->when(
                 filled($filters['search'] ?? null),
                 fn (Builder $q) => $q->where(function (Builder $q) use ($filters): void {
-                    $q->where('name', 'like', "%{$filters['search']}%")
-                        ->orWhere('email', 'like', "%{$filters['search']}%");
+                    $search = (string) $filters['search'];
+                    $cpfDigits = preg_replace('/\D+/', '', $search);
+
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+
+                    if ($cpfDigits !== '') {
+                        $q->orWhere('cpf', 'like', "%{$cpfDigits}%");
+                    }
                 })
             )
             ->when(

@@ -183,6 +183,39 @@ it('lista equipamentos filtrando por status em estoque', function (): void {
         ->assertJsonCount(1, 'data');
 });
 
+it('lista usuarios elegiveis para emprestimo e manutencao incluindo super-usuarios', function (): void {
+    $this->tenant->run(function (): void {
+        User::factory()->create([
+            'name' => 'Colaborador Comum',
+            'email' => 'colaborador@example.com',
+        ]);
+
+        $superAdmin = User::factory()->create([
+            'name' => 'Super Admin Plataforma',
+            'email' => 'super@example.com',
+            'is_platform_user' => true,
+            'is_super_admin' => false,
+        ]);
+        $superAdmin->assignRole('super-admin');
+
+        User::factory()->create([
+            'name' => 'Usuario Plataforma Sem Super',
+            'email' => 'platform@example.com',
+            'is_platform_user' => true,
+        ]);
+    });
+
+    $response = $this->getJson('/api/v1/lookups/usuarios', equipHeaders($this->tenant->id))
+        ->assertOk();
+
+    $names = collect($response->json('result'))->pluck('name')->all();
+
+    expect($names)
+        ->toContain('Colaborador Comum')
+        ->toContain('Super Admin Plataforma')
+        ->not->toContain('Usuario Plataforma Sem Super');
+});
+
 it('ordena equipamentos por patrimonio', function (): void {
     $this->tenant->run(function (): void {
         Equipamento::factory()->create(['patrimonio' => 'EQ-300']);

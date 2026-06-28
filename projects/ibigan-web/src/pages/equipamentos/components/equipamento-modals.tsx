@@ -39,8 +39,10 @@ import { showAppToast } from '@/lib/show-app-toast';
 import { cn } from '@/lib/utils';
 import { mapZodFieldErrors } from '@/lib/zod-validators';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { equipamentosService } from '@/services/equipamentos.service';
-import { usersService, type User } from '@/services/users.service';
+import {
+  equipamentosService,
+  type EquipamentoUserLookup,
+} from '@/services/equipamentos.service';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { FieldMessage } from '@/components/ui/field-message';
@@ -1422,7 +1424,7 @@ export function CadastroEquipamentoModal({
 }
 
 function resolveEmprestimoUserId(
-  users: User[],
+  users: EquipamentoUserLookup[],
   nome: string,
   matricula?: string,
 ): string {
@@ -1487,8 +1489,8 @@ export function EditarEquipamentoModal({
   });
   const emprestimoAtivo = equipamento?.emprestimo_ativo ?? null;
   const { data: activeUsers = [] } = useQuery({
-    queryKey: ['equipamentos-users-all'],
-    queryFn: () => usersService.listAllActive(),
+    queryKey: ['equipamentos-users-lookup'],
+    queryFn: () => equipamentosService.lookupUsers(),
     enabled: open && Boolean(emprestimoAtivo),
     staleTime: 5 * 60 * 1000,
   });

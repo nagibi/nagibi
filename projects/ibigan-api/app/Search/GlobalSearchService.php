@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Search;
 
+use App\Support\BrazilianDocuments;
+
 use App\Models\Equipamento;
 use App\Models\Fornecedor;
 use App\Models\Menu;
@@ -32,7 +34,7 @@ final class GlobalSearchService
      */
     public function search(string $term, ?User $actor, int $perGroup = 5): array
     {
-        $term = trim($term);
+        $term = $this->normalizeSearchTerm($term);
         if ($term === '') {
             return [];
         }
@@ -69,6 +71,22 @@ final class GlobalSearchService
     {
         return $exception->errorCode === 'index_not_found'
             || str_contains($exception->getMessage(), 'not found');
+    }
+
+    private function normalizeSearchTerm(string $term): string
+    {
+        $trimmed = trim($term);
+        if ($trimmed === '') {
+            return '';
+        }
+
+        if (! preg_match('/^[\d.\-\/\s]+$/', $trimmed)) {
+            return $trimmed;
+        }
+
+        $digitsOnly = BrazilianDocuments::digitsOnly($trimmed);
+
+        return ($digitsOnly !== null && strlen($digitsOnly) >= 3) ? $digitsOnly : $trimmed;
     }
 
     private function canView(?User $actor, Model $item): bool

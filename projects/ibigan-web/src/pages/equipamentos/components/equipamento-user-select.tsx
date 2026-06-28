@@ -13,18 +13,21 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { isUserActive, usersService, type User } from '@/services/users.service';
+import {
+  equipamentosService,
+  type EquipamentoUserLookup,
+} from '@/services/equipamentos.service';
 
 type EquipamentoUserSelectProps = {
   value?: string;
-  onSelect: (user: User) => void;
+  onSelect: (user: EquipamentoUserLookup) => void;
   enabled?: boolean;
   disabled?: boolean;
   placeholder?: string;
   className?: string;
 };
 
-export function getUserMatricula(user: Pick<User, 'id' | 'cpf'>): string {
+export function getUserMatricula(user: Pick<EquipamentoUserLookup, 'id' | 'cpf'>): string {
   if (user.cpf?.trim()) {
     return user.cpf.replace(/\D/g, '');
   }
@@ -32,10 +35,14 @@ export function getUserMatricula(user: Pick<User, 'id' | 'cpf'>): string {
   return String(user.id);
 }
 
-function formatUserSearchValue(user: User): string {
+function formatUserSearchValue(user: EquipamentoUserLookup): string {
   const matricula = getUserMatricula(user);
 
   return `${user.name} ${user.email} ${matricula} ${user.cpf ?? ''}`;
+}
+
+function isSuperUser(user: EquipamentoUserLookup): boolean {
+  return Boolean(user.is_super_admin) || (user.roles?.includes('super-admin') ?? false);
 }
 
 export function EquipamentoUserSelect({
@@ -49,8 +56,8 @@ export function EquipamentoUserSelect({
   const [open, setOpen] = useState(false);
 
   const { data: users = [], isLoading } = useQuery({
-    queryKey: ['equipamentos-users-all'],
-    queryFn: () => usersService.listAllActive(),
+    queryKey: ['equipamentos-users-lookup'],
+    queryFn: () => equipamentosService.lookupUsers(),
     enabled,
     staleTime: 5 * 60 * 1000,
   });
@@ -89,6 +96,7 @@ export function EquipamentoUserSelect({
               {users.map((user) => {
                 const matricula = getUserMatricula(user);
                 const isSelected = value === String(user.id);
+                const superUser = isSuperUser(user);
 
                 return (
                   <CommandItem
@@ -103,6 +111,7 @@ export function EquipamentoUserSelect({
                       <p className="truncate font-medium">{user.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
                         {matricula} · {user.email}
+                        {superUser ? ' · Super-usuário' : ''}
                       </p>
                     </div>
                     <CommandCheck className={cn(!isSelected && 'opacity-0')} />

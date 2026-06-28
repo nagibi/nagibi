@@ -177,6 +177,32 @@ it('retorna tipos fornecedores e obras no resultado global', function (): void {
 
 // ─── Isolamento entre tenants (a garantia central) ───────────────
 
+it('retorna usuarios ao buscar por cpf com ou sem mascara', function (): void {
+    Sanctum::actingAs($this->a['user'], ['*'], 'sanctum');
+
+    $this->a['tenant']->run(function (): void {
+        User::factory()->create([
+            'name' => 'Usuario CPF Teste',
+            'email' => 'cpf.teste@alpha.com',
+            'cpf' => '52998224725',
+        ]);
+    });
+
+    $digits = $this->getJson('/api/v1/search?q=52998224725', [
+        'X-Tenant-ID' => $this->a['tenant']->id,
+    ])->assertOk();
+
+    expect(collect($digits->json('result.users') ?? [])->pluck('title')->all())
+        ->toContain('Usuario CPF Teste');
+
+    $masked = $this->getJson('/api/v1/search?q=529.982.247-25', [
+        'X-Tenant-ID' => $this->a['tenant']->id,
+    ])->assertOk();
+
+    expect(collect($masked->json('result.users') ?? [])->pluck('title')->all())
+        ->toContain('Usuario CPF Teste');
+});
+
 it('não retorna usuários de outro tenant', function (): void {
     // logado no tenant A, busca pelo email do usuário do tenant B
     Sanctum::actingAs($this->a['user'], ['*'], 'sanctum');

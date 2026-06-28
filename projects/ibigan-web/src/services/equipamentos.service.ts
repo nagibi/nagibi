@@ -11,6 +11,7 @@ import type {
   EquipamentoLookup,
   LaravelPaginated,
 } from '@/types/equipamento';
+import { isUserActive } from '@/services/users.service';
 
 type ApiResult<T> = { status: number; result: T };
 
@@ -22,6 +23,17 @@ type PaginatedResult<T> = {
 export interface TipoLookup extends EquipamentoLookup {
   grupo_id: number;
   grupo?: { id: number; nome: string } | null;
+}
+
+export interface EquipamentoUserLookup {
+  id: number;
+  name: string;
+  email: string;
+  cpf?: string | null;
+  status: string;
+  is_active: boolean;
+  is_super_admin?: boolean;
+  roles?: string[];
 }
 
 export interface Emprestimo {
@@ -311,5 +323,13 @@ export const equipamentosService = {
       params: search ? { search } : undefined,
     });
     return response.data.result;
+  },
+
+  lookupUsers: async (search?: string) => {
+    const response = await api.get<ApiResult<EquipamentoUserLookup[]>>('/v1/lookups/usuarios', {
+      params: search ? { search } : undefined,
+    });
+
+    return response.data.result.filter(isUserActive);
   },
 };
