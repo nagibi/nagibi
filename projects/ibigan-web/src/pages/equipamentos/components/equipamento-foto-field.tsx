@@ -469,6 +469,7 @@ export function buildEquipamentoUpdateFormData(payload: {
   tipo_id: number;
   fornecedor_id: number;
   obra_id: number;
+  data_entrada: string;
   valor_mensal: number;
   is_critico: boolean;
   fotos?: File[];

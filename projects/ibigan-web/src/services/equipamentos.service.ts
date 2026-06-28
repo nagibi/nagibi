@@ -88,6 +88,8 @@ export interface EquipamentosListParams {
   cadastrado_dias?: number;
   created_at_from?: string;
   created_at_to?: string;
+  data_entrada_from?: string;
+  data_entrada_to?: string;
   updated_at_from?: string;
   updated_at_to?: string;
   created_by?: string;

@@ -65,6 +65,40 @@ type ModalBaseProps = {
   onOpenChange: (open: boolean) => void;
 };
 
+function EquipamentoCreatedDateField({
+  id,
+  value,
+  error,
+  onChange,
+  onClearError,
+}: {
+  id: string;
+  value: string;
+  error?: string;
+  onChange: (value: string) => void;
+  onClearError: () => void;
+}) {
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id} required>
+        Data de cadastro
+      </Label>
+      <Input
+        id={id}
+        type="date"
+        value={value}
+        max={todayIsoDate()}
+        className={cn('w-full max-w-44', fieldErrorClass(Boolean(error)))}
+        onChange={(event) => {
+          onClearError();
+          onChange(event.target.value);
+        }}
+      />
+      <FieldMessage message={error} />
+    </div>
+  );
+}
+
 function useEquipamentoFieldErrors() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -978,6 +1012,7 @@ export function CadastroEquipamentoModal({
   const [tipoId, setTipoId] = useState('');
   const [fornecedorId, setFornecedorId] = useState('');
   const [obraId, setObraId] = useState('');
+  const [dataEntrada, setDataEntrada] = useState(todayIsoDate());
   const [valorMensal, setValorMensal] = useState('');
   const [isCritico, setIsCritico] = useState(false);
   const [newFotos, setNewFotos] = useState<File[]>([]);
@@ -1023,6 +1058,7 @@ export function CadastroEquipamentoModal({
     setTipoId('');
     setFornecedorId('');
     setObraId('');
+    setDataEntrada(todayIsoDate());
     setValorMensal('');
     setIsCritico(false);
     setNewFotos([]);
@@ -1048,7 +1084,7 @@ export function CadastroEquipamentoModal({
           fornecedor_id: values.fornecedor_id,
           obra_id: values.obra_id,
           valor_mensal: values.valor_mensal,
-          data_entrada: todayIsoDate(),
+          data_entrada: values.data_entrada,
           is_critico: values.is_critico,
           fotos: orderedFotos,
           principal: principalForSubmit,
@@ -1076,6 +1112,7 @@ export function CadastroEquipamentoModal({
         tipoId,
         fornecedorId,
         obraId,
+        dataEntrada,
         valorMensalDigits: valorMensal,
         isCritico,
       }),
@@ -1185,6 +1222,13 @@ export function CadastroEquipamentoModal({
             />
             <FieldMessage message={fieldErrors.obra_id} />
           </div>
+          <EquipamentoCreatedDateField
+            id="cadastro-equipamento-created-date"
+            value={dataEntrada}
+            error={fieldErrors.data_entrada}
+            onChange={setDataEntrada}
+            onClearError={() => clearField('data_entrada')}
+          />
           <div className="grid gap-2">
             <Label required>Valor mensal</Label>
             <MaskedInput
@@ -1228,6 +1272,7 @@ export function EditarEquipamentoModal({
   const [tipoId, setTipoId] = useState('');
   const [fornecedorId, setFornecedorId] = useState('');
   const [obraId, setObraId] = useState('');
+  const [dataEntrada, setDataEntrada] = useState(todayIsoDate());
   const [valorMensal, setValorMensal] = useState('');
   const [isCritico, setIsCritico] = useState(false);
   const [newFotos, setNewFotos] = useState<File[]>([]);
@@ -1277,6 +1322,7 @@ export function EditarEquipamentoModal({
     setTipoId(String(equipamento.tipo_id));
     setFornecedorId(String(equipamento.fornecedor_id));
     setObraId(String(equipamento.obra_id));
+    setDataEntrada(equipamento.data_entrada);
     setValorMensal(numberToCurrencyDigits(equipamento.valor_mensal));
     setIsCritico(equipamento.is_critico);
     setNewFotos([]);
@@ -1304,6 +1350,7 @@ export function EditarEquipamentoModal({
         tipo_id: values.tipo_id,
         fornecedor_id: values.fornecedor_id,
         obra_id: values.obra_id,
+        data_entrada: values.data_entrada,
         valor_mensal: values.valor_mensal,
         is_critico: values.is_critico,
         fotos: orderedFotos,
@@ -1328,6 +1375,7 @@ export function EditarEquipamentoModal({
         tipo_id: values.tipo_id,
         fornecedor_id: values.fornecedor_id,
         obra_id: values.obra_id,
+        data_entrada: values.data_entrada,
         valor_mensal: values.valor_mensal,
         is_critico: values.is_critico,
         ...(principalChanged ? resolvePrincipalPayload(principal) : {}),
@@ -1356,6 +1404,7 @@ export function EditarEquipamentoModal({
         tipoId,
         fornecedorId,
         obraId,
+        dataEntrada,
         valorMensalDigits: valorMensal,
         isCritico,
       }),
@@ -1481,6 +1530,13 @@ export function EditarEquipamentoModal({
             />
             <FieldMessage message={fieldErrors.obra_id} />
           </div>
+          <EquipamentoCreatedDateField
+            id="editar-equipamento-created-date"
+            value={dataEntrada}
+            error={fieldErrors.data_entrada}
+            onChange={setDataEntrada}
+            onClearError={() => clearField('data_entrada')}
+          />
           <div className="grid gap-2">
             <Label required>Valor mensal</Label>
             <MaskedInput

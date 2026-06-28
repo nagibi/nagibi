@@ -103,6 +103,11 @@ export function useEquipamentoFilterColumns(mode: EquipamentoFilterMode) {
         getAuditUserName: () => '—',
       }),
       {
+        id: 'data_entrada',
+        label: cols.registrationDate,
+        filter: { type: 'dateRange', filterKey: 'data_entrada' },
+      },
+      {
         id: 'created_at',
         label: cols.createdAt,
         filter: { type: 'dateRange', filterKey: 'created_at' },

@@ -11,6 +11,7 @@ export function useGridColumnLabels() {
     active: t('columns.active'),
     search: t('columns.search'),
     createdAt: t('columns.created_at'),
+    registrationDate: t('columns.registration_date'),
     createdBy: t('columns.created_by'),
     updatedAt: t('columns.updated_at'),
     updatedBy: t('columns.updated_by'),

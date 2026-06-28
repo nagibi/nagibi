@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Trash2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
@@ -87,6 +87,11 @@ import {
 function formatAuditDate(value?: string | null) {
   if (!value) return '—';
   return format(new Date(value), 'dd/MM/yy HH:mm', { locale: ptBR });
+}
+
+function formatRegistrationDate(value?: string | null) {
+  if (!value) return '—';
+  return format(parseISO(value), 'dd/MM/yy', { locale: ptBR });
 }
 
 function getAuditUserName(
@@ -510,6 +515,16 @@ export function EquipamentosModeGridView({ mode }: EquipamentosModeGridViewProps
         formatAuditDate,
         getAuditUserName,
       }),
+      {
+        id: 'data_entrada',
+        label: cols.registrationDate,
+        sortable: true,
+        sortKey: 'data_entrada',
+        filter: { type: 'dateRange', filterKey: 'data_entrada' },
+        className: 'min-w-[130px] text-sm text-muted-foreground whitespace-nowrap',
+        render: (row) => formatRegistrationDate(row.data_entrada),
+        exportValue: (row) => row.data_entrada ?? '',
+      },
       {
         id: 'created_at',
         label: cols.createdAt,

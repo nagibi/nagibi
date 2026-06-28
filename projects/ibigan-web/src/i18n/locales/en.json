@@ -368,6 +368,7 @@
   "columns.active": "Active",
   "columns.search": "Search",
   "columns.created_at": "Created at",
+  "columns.registration_date": "Registration date",
   "columns.created_by": "Created by",
   "columns.updated_at": "Updated at",
   "columns.updated_by": "Updated by",

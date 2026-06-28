@@ -135,6 +135,11 @@ export function applyEquipamentoColumnFiltersToParams(
   if (createdFrom) next.created_at_from = createdFrom;
   if (createdTo) next.created_at_to = createdTo;
 
+  const dataEntradaFrom = filters[dateRangeFilterFromKey('data_entrada')]?.trim();
+  const dataEntradaTo = filters[dateRangeFilterToKey('data_entrada')]?.trim();
+  if (dataEntradaFrom) next.data_entrada_from = dataEntradaFrom;
+  if (dataEntradaTo) next.data_entrada_to = dataEntradaTo;
+
   const updatedFrom = filters[dateRangeFilterFromKey('updated_at')]?.trim();
   const updatedTo = filters[dateRangeFilterToKey('updated_at')]?.trim();
   if (updatedFrom) next.updated_at_from = updatedFrom;

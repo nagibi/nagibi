@@ -368,6 +368,7 @@
   "columns.active": "Ativo",
   "columns.search": "Busca",
   "columns.created_at": "Data criação",
+  "columns.registration_date": "Data de cadastro",
   "columns.created_by": "Usuário criação",
   "columns.updated_at": "Data atualização",
   "columns.updated_by": "Usuário atualização",

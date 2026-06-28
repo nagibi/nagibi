@@ -138,6 +138,14 @@ final class EquipamentoController extends Controller
             $query->whereDate('created_at', '<=', $request->string('created_at_to')->toString());
         }
 
+        if ($request->filled('data_entrada_from')) {
+            $query->whereDate('data_entrada', '>=', $request->string('data_entrada_from')->toString());
+        }
+
+        if ($request->filled('data_entrada_to')) {
+            $query->whereDate('data_entrada', '<=', $request->string('data_entrada_to')->toString());
+        }
+
         if ($request->filled('updated_at_from')) {
             $query->whereDate('updated_at', '>=', $request->string('updated_at_from')->toString());
         }
