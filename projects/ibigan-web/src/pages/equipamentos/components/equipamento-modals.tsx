@@ -38,8 +38,8 @@ import { getApiErrorMessage } from '@/lib/get-api-error-message';
 import { showAppToast } from '@/lib/show-app-toast';
 import { cn } from '@/lib/utils';
 import { mapZodFieldErrors } from '@/lib/zod-validators';
-import { equipamentosService } from '@/services/equipamentos.service';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { equipamentosService } from '@/services/equipamentos.service';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { FieldMessage } from '@/components/ui/field-message';
@@ -88,7 +88,7 @@ function EquipamentoCreatedDateField({
         type="date"
         value={value}
         max={todayIsoDate()}
-        className={cn('w-full max-w-44', fieldErrorClass(Boolean(error)))}
+        className={cn('w-full', fieldErrorClass(Boolean(error)))}
         onChange={(event) => {
           onClearError();
           onChange(event.target.value);
@@ -578,7 +578,7 @@ export function DevolverModal({
             type="date"
             value={dataDevolucao}
             max={todayIsoDate()}
-            className="w-full max-w-44"
+            className="w-full"
             onChange={(event) => setDataDevolucao(event.target.value)}
           />
           <p className="text-xs text-muted-foreground">
@@ -642,7 +642,8 @@ export function DevolverModal({
               </ul>
             ) : (
               <p className="text-xs text-muted-foreground">
-                Você pode selecionar uma ou mais imagens do equipamento no momento da devolução.
+                Você pode selecionar uma ou mais imagens do equipamento no
+                momento da devolução.
               </p>
             )}
           </div>
