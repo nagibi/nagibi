@@ -81,7 +81,13 @@ type EquipamentoCardProps = {
   actions?: EquipamentoCardAction[];
 };
 
-function getHighlight(equipamento: Equipamento) {
+type EquipamentoHighlight = {
+  tone: 'danger' | 'warning';
+  message: string;
+  detail?: string;
+};
+
+function getHighlight(equipamento: Equipamento): EquipamentoHighlight | null {
   const emprestimo = equipamento.emprestimo_ativo
     ? enrichEmprestimoAtivo(equipamento.emprestimo_ativo)
     : null;
@@ -90,7 +96,6 @@ function getHighlight(equipamento: Equipamento) {
     return {
       tone: 'danger' as const,
       message: `Vencido há ${Math.abs(emprestimo.dias_ate_vencimento ?? 0)} dias`,
-      detail: `${emprestimo.colaborador_nome} · Obra ${equipamento.obra?.codigo ?? '—'}`,
     };
   }
 
@@ -98,7 +103,6 @@ function getHighlight(equipamento: Equipamento) {
     return {
       tone: 'warning' as const,
       message: `Vence em ${emprestimo.dias_ate_vencimento} dias`,
-      detail: `${emprestimo.colaborador_nome} · Obra ${equipamento.obra?.codigo ?? '—'}`,
     };
   }
 
@@ -239,11 +243,30 @@ export function EquipamentoCard({ equipamento, actions = [] }: EquipamentoCardPr
               <AlertTriangle className="size-4 shrink-0" />
               {highlight.message}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">{highlight.detail}</p>
+            {highlight.detail ? (
+              <p className="mt-1 text-xs text-muted-foreground">{highlight.detail}</p>
+            ) : null}
           </div>
         ) : null}
 
         <div className="grid gap-2 text-sm text-muted-foreground">
+          {emprestimo && equipamento.status === 'em_utilizacao' ? (
+            <p className="inline-flex items-center gap-1.5">
+              <User className="size-3.5 shrink-0" />
+              <span className="min-w-0 truncate text-foreground">
+                {emprestimo.colaborador_nome}
+                {emprestimo.colaborador_matricula
+                  ? ` · ${emprestimo.colaborador_matricula}`
+                  : ''}
+              </span>
+            </p>
+          ) : null}
+          {emprestimo?.encarregado_nome && equipamento.status === 'em_utilizacao' ? (
+            <p className="inline-flex items-center gap-1.5">
+              <User className="size-3.5 shrink-0 opacity-60" />
+              Encarregado: {emprestimo.encarregado_nome}
+            </p>
+          ) : null}
           {equipamento.obra ? (
             <p className="inline-flex items-center gap-1.5">
               <MapPin className="size-3.5 shrink-0" />
@@ -258,16 +281,6 @@ export function EquipamentoCard({ equipamento, actions = [] }: EquipamentoCardPr
             </p>
           ) : null}
         </div>
-
-        {emprestimo && equipamento.status === 'em_utilizacao' && !emprestimo.is_vencido && !emprestimo.is_proximo_vencimento ? (
-          <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs">
-            <p className="inline-flex items-center gap-1.5 font-medium text-foreground">
-              <User className="size-3.5" />
-              {emprestimo.colaborador_nome} · {emprestimo.colaborador_matricula}
-            </p>
-            <p className="mt-1 text-muted-foreground">Encarregado: {emprestimo.encarregado_nome}</p>
-          </div>
-        ) : null}
 
         {equipamento.manutencao_ativa ? (
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs">
