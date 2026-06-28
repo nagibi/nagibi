@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Search;
 
-use App\Support\BrazilianDocuments;
-
 use App\Models\Equipamento;
 use App\Models\Fornecedor;
 use App\Models\Menu;
 use App\Models\Obra;
 use App\Models\TipoEquipamento;
 use App\Models\User;
+use App\Support\BrazilianDocuments;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Meilisearch\Exceptions\ApiException;
 
@@ -42,15 +42,9 @@ final class GlobalSearchService
         $groups = [];
 
         foreach (self::SOURCES as $model => $category) {
-            try {
-                $hits = $model::search($term)->take($perGroup * 3)->get();
-            } catch (ApiException $exception) {
-                if ($this->isMissingSearchIndex($exception)) {
-                    continue;
-                }
-
-                throw $exception;
-            }
+            $hits = $model === User::class
+                ? $this->searchUsers($term, $perGroup * 3)
+                : $this->searchWithScout($model, $term, $perGroup * 3);
 
             $visible = $hits
                 ->filter(fn (Model $item) => $this->canView($actor, $item))
@@ -65,6 +59,44 @@ final class GlobalSearchService
         }
 
         return $groups;
+    }
+
+    /**
+     * @param  class-string<Model>  $model
+     * @return EloquentCollection<int, Model>
+     */
+    private function searchWithScout(string $model, string $term, int $limit): EloquentCollection
+    {
+        try {
+            return $model::search($term)->take($limit)->get();
+        } catch (ApiException $exception) {
+            if ($this->isMissingSearchIndex($exception)) {
+                return $model::query()->whereRaw('1 = 0')->get();
+            }
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @return EloquentCollection<int, User>
+     */
+    private function searchUsers(string $term, int $limit): EloquentCollection
+    {
+        if ($this->isNumericDocumentTerm($term)) {
+            return User::query()
+                ->where('cpf', 'like', "%{$term}%")
+                ->orderBy('name')
+                ->limit($limit)
+                ->get();
+        }
+
+        return $this->searchWithScout(User::class, $term, $limit);
+    }
+
+    private function isNumericDocumentTerm(string $term): bool
+    {
+        return preg_match('/^\d{3,}$/', $term) === 1;
     }
 
     private function isMissingSearchIndex(ApiException $exception): bool

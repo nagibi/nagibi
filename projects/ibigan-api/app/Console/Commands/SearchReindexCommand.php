@@ -12,6 +12,7 @@ use App\Models\TipoEquipamento;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
+use Meilisearch\Client as MeilisearchClient;
 
 final class SearchReindexCommand extends Command
 {
@@ -38,8 +39,33 @@ final class SearchReindexCommand extends Command
             Artisan::call('scout:flush', ['model' => $model]);
             Artisan::call('scout:import', ['model' => $model]);
             $this->line(trim(Artisan::output()));
+
+            if ($model === User::class) {
+                $this->configureMeilisearchUserIndex();
+            }
         }
 
         return self::SUCCESS;
+    }
+
+    private function configureMeilisearchUserIndex(): void
+    {
+        if (config('scout.driver') !== 'meilisearch') {
+            return;
+        }
+
+        $client = app(MeilisearchClient::class);
+        $index = $client->index((new User)->searchableAs());
+
+        $index->updateSearchableAttributes([
+            'title',
+            'email',
+            'cpf',
+            'id',
+        ]);
+
+        $index->updateTypoTolerance([
+            'disableOnAttributes' => ['cpf', 'id'],
+        ]);
     }
 }

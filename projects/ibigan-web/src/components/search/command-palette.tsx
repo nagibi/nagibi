@@ -90,7 +90,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const isSearching = isLoading || isFetching;
 
   return (
-    <CommandDialog open={open} onOpenChange={handleOpenChange}>
+    <CommandDialog open={open} onOpenChange={handleOpenChange} shouldFilter={false}>
       <CommandInput
         value={term}
         onValueChange={setTerm}
