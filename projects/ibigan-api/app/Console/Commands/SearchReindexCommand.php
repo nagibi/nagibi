@@ -43,9 +43,34 @@ final class SearchReindexCommand extends Command
             if ($model === User::class) {
                 $this->configureMeilisearchUserIndex();
             }
+
+            if ($model === Fornecedor::class) {
+                $this->configureMeilisearchFornecedorIndex();
+            }
         }
 
         return self::SUCCESS;
+    }
+
+    private function configureMeilisearchFornecedorIndex(): void
+    {
+        if (config('scout.driver') !== 'meilisearch') {
+            return;
+        }
+
+        $client = app(MeilisearchClient::class);
+        $index = $client->index((new Fornecedor)->searchableAs());
+
+        $index->updateSearchableAttributes([
+            'title',
+            'subtitle',
+            'cnpj',
+            'id',
+        ]);
+
+        $index->updateTypoTolerance([
+            'disableOnAttributes' => ['cnpj', 'id'],
+        ]);
     }
 
     private function configureMeilisearchUserIndex(): void

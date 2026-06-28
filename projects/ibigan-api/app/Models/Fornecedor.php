@@ -53,6 +53,7 @@ class Fornecedor extends Model
             'id' => (string) $this->id,
             'type' => 'fornecedor',
             'title' => $this->nome,
+            'cnpj' => $this->cnpj,
             'subtitle' => $this->cnpj,
             'path' => "/equipamentos/fornecedores/{$this->id}",
             'avatar_url' => null,

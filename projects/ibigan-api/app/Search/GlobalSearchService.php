@@ -42,9 +42,11 @@ final class GlobalSearchService
         $groups = [];
 
         foreach (self::SOURCES as $model => $category) {
-            $hits = $model === User::class
-                ? $this->searchUsers($term, $perGroup * 3)
-                : $this->searchWithScout($model, $term, $perGroup * 3);
+            $hits = match ($model) {
+                User::class => $this->searchUsers($term, $perGroup * 3),
+                Fornecedor::class => $this->searchFornecedores($term, $perGroup * 3),
+                default => $this->searchWithScout($model, $term, $perGroup * 3),
+            };
 
             $visible = $hits
                 ->filter(fn (Model $item) => $this->canView($actor, $item))
@@ -92,6 +94,29 @@ final class GlobalSearchService
         }
 
         return $this->searchWithScout(User::class, $term, $limit);
+    }
+
+    /**
+     * @return EloquentCollection<int, Fornecedor>
+     */
+    private function searchFornecedores(string $term, int $limit): EloquentCollection
+    {
+        if ($this->isNumericDocumentTerm($term)) {
+            $cnpjDigits = BrazilianDocuments::sqlDigitsOnlyColumn('cnpj');
+
+            return Fornecedor::query()
+                ->where('is_ativo', true)
+                ->where(function ($query) use ($term, $cnpjDigits): void {
+                    $query
+                        ->where('cnpj', 'like', "%{$term}%")
+                        ->orWhereRaw("{$cnpjDigits} LIKE ?", ["%{$term}%"]);
+                })
+                ->orderBy('nome')
+                ->limit($limit)
+                ->get();
+        }
+
+        return $this->searchWithScout(Fornecedor::class, $term, $limit);
     }
 
     private function isNumericDocumentTerm(string $term): bool

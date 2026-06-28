@@ -71,4 +71,9 @@ final class BrazilianDocuments
 
         return (int) $cnpj[13] === $secondDigit;
     }
+
+    public static function sqlDigitsOnlyColumn(string $column): string
+    {
+        return "REPLACE(REPLACE(REPLACE(REPLACE({$column}, '.', ''), '/', ''), '-', ''), ' ', '')";
+    }
 }

@@ -203,6 +203,32 @@ it('retorna usuarios ao buscar por cpf com ou sem mascara', function (): void {
         ->toContain('Usuario CPF Teste');
 });
 
+it('retorna fornecedores ao buscar por cnpj com ou sem mascara', function (): void {
+    Sanctum::actingAs($this->a['user'], ['*'], 'sanctum');
+
+    $this->a['tenant']->run(function (): void {
+        Fornecedor::factory()->create([
+            'nome' => 'Fornecedor CNPJ Teste',
+            'cnpj' => '12.345.678/0001-90',
+            'is_ativo' => true,
+        ]);
+    });
+
+    $digits = $this->getJson('/api/v1/search?q=12345678000190', [
+        'X-Tenant-ID' => $this->a['tenant']->id,
+    ])->assertOk();
+
+    expect(collect($digits->json('result.fornecedores') ?? [])->pluck('title')->all())
+        ->toContain('Fornecedor CNPJ Teste');
+
+    $masked = $this->getJson('/api/v1/search?q=12.345.678/0001-90', [
+        'X-Tenant-ID' => $this->a['tenant']->id,
+    ])->assertOk();
+
+    expect(collect($masked->json('result.fornecedores') ?? [])->pluck('title')->all())
+        ->toContain('Fornecedor CNPJ Teste');
+});
+
 it('não retorna usuários de outro tenant', function (): void {
     // logado no tenant A, busca pelo email do usuário do tenant B
     Sanctum::actingAs($this->a['user'], ['*'], 'sanctum');
