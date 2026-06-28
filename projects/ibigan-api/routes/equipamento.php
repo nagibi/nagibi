@@ -46,6 +46,7 @@ Route::get('equipamentos/{equipamento}/historico', [HistoricoController::class, 
 
 Route::get('emprestimos', [EmprestimoController::class, 'index']);
 Route::get('emprestimos/{emprestimo}', [EmprestimoController::class, 'show']);
+Route::put('emprestimos/{emprestimo}', [EmprestimoController::class, 'update']);
 Route::post('emprestimos/{emprestimo}/devolver', [EmprestimoController::class, 'devolver']);
 Route::post('emprestimos/{emprestimo}/renovar', [EmprestimoController::class, 'renovar']);
 

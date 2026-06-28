@@ -75,9 +75,16 @@ final class EquipamentoResource extends JsonResource
 
                 return [
                     'id' => $this->emprestimoAtivo->id,
+                    'obra_id' => $this->emprestimoAtivo->obra_id,
+                    'obra' => $this->emprestimoAtivo->relationLoaded('obra') && $this->emprestimoAtivo->obra
+                        ? [
+                            'id' => $this->emprestimoAtivo->obra->id,
+                            'codigo' => $this->emprestimoAtivo->obra->codigo,
+                            'nome' => $this->emprestimoAtivo->obra->nome,
+                        ]
+                        : null,
                     'colaborador_nome' => $this->emprestimoAtivo->colaborador_nome,
                     'colaborador_matricula' => $this->emprestimoAtivo->colaborador_matricula,
-                    'encarregado_nome' => $this->emprestimoAtivo->encarregado_nome,
                     'data_retirada' => $this->emprestimoAtivo->data_retirada->toDateString(),
                     'prazo_dias' => $this->emprestimoAtivo->prazo_dias,
                     'renovacoes' => $this->emprestimoAtivo->relationLoaded('renovacoes')

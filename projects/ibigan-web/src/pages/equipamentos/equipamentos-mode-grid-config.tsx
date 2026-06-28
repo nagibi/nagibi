@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   CheckCircle2,
+  Handshake,
   History,
   PackageMinus,
   Pencil,
@@ -163,6 +164,7 @@ export function getModeRowActions(
   switch (mode) {
     case 'estoque':
       return [
+        { label: 'Emprestar', icon: Handshake, onClick: open('emprestar') },
         { label: 'Enviar para manutenção', icon: Wrench, onClick: open('manutencao') },
         { label: 'Baixar', icon: PackageMinus, onClick: open('baixa'), tone: 'destructive' },
         { label: 'Histórico', icon: History, onClick: open('historico') },
@@ -175,11 +177,15 @@ export function getModeRowActions(
         { label: 'Renovar', icon: RefreshCw, onClick: open('renovar') },
         { label: 'Enviar para manutenção', icon: Wrench, onClick: open('manutencao') },
         { label: 'Histórico', icon: History, onClick: open('historico') },
+        { label: 'Editar', icon: Pencil, onClick: open('editar') },
+        { label: 'QR Code', icon: QrCode, onClick: open('qr') },
       ];
     case 'manutencao':
       return [
         { label: 'Finalizar', icon: CheckCircle2, onClick: open('finalizar') },
         { label: 'Histórico', icon: History, onClick: open('historico') },
+        { label: 'Editar', icon: Pencil, onClick: open('editar') },
+        { label: 'QR Code', icon: QrCode, onClick: open('qr') },
       ];
     case 'baixados':
       return [{ label: 'Histórico', icon: History, onClick: open('historico') }];
@@ -364,8 +370,8 @@ export function getModeSpecificColumns(
           placeholder: 'Todas',
           options: obraOptions,
         },
-        render: (row) => row.obra?.codigo ?? '—',
-        exportValue: (row) => row.obra?.codigo ?? '',
+        render: (row) => row.emprestimo_ativo?.obra?.codigo ?? row.obra?.codigo ?? '—',
+        exportValue: (row) => row.emprestimo_ativo?.obra?.codigo ?? row.obra?.codigo ?? '',
       },
       ...sharedTail,
       {
@@ -376,19 +382,17 @@ export function getModeSpecificColumns(
           filterKey: 'colaborador',
           placeholder: 'Nome ou matrícula',
         },
-        render: (row) => row.emprestimo_ativo?.colaborador_nome ?? '—',
-        exportValue: (row) => row.emprestimo_ativo?.colaborador_nome ?? '',
-      },
-      {
-        id: 'encarregado',
-        label: 'Encarregado',
-        filter: {
-          type: 'text',
-          filterKey: 'encarregado',
-          placeholder: 'Encarregado',
+        render: (row) => {
+          const matricula = row.emprestimo_ativo?.colaborador_matricula;
+          const nome = row.emprestimo_ativo?.colaborador_nome;
+          if (!nome) return '—';
+          return matricula ? `${nome} · ${matricula}` : nome;
         },
-        render: (row) => row.emprestimo_ativo?.encarregado_nome ?? '—',
-        exportValue: (row) => row.emprestimo_ativo?.encarregado_nome ?? '',
+        exportValue: (row) => {
+          const matricula = row.emprestimo_ativo?.colaborador_matricula;
+          const nome = row.emprestimo_ativo?.colaborador_nome ?? '';
+          return matricula ? `${nome} · ${matricula}` : nome;
+        },
       },
       {
         id: 'data_retirada',

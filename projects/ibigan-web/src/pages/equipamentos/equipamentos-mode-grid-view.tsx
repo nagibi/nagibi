@@ -338,7 +338,7 @@ export function EquipamentosModeGridView({ mode }: EquipamentosModeGridViewProps
   }, [grid.clearDeleteRequest, grid.clearSelection, grid.deleteIds.length, grid.hasSelection]);
 
   useGridKeyboard({
-    canEdit: config.showCrudToolbar && grid.singleSelection,
+    canEdit: grid.singleSelection,
     canDelete: config.showCrudToolbar && grid.hasSelection,
     onEdit: handleEditSelected,
     onDelete: handleDeleteSelected,
@@ -797,18 +797,18 @@ export function EquipamentosModeGridView({ mode }: EquipamentosModeGridViewProps
         open={activeModal === 'historico'}
         onOpenChange={(open) => (open ? setActiveModal('historico') : closeModal())}
       />
+      <EditarEquipamentoModal
+        equipamento={selected}
+        open={activeModal === 'editar'}
+        onOpenChange={(open) => (open ? setActiveModal('editar') : closeModal())}
+      />
+      <EquipamentoQrModal
+        equipamento={selected}
+        open={activeModal === 'qr'}
+        onOpenChange={(open) => (open ? setActiveModal('qr') : closeModal())}
+      />
       {config.showCrudToolbar ? (
         <>
-          <EditarEquipamentoModal
-            equipamento={selected}
-            open={activeModal === 'editar'}
-            onOpenChange={(open) => (open ? setActiveModal('editar') : closeModal())}
-          />
-          <EquipamentoQrModal
-            equipamento={selected}
-            open={activeModal === 'qr'}
-            onOpenChange={(open) => (open ? setActiveModal('qr') : closeModal())}
-          />
           <CadastroEquipamentoModal open={cadastroOpen} onOpenChange={setCadastroOpen} />
           <AlertDialog
             open={grid.deleteIds.length > 0}

@@ -32,7 +32,6 @@ export interface Emprestimo {
   obra?: { id: number; codigo: string; nome: string } | null;
   colaborador_nome: string;
   colaborador_matricula: string;
-  encarregado_nome: string;
   data_retirada: string;
   data_devolucao?: string | null;
   prazo_dias: number;
@@ -97,7 +96,6 @@ export interface EquipamentosListParams {
   emprestimo_alerta?: 'normais' | 'proximos' | 'vencidos';
   manutencao_filtro?: 'hoje' | 'atrasados' | 'criticos';
   colaborador?: string;
-  encarregado?: string;
   data_retirada_from?: string;
   data_retirada_to?: string;
   dias_em_uso_min?: number;
@@ -222,6 +220,18 @@ export const equipamentosService = {
         headers: payload instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
       },
     );
+    return response.data.data;
+  },
+
+  updateEmprestimo: async (
+    id: number,
+    payload: {
+      obra_id: number;
+      colaborador_nome: string;
+      colaborador_matricula: string;
+    },
+  ) => {
+    const response = await api.put<{ data: Emprestimo }>(`/v1/emprestimos/${id}`, payload);
     return response.data.data;
   },
 

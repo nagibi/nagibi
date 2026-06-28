@@ -32,7 +32,6 @@ final class EquipamentoStatusService
                 'colaborador_nome' => $dados['colaborador_nome'],
                 'colaborador_matricula' => $dados['colaborador_matricula'],
                 'colaborador_whatsapp' => $dados['colaborador_whatsapp'] ?? null,
-                'encarregado_nome' => $dados['encarregado_nome'],
                 'data_retirada' => $dados['data_retirada'],
                 'prazo_dias' => $dados['prazo_dias'] ?? 15,
                 'foto_cracha_path' => $dados['foto_cracha_path'] ?? null,
@@ -45,7 +44,6 @@ final class EquipamentoStatusService
             $this->registrarHistorico($equipamento, 'emprestado', 'em_utilizacao', [
                 'colaborador' => $dados['colaborador_nome'],
                 'matricula' => $dados['colaborador_matricula'],
-                'encarregado' => $dados['encarregado_nome'],
                 'obra_id' => $dados['obra_id'],
                 'data_retirada' => $dados['data_retirada'],
             ]);
@@ -114,6 +112,33 @@ final class EquipamentoStatusService
         return $renovacao;
     }
 
+    public function atualizarEmprestimo(Emprestimo $emprestimo, array $dados): Emprestimo
+    {
+        if (! $emprestimo->is_ativo) {
+            throw new RuntimeException('Este empréstimo já foi encerrado.');
+        }
+
+        return DB::transaction(function () use ($emprestimo, $dados) {
+            $emprestimo->update([
+                'obra_id' => $dados['obra_id'],
+                'colaborador_nome' => $dados['colaborador_nome'],
+                'colaborador_matricula' => $dados['colaborador_matricula'],
+                'colaborador_whatsapp' => $dados['colaborador_whatsapp'] ?? $emprestimo->colaborador_whatsapp,
+            ]);
+
+            $equipamento = $emprestimo->equipamento;
+
+            $this->registrarHistorico($equipamento, 'editado', 'em_utilizacao', [
+                'escopo' => 'emprestimo',
+                'colaborador' => $dados['colaborador_nome'],
+                'matricula' => $dados['colaborador_matricula'],
+                'obra_id' => $dados['obra_id'],
+            ]);
+
+            return $emprestimo->fresh(['equipamento.tipo', 'obra', 'renovacoes']);
+        });
+    }
+
     public function enviarParaManutencao(Equipamento $equipamento, array $dados): Manutencao
     {
         $this->applyResponsavelUser($dados);
@@ -151,6 +176,7 @@ final class EquipamentoStatusService
                 'responsabilidade' => $dados['responsabilidade'],
                 'responsavel_user_id' => $dados['responsavel_user_id'],
                 'responsavel' => $dados['responsavel_manutencao'] ?? null,
+                'enviado_por' => Auth::user()?->name,
             ]);
 
             return $manutencao;

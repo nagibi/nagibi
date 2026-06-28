@@ -7,7 +7,7 @@ namespace App\Http\Requests\Emprestimo;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-final class StoreEmprestimoRequest extends FormRequest
+final class UpdateEmprestimoRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -24,12 +24,6 @@ final class StoreEmprestimoRequest extends FormRequest
             'colaborador_nome' => ['required', 'string', 'max:150'],
             'colaborador_matricula' => ['required', 'string', 'max:30'],
             'colaborador_whatsapp' => ['nullable', 'string', 'max:20'],
-            'data_retirada' => ['required', 'date', 'before_or_equal:today'],
-            'prazo_dias' => ['sometimes', 'integer', 'min:1', 'max:365'],
-            'observacoes' => ['nullable', 'string', 'max:1000'],
-            'foto_cracha' => ['nullable', 'image', 'max:5120'],
-            'foto_equipamento_retirada' => ['nullable', 'image', 'max:5120'],
-            'foto_assinatura' => ['nullable', 'image', 'max:5120'],
         ];
     }
 
@@ -41,7 +35,6 @@ final class StoreEmprestimoRequest extends FormRequest
         return [
             'colaborador_nome.required' => 'Informe o nome do colaborador.',
             'colaborador_matricula.required' => 'Informe a matrícula do colaborador.',
-            'data_retirada.before_or_equal' => 'A data de retirada não pode ser no futuro.',
         ];
     }
 }

@@ -86,10 +86,6 @@ export function applyEquipamentoColumnFiltersToParams(
     next.colaborador = filters.colaborador.trim();
   }
 
-  if (filters.encarregado?.trim()) {
-    next.encarregado = filters.encarregado.trim();
-  }
-
   const retiradaFrom = filters[dateRangeFilterFromKey('data_retirada')]?.trim();
   const retiradaTo = filters[dateRangeFilterToKey('data_retirada')]?.trim();
   if (retiradaFrom) next.data_retirada_from = retiradaFrom;

@@ -56,7 +56,6 @@ final class EmprestimoResource extends JsonResource
             'colaborador_nome' => $this->colaborador_nome,
             'colaborador_matricula' => $this->colaborador_matricula,
             'colaborador_whatsapp' => $this->colaborador_whatsapp,
-            'encarregado_nome' => $this->encarregado_nome,
             'data_retirada' => $this->data_retirada->toDateString(),
             'data_devolucao' => $this->data_devolucao?->toDateString(),
             'observacao_devolucao' => $this->observacao_devolucao,

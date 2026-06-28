@@ -81,6 +81,14 @@ type EquipamentoCardProps = {
   actions?: EquipamentoCardAction[];
 };
 
+function resolveEmprestimoObra(equipamento: Equipamento) {
+  if (equipamento.status === 'em_utilizacao' && equipamento.emprestimo_ativo?.obra) {
+    return equipamento.emprestimo_ativo.obra;
+  }
+
+  return equipamento.obra ?? null;
+}
+
 type EquipamentoHighlight = {
   tone: 'danger' | 'warning';
   message: string;
@@ -168,6 +176,7 @@ export function EquipamentoCard({ equipamento, actions = [] }: EquipamentoCardPr
     !tendenciaOcultaPorDestaque &&
     !isTendenciaRedundanteComAcao(primaryAction?.id, tendencia);
   const PrimaryIcon = primaryAction ? PRIMARY_ACTION_ICONS[primaryAction.id] : null;
+  const obraExibida = resolveEmprestimoObra(equipamento);
 
   return (
     <Card
@@ -251,27 +260,26 @@ export function EquipamentoCard({ equipamento, actions = [] }: EquipamentoCardPr
 
         <div className="grid gap-2 text-sm text-muted-foreground">
           {emprestimo && equipamento.status === 'em_utilizacao' ? (
-            <p className="inline-flex items-center gap-1.5">
-              <User className="size-3.5 shrink-0" />
-              <span className="min-w-0 truncate text-foreground">
-                {emprestimo.colaborador_nome}
-                {emprestimo.colaborador_matricula
-                  ? ` · ${emprestimo.colaborador_matricula}`
-                  : ''}
-              </span>
-            </p>
+            <div className="inline-flex items-start gap-1.5">
+              <User className="mt-0.5 size-3.5 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Colaborador</p>
+                <p className="truncate font-medium text-foreground">
+                  {emprestimo.colaborador_nome}
+                </p>
+                {emprestimo.colaborador_matricula ? (
+                  <p className="text-xs text-muted-foreground">
+                    Matrícula {emprestimo.colaborador_matricula}
+                  </p>
+                ) : null}
+              </div>
+            </div>
           ) : null}
-          {emprestimo?.encarregado_nome && equipamento.status === 'em_utilizacao' ? (
-            <p className="inline-flex items-center gap-1.5">
-              <User className="size-3.5 shrink-0 opacity-60" />
-              Encarregado: {emprestimo.encarregado_nome}
-            </p>
-          ) : null}
-          {equipamento.obra ? (
+          {obraExibida ? (
             <p className="inline-flex items-center gap-1.5">
               <MapPin className="size-3.5 shrink-0" />
-              Obra {equipamento.obra.codigo}
-              {equipamento.obra.nome ? ` · ${equipamento.obra.nome}` : ''}
+              Obra {obraExibida.codigo}
+              {obraExibida.nome ? ` · ${obraExibida.nome}` : ''}
             </p>
           ) : null}
           {equipamento.fornecedor?.nome ? (

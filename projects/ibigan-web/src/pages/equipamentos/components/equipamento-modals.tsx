@@ -40,6 +40,7 @@ import { cn } from '@/lib/utils';
 import { mapZodFieldErrors } from '@/lib/zod-validators';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { equipamentosService } from '@/services/equipamentos.service';
+import { usersService, type User } from '@/services/users.service';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import { FieldMessage } from '@/components/ui/field-message';
@@ -145,8 +146,6 @@ export function EmprestarModal({
   const [colaboradorUserId, setColaboradorUserId] = useState('');
   const [colaboradorNome, setColaboradorNome] = useState('');
   const [colaboradorMatricula, setColaboradorMatricula] = useState('');
-  const [encarregadoUserId, setEncarregadoUserId] = useState('');
-  const [encarregadoNome, setEncarregadoNome] = useState('');
   const [prazoDias, setPrazoDias] = useState('15');
 
   const { data: obras = [], isLoading: loadingObras } = useQuery({
@@ -167,8 +166,6 @@ export function EmprestarModal({
     setColaboradorUserId('');
     setColaboradorNome('');
     setColaboradorMatricula('');
-    setEncarregadoUserId('');
-    setEncarregadoNome('');
     setPrazoDias('15');
   }, [open, equipamento?.id]);
 
@@ -178,7 +175,6 @@ export function EmprestarModal({
         obra_id: Number(obraId),
         colaborador_nome: colaboradorNome,
         colaborador_matricula: colaboradorMatricula,
-        encarregado_nome: encarregadoNome,
         data_retirada: todayIsoDate(),
         prazo_dias: Number(prazoDias),
       }),
@@ -206,10 +202,7 @@ export function EmprestarModal({
             </Button>
             <Button
               disabled={
-                mutation.isPending ||
-                !obraId ||
-                !colaboradorUserId ||
-                !encarregadoUserId
+                mutation.isPending || !obraId || !colaboradorUserId
               }
               onClick={() => mutation.mutate()}
             >
@@ -252,18 +245,6 @@ export function EmprestarModal({
                 Matrícula: {colaboradorMatricula}
               </p>
             ) : null}
-          </div>
-          <div className="grid gap-2">
-            <Label>Encarregado / líder</Label>
-            <EquipamentoUserSelect
-              value={encarregadoUserId}
-              enabled={open}
-              placeholder="Selecione o encarregado"
-              onSelect={(user) => {
-                setEncarregadoUserId(String(user.id));
-                setEncarregadoNome(user.name);
-              }}
-            />
           </div>
           <div className="grid gap-2">
             <Label>Prazo (dias)</Label>
@@ -879,6 +860,7 @@ const HISTORICO_EVENTO_COLORS: Record<string, string> = {
   emprestado: 'bg-blue-500',
   devolvido: 'bg-emerald-500',
   renovado: 'bg-indigo-500',
+  manutencao_aberta: 'bg-amber-500',
   manutencao_iniciada: 'bg-amber-500',
   manutencao_finalizada: 'bg-emerald-500',
   cadastrado: 'bg-primary',
@@ -913,6 +895,31 @@ function HistoricoTimelineItem({
         (url): url is string => typeof url === 'string' && url.length > 0,
       )
     : [];
+  const colaboradorEmprestimo =
+    typeof item.dados?.colaborador === 'string'
+      ? item.dados.colaborador.trim()
+      : '';
+  const matriculaEmprestimo =
+    typeof item.dados?.matricula === 'string'
+      ? item.dados.matricula.trim()
+      : '';
+  const motivoManutencao =
+    typeof item.dados?.motivo === 'string' ? item.dados.motivo.trim() : '';
+  const responsavelManutencao =
+    typeof item.dados?.responsavel === 'string'
+      ? item.dados.responsavel.trim()
+      : '';
+  const diasEmManutencao =
+    typeof item.dados?.dias_em_manutencao === 'number'
+      ? item.dados.dias_em_manutencao
+      : null;
+  const mostraRegistradoPor =
+    Boolean(item.registrado_por?.name) &&
+    item.evento !== 'emprestado' &&
+    item.evento !== 'manutencao_aberta' &&
+    item.evento !== 'manutencao_finalizada';
+  const isEmprestimoEditado =
+    item.evento === 'editado' && item.dados?.escopo === 'emprestimo';
 
   return (
     <li className="relative flex gap-3 pb-5">
@@ -941,9 +948,56 @@ function HistoricoTimelineItem({
               : ''}
           </time>
         </div>
-        {item.registrado_por?.name ? (
+        {item.evento === 'emprestado' && colaboradorEmprestimo ? (
           <p className="mt-1 text-xs text-muted-foreground">
-            Por {item.registrado_por.name}
+            Colaborador: {colaboradorEmprestimo}
+            {matriculaEmprestimo ? ` · Matrícula ${matriculaEmprestimo}` : ''}
+          </p>
+        ) : null}
+        {isEmprestimoEditado && colaboradorEmprestimo ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Empréstimo atualizado · Colaborador: {colaboradorEmprestimo}
+            {matriculaEmprestimo ? ` · Matrícula ${matriculaEmprestimo}` : ''}
+          </p>
+        ) : null}
+        {item.evento === 'manutencao_aberta' && motivoManutencao ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Motivo: {motivoManutencao}
+          </p>
+        ) : null}
+        {item.evento === 'manutencao_aberta' &&
+        (item.registrado_por?.name ||
+          (typeof item.dados?.enviado_por === 'string' &&
+            item.dados.enviado_por.trim())) ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Enviado por{' '}
+            {item.registrado_por?.name ??
+              (typeof item.dados?.enviado_por === 'string'
+                ? item.dados.enviado_por.trim()
+                : '')}
+          </p>
+        ) : null}
+        {item.evento === 'manutencao_aberta' && responsavelManutencao ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Responsável: {responsavelManutencao}
+          </p>
+        ) : null}
+        {item.evento === 'manutencao_finalizada' &&
+        diasEmManutencao !== null ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            {diasEmManutencao} dia{diasEmManutencao === 1 ? '' : 's'} em
+            manutenção
+          </p>
+        ) : null}
+        {item.evento === 'manutencao_finalizada' &&
+        item.registrado_por?.name ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Finalizado por {item.registrado_por.name}
+          </p>
+        ) : null}
+        {mostraRegistradoPor ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Registrado por {item.registrado_por?.name}
           </p>
         ) : null}
         {item.evento === 'devolvido' && dataDevolucao ? (
@@ -1263,6 +1317,28 @@ export function CadastroEquipamentoModal({
   );
 }
 
+function resolveEmprestimoUserId(
+  users: User[],
+  nome: string,
+  matricula?: string,
+): string {
+  const normalizedMatricula = matricula?.replace(/\D/g, '') ?? '';
+  if (normalizedMatricula) {
+    const byMatricula = users.find(
+      (user) => getUserMatricula(user) === normalizedMatricula,
+    );
+    if (byMatricula) return String(byMatricula.id);
+  }
+
+  const normalizedNome = nome.trim().toLowerCase();
+  if (!normalizedNome) return '';
+
+  const byName = users.find(
+    (user) => user.name.trim().toLowerCase() === normalizedNome,
+  );
+  return byName ? String(byName.id) : '';
+}
+
 export function EditarEquipamentoModal({
   equipamento,
   open,
@@ -1276,6 +1352,10 @@ export function EditarEquipamentoModal({
   const [dataEntrada, setDataEntrada] = useState(todayIsoDate());
   const [valorMensal, setValorMensal] = useState('');
   const [isCritico, setIsCritico] = useState(false);
+  const [emprestimoObraId, setEmprestimoObraId] = useState('');
+  const [colaboradorUserId, setColaboradorUserId] = useState('');
+  const [colaboradorNome, setColaboradorNome] = useState('');
+  const [colaboradorMatricula, setColaboradorMatricula] = useState('');
   const [newFotos, setNewFotos] = useState<File[]>([]);
   const [removedFotoIds, setRemovedFotoIds] = useState<number[]>([]);
   const [principal, setPrincipal] = useState<EquipamentoFotoPrincipal | null>(
@@ -1300,6 +1380,13 @@ export function EditarEquipamentoModal({
     queryKey: ['equipamentos-lookups', 'obras'],
     queryFn: () => equipamentosService.lookupObras(),
     enabled: open,
+  });
+  const emprestimoAtivo = equipamento?.emprestimo_ativo ?? null;
+  const { data: activeUsers = [] } = useQuery({
+    queryKey: ['equipamentos-users-all'],
+    queryFn: () => usersService.listAllActive(),
+    enabled: open && Boolean(emprestimoAtivo),
+    staleTime: 5 * 60 * 1000,
   });
 
   const tipoOptions = tipos.map((tipo) => ({
@@ -1326,6 +1413,20 @@ export function EditarEquipamentoModal({
     setDataEntrada(equipamento.data_entrada);
     setValorMensal(numberToCurrencyDigits(equipamento.valor_mensal));
     setIsCritico(equipamento.is_critico);
+    const emprestimo = equipamento.emprestimo_ativo;
+    if (emprestimo) {
+      setEmprestimoObraId(
+        String(emprestimo.obra_id ?? emprestimo.obra?.id ?? ''),
+      );
+      setColaboradorNome(emprestimo.colaborador_nome);
+      setColaboradorMatricula(emprestimo.colaborador_matricula);
+      setColaboradorUserId('');
+    } else {
+      setEmprestimoObraId('');
+      setColaboradorUserId('');
+      setColaboradorNome('');
+      setColaboradorMatricula('');
+    }
     setNewFotos([]);
     setRemovedFotoIds([]);
     const defaultPrincipal = getDefaultEquipamentoPrincipal(
@@ -1336,8 +1437,20 @@ export function EditarEquipamentoModal({
     clear();
   }, [open, equipamento, clear]);
 
+  useEffect(() => {
+    if (!open || !emprestimoAtivo || activeUsers.length === 0) return;
+
+    setColaboradorUserId(
+      resolveEmprestimoUserId(
+        activeUsers,
+        emprestimoAtivo.colaborador_nome,
+        emprestimoAtivo.colaborador_matricula,
+      ),
+    );
+  }, [open, emprestimoAtivo, activeUsers]);
+
   const mutation = useMutation({
-    mutationFn: (values: EquipamentoFormValues) => {
+    mutationFn: async (values: EquipamentoFormValues) => {
       const orderedFotos =
         principal?.type === 'new'
           ? orderFotosWithPrincipalFirst(newFotos, principal.index)
@@ -1365,21 +1478,40 @@ export function EditarEquipamentoModal({
         principalForSubmit?.type === 'new';
 
       if (needsMultipart) {
-        return equipamentosService.update(
+        await equipamentosService.update(
           equipamento!.id,
           buildEquipamentoUpdateFormData(payload),
         );
+      } else {
+        await equipamentosService.update(equipamento!.id, {
+          patrimonio: values.patrimonio,
+          tipo_id: values.tipo_id,
+          fornecedor_id: values.fornecedor_id,
+          obra_id: values.obra_id,
+          data_entrada: values.data_entrada,
+          valor_mensal: values.valor_mensal,
+          is_critico: values.is_critico,
+          ...(principalChanged ? resolvePrincipalPayload(principal) : {}),
+        });
       }
 
-      return equipamentosService.update(equipamento!.id, {
-        patrimonio: values.patrimonio,
-        tipo_id: values.tipo_id,
-        fornecedor_id: values.fornecedor_id,
-        obra_id: values.obra_id,
-        data_entrada: values.data_entrada,
-        valor_mensal: values.valor_mensal,
-        is_critico: values.is_critico,
-        ...(principalChanged ? resolvePrincipalPayload(principal) : {}),
+      const emprestimo = equipamento!.emprestimo_ativo;
+      if (!emprestimo) return;
+
+      const emprestimoObraInicial = String(
+        emprestimo.obra_id ?? emprestimo.obra?.id ?? '',
+      );
+      const emprestimoAlterado =
+        emprestimoObraId !== emprestimoObraInicial ||
+        colaboradorNome !== emprestimo.colaborador_nome ||
+        colaboradorMatricula !== emprestimo.colaborador_matricula;
+
+      if (!emprestimoAlterado) return;
+
+      await equipamentosService.updateEmprestimo(emprestimo.id, {
+        obra_id: Number(emprestimoObraId),
+        colaborador_nome: colaboradorNome,
+        colaborador_matricula: colaboradorMatricula,
       });
     },
     onSuccess: () => {
@@ -1398,6 +1530,16 @@ export function EditarEquipamentoModal({
 
   const handleSubmit = () => {
     if (!equipamento) return;
+
+    if (emprestimoAtivo) {
+      if (!emprestimoObraId || !colaboradorUserId) {
+        showAppToast({
+          title: 'Preencha obra destino e colaborador do empréstimo.',
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
 
     const result = equipamentoFormSchema.safeParse(
       buildEquipamentoFormValues({
@@ -1562,6 +1704,41 @@ export function EditarEquipamentoModal({
               onCheckedChange={setIsCritico}
             />
           </div>
+          {emprestimoAtivo ? (
+            <div className="grid gap-4 rounded-lg border border-border bg-muted/20 p-4">
+              <p className="text-sm font-semibold text-foreground">
+                Empréstimo ativo
+              </p>
+              <div className="grid gap-2">
+                <Label required>Obra destino</Label>
+                <SearchableSelect
+                  value={emprestimoObraId}
+                  onValueChange={setEmprestimoObraId}
+                  options={obraOptions}
+                  placeholder="Selecione a obra"
+                  searchPlaceholder="Buscar obra..."
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label required>Colaborador</Label>
+                <EquipamentoUserSelect
+                  value={colaboradorUserId}
+                  enabled={open}
+                  placeholder="Selecione o colaborador"
+                  onSelect={(user) => {
+                    setColaboradorUserId(String(user.id));
+                    setColaboradorNome(user.name);
+                    setColaboradorMatricula(getUserMatricula(user));
+                  }}
+                />
+                {colaboradorMatricula ? (
+                  <p className="text-xs text-muted-foreground">
+                    Matrícula: {colaboradorMatricula}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </div>
       </EquipamentoDialogShell>
     </Dialog>

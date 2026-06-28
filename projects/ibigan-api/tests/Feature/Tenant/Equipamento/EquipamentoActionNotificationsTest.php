@@ -86,7 +86,6 @@ it('dispara loan.created ao emprestar equipamento', function (): void {
         'obra_id' => $this->obra->id,
         'colaborador_nome' => 'João Silva',
         'colaborador_matricula' => '12345',
-        'encarregado_nome' => 'Carlos',
         'data_retirada' => now()->toDateString(),
         'prazo_dias' => 15,
     ], equipNotifHeaders($this->tenant))->assertCreated();

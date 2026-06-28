@@ -79,6 +79,7 @@ export const HISTORICO_EVENTO_LABELS: Record<string, string> = {
   emprestado: 'Emprestado',
   devolvido: 'Devolvido',
   renovado: 'Renovado',
+  manutencao_aberta: 'Enviado para manutenção',
   manutencao_iniciada: 'Manutenção iniciada',
   manutencao_finalizada: 'Manutenção finalizada',
   baixado: 'Baixado',

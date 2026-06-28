@@ -24,7 +24,6 @@ class Emprestimo extends Model
         'colaborador_nome',
         'colaborador_matricula',
         'colaborador_whatsapp',
-        'encarregado_nome',
         'data_retirada',
         'data_devolucao',
         'observacao_devolucao',

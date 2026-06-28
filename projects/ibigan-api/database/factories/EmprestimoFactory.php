@@ -24,7 +24,6 @@ class EmprestimoFactory extends Factory
             'colaborador_nome' => fake()->name(),
             'colaborador_matricula' => fake()->numerify('######'),
             'colaborador_whatsapp' => fake()->numerify('119########'),
-            'encarregado_nome' => fake()->name(),
             'data_retirada' => now()->subDays(5)->toDateString(),
             'data_devolucao' => null,
             'prazo_dias' => 15,

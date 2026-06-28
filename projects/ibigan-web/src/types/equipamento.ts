@@ -21,9 +21,10 @@ export interface EquipamentoRenovacao {
 
 export interface EquipamentoEmprestimoAtivo {
   id: number;
+  obra_id?: number;
+  obra?: { id: number; codigo: string; nome: string } | null;
   colaborador_nome: string;
   colaborador_matricula: string;
-  encarregado_nome: string;
   data_retirada: string;
   prazo_dias: number;
   renovacoes?: EquipamentoRenovacao[];

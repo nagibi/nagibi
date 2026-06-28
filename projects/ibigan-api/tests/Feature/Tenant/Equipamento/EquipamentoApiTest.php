@@ -406,7 +406,6 @@ it('empresta equipamento em estoque', function (): void {
         'obra_id' => $obraDestino->id,
         'colaborador_nome' => 'João Silva',
         'colaborador_matricula' => '12345',
-        'encarregado_nome' => 'Carlos Líder',
         'data_retirada' => now()->toDateString(),
         'prazo_dias' => 15,
     ], equipHeaders($this->tenant->id))
@@ -439,6 +438,37 @@ it('devolve emprestimo ativo', function (): void {
         ->assertJsonPath('data.is_ativo', false);
 
     $this->tenant->run(fn() => expect($emprestimo->fresh()->data_devolucao)->not->toBeNull());
+});
+
+it('atualiza colaborador e obra de emprestimo ativo', function (): void {
+    $context = $this->tenant->run(function (): array {
+        $equipamento = Equipamento::factory()->create();
+        $obraDestino = Obra::factory()->create(['codigo' => '701']);
+        $emprestimo = Emprestimo::factory()->create([
+            'equipamento_id' => $equipamento->id,
+            'obra_id' => $equipamento->obra_id,
+            'colaborador_nome' => 'João Silva',
+            'colaborador_matricula' => '12345',
+            'data_devolucao' => null,
+        ]);
+
+        return compact('emprestimo', 'obraDestino');
+    });
+
+    $this->putJson("/api/v1/emprestimos/{$context['emprestimo']->id}", [
+        'obra_id' => $context['obraDestino']->id,
+        'colaborador_nome' => 'Maria Santos',
+        'colaborador_matricula' => '54321',
+    ], equipHeaders($this->tenant->id))
+        ->assertOk()
+        ->assertJsonPath('data.colaborador_nome', 'Maria Santos')
+        ->assertJsonPath('data.obra_id', $context['obraDestino']->id);
+
+    $this->tenant->run(function () use ($context): void {
+        $emprestimo = $context['emprestimo']->fresh();
+        expect($emprestimo->colaborador_nome)->toBe('Maria Santos')
+            ->and($emprestimo->obra_id)->toBe($context['obraDestino']->id);
+    });
 });
 
 it('devolve emprestimo com observacao e multiplas imagens', function (): void {

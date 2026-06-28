@@ -183,7 +183,6 @@ class EquipamentoSeeder extends Seeder
         $this->simularEmprestimoEncerrado($service, $estoqueComHistorico, [
             'colaborador_nome' => 'Roberto Nunes',
             'colaborador_matricula' => '44556',
-            'encarregado_nome' => 'Carlos Líder',
             'obra' => '652',
             'data_retirada' => now()->subDays(35)->toDateString(),
             'prazo_dias' => 10,
@@ -221,7 +220,6 @@ class EquipamentoSeeder extends Seeder
         $service->emprestar($emUsoNormal, $this->dadosEmprestimo([
             'colaborador_nome' => 'João Silva',
             'colaborador_matricula' => '12345',
-            'encarregado_nome' => 'Carlos Líder',
             'obra' => '651',
             'data_retirada' => now()->subDays(5)->toDateString(),
             'prazo_dias' => 15,
@@ -240,7 +238,6 @@ class EquipamentoSeeder extends Seeder
         $emprestimoVencido = $service->emprestar($vencido, $this->dadosEmprestimo([
             'colaborador_nome' => 'Maria Santos',
             'colaborador_matricula' => '67890',
-            'encarregado_nome' => 'Ana Supervisora',
             'obra' => '652',
             'data_retirada' => now()->subDays(22)->toDateString(),
             'prazo_dias' => 15,
@@ -259,7 +256,6 @@ class EquipamentoSeeder extends Seeder
         $service->emprestar($proximoVencimento, $this->dadosEmprestimo([
             'colaborador_nome' => 'Carlos Oliveira',
             'colaborador_matricula' => '11111',
-            'encarregado_nome' => 'Paulo Encarregado',
             'obra' => '653',
             'data_retirada' => now()->subDays(13)->toDateString(),
             'prazo_dias' => 15,
@@ -277,7 +273,6 @@ class EquipamentoSeeder extends Seeder
         $emprestimoRenovado = $service->emprestar($comRenovacao, $this->dadosEmprestimo([
             'colaborador_nome' => 'Ana Costa',
             'colaborador_matricula' => '22222',
-            'encarregado_nome' => 'Marcos Líder',
             'obra' => '650',
             'data_retirada' => now()->subDays(18)->toDateString(),
             'prazo_dias' => 10,
@@ -447,7 +442,6 @@ class EquipamentoSeeder extends Seeder
      * @param  array{
      *     colaborador_nome: string,
      *     colaborador_matricula: string,
-     *     encarregado_nome: string,
      *     obra: string,
      *     data_retirada: string,
      *     prazo_dias: int,
@@ -462,7 +456,6 @@ class EquipamentoSeeder extends Seeder
             'colaborador_nome' => $dados['colaborador_nome'],
             'colaborador_matricula' => $dados['colaborador_matricula'],
             'colaborador_whatsapp' => $this->whatsappDemo($dados['colaborador_matricula']),
-            'encarregado_nome' => $dados['encarregado_nome'],
             'data_retirada' => $dados['data_retirada'],
             'prazo_dias' => $dados['prazo_dias'],
             'observacoes' => 'Empréstimo gerado pelo seed de demonstração.',
@@ -487,7 +480,6 @@ class EquipamentoSeeder extends Seeder
      * @param  array{
      *     colaborador_nome: string,
      *     colaborador_matricula: string,
-     *     encarregado_nome: string,
      *     obra: string,
      *     data_retirada: string,
      *     prazo_dias: int,

@@ -33,6 +33,7 @@ final class EquipamentoController extends Controller
             'creator',
             'updater',
             'emprestimoAtivo.renovacoes',
+            'emprestimoAtivo.obra',
             'manutencaoAtiva.responsavelUser',
             'baixa',
         ]);
@@ -54,7 +55,16 @@ final class EquipamentoController extends Controller
         }
 
         if ($request->filled('obra_id')) {
-            $query->where('obra_id', $request->integer('obra_id'));
+            $obraId = $request->integer('obra_id');
+
+            if ($request->string('status')->toString() === 'em_utilizacao') {
+                $query->whereHas(
+                    'emprestimoAtivo',
+                    fn ($emprestimoQuery) => $emprestimoQuery->where('obra_id', $obraId),
+                );
+            } else {
+                $query->where('obra_id', $obraId);
+            }
         }
 
         if ($request->filled('fornecedor_id')) {
@@ -93,8 +103,7 @@ final class EquipamentoController extends Controller
                     })
                     ->orWhereHas('emprestimoAtivo', function ($e) use ($search) {
                         $e->where('colaborador_nome', 'like', "%{$search}%")
-                            ->orWhere('colaborador_matricula', 'like', "%{$search}%")
-                            ->orWhere('encarregado_nome', 'like', "%{$search}%");
+                            ->orWhere('colaborador_matricula', 'like', "%{$search}%");
                     });
             });
         }
@@ -203,14 +212,6 @@ final class EquipamentoController extends Controller
                 $q->where('colaborador_nome', 'like', "%{$colaborador}%")
                     ->orWhere('colaborador_matricula', 'like', "%{$colaborador}%");
             });
-        }
-
-        if ($request->filled('encarregado')) {
-            $encarregado = $request->string('encarregado')->toString();
-            $query->whereHas(
-                'emprestimoAtivo',
-                fn($q) => $q->where('encarregado_nome', 'like', "%{$encarregado}%"),
-            );
         }
 
         if ($request->filled('data_retirada_from')) {
@@ -347,6 +348,7 @@ final class EquipamentoController extends Controller
             'creator',
             'updater',
             'emprestimoAtivo.renovacoes',
+            'emprestimoAtivo.obra',
             'manutencaoAtiva.responsavelUser',
             'baixa',
         ]);
@@ -435,6 +437,7 @@ final class EquipamentoController extends Controller
             'creator',
             'updater',
             'emprestimoAtivo.renovacoes',
+            'emprestimoAtivo.obra',
             'manutencaoAtiva.responsavelUser',
             'baixa',
         ]);
@@ -473,6 +476,7 @@ final class EquipamentoController extends Controller
             'creator',
             'updater',
             'emprestimoAtivo.renovacoes',
+            'emprestimoAtivo.obra',
             'manutencaoAtiva.responsavelUser',
             'baixa',
         ]);

@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1\Tenant\Equipamento;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Emprestimo\StoreEmprestimoRequest;
+use App\Http\Requests\Emprestimo\UpdateEmprestimoRequest;
 use App\Http\Resources\Equipamento\EmprestimoResource;
 use App\Models\Emprestimo;
 use App\Models\Equipamento;
@@ -161,5 +162,23 @@ final class EmprestimoController extends Controller
                 'autorizado_por' => $renovacao->autorizadoPor?->name,
             ],
         ]);
+    }
+
+    public function update(UpdateEmprestimoRequest $request, Emprestimo $emprestimo): EmprestimoResource|JsonResponse
+    {
+        if (! $emprestimo->is_ativo) {
+            return response()->json([
+                'message' => 'Este empréstimo já foi encerrado.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $emprestimo = $this->service->atualizarEmprestimo($emprestimo, $request->validated());
+
+        return new EmprestimoResource($emprestimo->load([
+            'equipamento.tipo.grupo',
+            'obra',
+            'renovacoes',
+            'autorizadoPor',
+        ]));
     }
 }
